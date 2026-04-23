@@ -1,0 +1,140 @@
+:root {
+  color-scheme: dark;
+  --bg-a: #120b28;
+  --bg-b: #21104a;
+  --panel: rgba(17, 11, 33, 0.82);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #f0eaff;
+  --muted: rgba(240, 234, 255, 0.72);
+  --accent: #8d6bff;
+  --accent-soft: #b29cff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(112, 84, 255, 0.34), transparent 32%),
+    radial-gradient(circle at 82% 76%, rgba(52, 92, 255, 0.22), transparent 28%),
+    linear-gradient(135deg, var(--bg-b), var(--bg-a));
+  color: var(--text);
+}
+
+.shell {
+  width: min(960px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 40px 0 72px;
+}
+
+.nav {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 28px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.hero,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.hero {
+  padding: 40px;
+}
+
+.panel {
+  padding: 30px;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  margin: 0 0 14px;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+
+p,
+li {
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 16px;
+}
+
+.lede {
+  max-width: 640px;
+  font-size: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.card {
+  padding: 22px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+  color: #10091f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.section {
+  margin-top: 22px;
+}
+
+a {
+  color: var(--accent-soft);
+}
+
+ul {
+  padding-left: 20px;
+}
+
+.meta {
+  margin-top: 28px;
+  color: rgba(240, 234, 255, 0.52);
+  font-size: 13px;
+}
+

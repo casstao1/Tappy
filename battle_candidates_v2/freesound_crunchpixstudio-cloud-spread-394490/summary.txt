@@ -1,0 +1,8 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/freesound_crunchpixstudio-cloud-spread-394490.wav
+Exported clips: 2
+Sample rate: 44100 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.223s score=3459.17 peak=10347 duration=240.0ms
+- t=0.152s score=3322.82 peak=9500 duration=240.0ms

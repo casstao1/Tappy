@@ -1,0 +1,18 @@
+{
+  "default": [
+    { "group": "freesound_crunchpixstudio-clear-combo-7-394494", "file": "00_full_trimmed.wav" },
+    { "group": "freesound_crunchpixstudio-combine-special-394482", "file": "00_full_trimmed.wav" }
+  ],
+  "space": [
+    { "group": "freesound_crunchpixstudio-button-394464", "file": "01_t0000.045_score7199.wav" }
+  ],
+  "return": [
+    { "group": "freesound_crunchpixstudio-get-item-394523", "file": "00_full_trimmed.wav" }
+  ],
+  "delete": [
+    { "group": "freesound_crunchpixstudio-material-add-item-394485", "file": "02_t0000.128_score2834.wav" }
+  ],
+  "modifier": [
+    { "group": "freesound_crunchpixstudio-material-level-complete-394521", "file": "04_t0000.551_score6076.wav" }
+  ]
+}

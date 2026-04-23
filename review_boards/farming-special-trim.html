@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Farming Special Trim Review</title>
+  <style>
+    :root {
+      --bg: #130d27;
+      --panel: #1d1536;
+      --panel-2: #251b45;
+      --text: #efeafd;
+      --muted: #a8a0c7;
+      --accent: #8f6cff;
+      --accent-2: #5dc4ff;
+      --line: rgba(255, 255, 255, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(108, 77, 255, 0.2), transparent 30%),
+        linear-gradient(180deg, #1c1240 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 24px 64px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    .intro {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.26);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      color: #cfc7f8;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .card h2 {
+      margin: 16px 0 8px;
+      font-size: 28px;
+    }
+
+    .meta {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #d8d1fb;
+    }
+
+    audio {
+      width: 100%;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 112px;
+      display: block;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .value-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #ddd6ff;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(180deg, #8d6bff, #6f56ea);
+      cursor: pointer;
+      box-shadow: 0 14px 24px rgba(111, 86, 234, 0.25);
+    }
+
+    button.secondary {
+      background: rgba(255,255,255,0.06);
+      color: #e7e1ff;
+      box-shadow: none;
+    }
+
+    .summary {
+      margin-top: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #140e29;
+      color: var(--text);
+      padding: 14px;
+      font: 14px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Farming Special Trim Review</h1>
+    <p class="intro">
+      Use this to decide exactly where the current Farming <strong>return</strong> and <strong>delete</strong> sounds should be cut.
+      The full source clip is on each card. Set <strong>start</strong> and <strong>end</strong>, preview the trimmed result, then copy the settings.
+    </p>
+
+    <div class="grid">
+      <section class="card" data-trim-card data-name="return" data-source="../farming_candidates_v2/water/00_full_trimmed.wav" data-current="../Tappy/Resources/BundledSounds/farming/return/return-01.wav" data-default-end-ms="2000">
+        <div class="eyebrow">Farming Return</div>
+        <h2>Return</h2>
+        <p class="meta">Source: <code>water/00_full_trimmed.wav</code></p>
+
+        <div class="panel">
+          <h3>Current In-App Clip</h3>
+          <audio controls preload="metadata" src="../Tappy/Resources/BundledSounds/farming/return/return-01.wav"></audio>
+        </div>
+
+        <div class="panel">
+          <h3>Full Source Clip</h3>
+          <audio controls preload="metadata" data-source-player src="../farming_candidates_v2/water/00_full_trimmed.wav"></audio>
+          <canvas width="520" height="112" data-waveform></canvas>
+
+          <div class="controls">
+            <div>
+              <label>Start Trim</label>
+              <input type="range" min="0" max="0" step="1" value="0" data-start>
+              <div class="value-row"><span>Start</span><strong data-start-value>0 ms</strong></div>
+            </div>
+            <div>
+              <label>End Cut</label>
+              <input type="range" min="0" max="0" step="1" value="0" data-end>
+              <div class="value-row"><span>End</span><strong data-end-value>0 ms</strong></div>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button type="button" data-preview>Preview Trim</button>
+            <button type="button" class="secondary" data-reset>Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" data-trim-card data-name="delete" data-source="../farming_candidates_v2/eating/00_full_trimmed.wav" data-current="../Tappy/Resources/BundledSounds/farming/delete/delete-01.wav" data-default-end-ms="880">
+        <div class="eyebrow">Farming Delete</div>
+        <h2>Delete</h2>
+        <p class="meta">Source: <code>eating/00_full_trimmed.wav</code></p>
+
+        <div class="panel">
+          <h3>Current In-App Clip</h3>
+          <audio controls preload="metadata" src="../Tappy/Resources/BundledSounds/farming/delete/delete-01.wav"></audio>
+        </div>
+
+        <div class="panel">
+          <h3>Full Source Clip</h3>
+          <audio controls preload="metadata" data-source-player src="../farming_candidates_v2/eating/00_full_trimmed.wav"></audio>
+          <canvas width="520" height="112" data-waveform></canvas>
+
+          <div class="controls">
+            <div>
+              <label>Start Trim</label>
+              <input type="range" min="0" max="0" step="1" value="0" data-start>
+              <div class="value-row"><span>Start</span><strong data-start-value>0 ms</strong></div>
+            </div>
+            <div>
+              <label>End Cut</label>
+              <input type="range" min="0" max="0" step="1" value="0" data-end>
+              <div class="value-row"><span>End</span><strong data-end-value>0 ms</strong></div>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button type="button" data-preview>Preview Trim</button>
+            <button type="button" class="secondary" data-reset>Reset</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="summary">
+      <h2 style="margin: 0 0 12px; font-size: 24px;">Copy Trim Settings</h2>
+      <textarea readonly data-output></textarea>
+      <div class="button-row">
+        <button type="button" data-copy>Copy Settings</button>
+      </div>
+      <p class="hint">Send me the copied values and I’ll apply them directly to the Farming pack builder.</p>
+    </section>
+  </div>
+
+  <script>
+    const output = document.querySelector('[data-output]');
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function formatMs(ms) {
+      return `${Math.round(ms)} ms`;
+    }
+
+    function updateOutput() {
+      const lines = Array.from(document.querySelectorAll('[data-trim-card]')).map(card => {
+        const name = card.dataset.name;
+        const start = Number(card.querySelector('[data-start]').value);
+        const end = Number(card.querySelector('[data-end]').value);
+        return `${name}: start=${Math.round(start)}ms, end=${Math.round(end)}ms`;
+      });
+      output.value = lines.join('\n');
+    }
+
+    async function decodeAudio(url) {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      return audioContext.decodeAudioData(arrayBuffer);
+    }
+
+    function drawWaveform(canvas, buffer, startMs, endMs) {
+      const ctx = canvas.getContext('2d');
+      const { width, height } = canvas;
+      const data = buffer.getChannelData(0);
+      const step = Math.ceil(data.length / width);
+      const amp = height / 2;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#120d24';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath();
+      ctx.moveTo(0, amp);
+      ctx.lineTo(width, amp);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#8f6cff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+
+      for (let i = 0; i < width; i++) {
+        let min = 1;
+        let max = -1;
+        for (let j = 0; j < step; j++) {
+          const datum = data[(i * step) + j];
+          if (datum < min) min = datum;
+          if (datum > max) max = datum;
+        }
+        ctx.moveTo(i, (1 + min) * amp);
+        ctx.lineTo(i, (1 + max) * amp);
+      }
+      ctx.stroke();
+
+      const totalMs = buffer.duration * 1000;
+      const startX = width * (startMs / totalMs);
+      const endX = width * (endMs / totalMs);
+
+      ctx.fillStyle = 'rgba(93, 196, 255, 0.16)';
+      ctx.fillRect(startX, 0, Math.max(0, endX - startX), height);
+
+      ctx.strokeStyle = '#5dc4ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(startX, 0);
+      ctx.lineTo(startX, height);
+      ctx.moveTo(endX, 0);
+      ctx.lineTo(endX, height);
+      ctx.stroke();
+    }
+
+    async function initCard(card) {
+      const sourceUrl = card.dataset.source;
+      const sourcePlayer = card.querySelector('[data-source-player]');
+      const canvas = card.querySelector('[data-waveform]');
+      const startInput = card.querySelector('[data-start]');
+      const endInput = card.querySelector('[data-end]');
+      const startValue = card.querySelector('[data-start-value]');
+      const endValue = card.querySelector('[data-end-value]');
+      const previewButton = card.querySelector('[data-preview]');
+      const resetButton = card.querySelector('[data-reset]');
+      const defaultEndMs = Number(card.dataset.defaultEndMs || 0);
+
+      const buffer = await decodeAudio(sourceUrl);
+      const durationMs = Math.round(buffer.duration * 1000);
+
+      startInput.max = durationMs;
+      endInput.max = durationMs;
+      startInput.value = 0;
+      endInput.value = Math.min(defaultEndMs || durationMs, durationMs);
+
+      let activeSource = null;
+
+      function refresh() {
+        let start = Number(startInput.value);
+        let end = Number(endInput.value);
+
+        if (start > end - 10) {
+          if (document.activeElement === startInput) {
+            end = Math.min(durationMs, start + 10);
+            endInput.value = end;
+          } else {
+            start = Math.max(0, end - 10);
+            startInput.value = start;
+          }
+        }
+
+        startValue.textContent = formatMs(start);
+        endValue.textContent = formatMs(end);
+        drawWaveform(canvas, buffer, start, end);
+        updateOutput();
+      }
+
+      function stopPreview() {
+        if (activeSource) {
+          try { activeSource.stop(); } catch (_) {}
+          activeSource.disconnect();
+          activeSource = null;
+        }
+      }
+
+      previewButton.addEventListener('click', async () => {
+        stopPreview();
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
+        const startSec = Number(startInput.value) / 1000;
+        const endSec = Number(endInput.value) / 1000;
+        const durationSec = Math.max(0.01, endSec - startSec);
+
+        activeSource = audioContext.createBufferSource();
+        activeSource.buffer = buffer;
+        activeSource.connect(audioContext.destination);
+        activeSource.start(0, startSec, durationSec);
+      });
+
+      resetButton.addEventListener('click', () => {
+        stopPreview();
+        startInput.value = 0;
+        endInput.value = Math.min(defaultEndMs || durationMs, durationMs);
+        sourcePlayer.currentTime = 0;
+        refresh();
+      });
+
+      startInput.addEventListener('input', refresh);
+      endInput.addEventListener('input', refresh);
+
+      refresh();
+    }
+
+    Promise.all(Array.from(document.querySelectorAll('[data-trim-card]')).map(initCard));
+
+    document.querySelector('[data-copy]').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+      } catch (_) {
+        output.select();
+        document.execCommand('copy');
+      }
+    });
+  </script>
+</body>
+</html>

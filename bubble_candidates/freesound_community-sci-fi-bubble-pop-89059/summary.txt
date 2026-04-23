@@ -1,0 +1,9 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/bubble_sources/freesound_community-sci-fi-bubble-pop-89059.wav
+Exported clips: 3
+Sample rate: 48000 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.268s score=5701.13 peak=11457 duration=130.0ms
+- t=0.104s score=4795.36 peak=10349 duration=130.0ms
+- t=0.328s score=3391.00 peak=6373 duration=130.0ms

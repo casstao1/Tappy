@@ -1,0 +1,14 @@
+Source: /Users/castao/Downloads/u_scysdwddsp-eating-effect-254996_converted.wav
+Exported clips: 8
+Sample rate: 44100 Hz
+Analysis window: 4.50 ms
+
+Top-scoring clips:
+- t=1.266s score=6595.94 peak=12735 duration=220.0ms
+- t=1.333s score=5886.04 peak=20623 duration=171.6ms
+- t=0.485s score=3646.02 peak=6820 duration=171.6ms
+- t=0.925s score=3452.03 peak=6446 duration=220.0ms
+- t=1.441s score=3326.10 peak=9992 duration=63.9ms
+- t=1.087s score=3139.13 peak=6583 duration=180.6ms
+- t=1.154s score=3065.40 peak=10566 duration=113.3ms
+- t=0.548s score=2934.18 peak=10307 duration=108.8ms

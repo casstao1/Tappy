@@ -1,0 +1,18 @@
+{
+  "default": [
+    { "group": "stone", "file": "00_full_trimmed_clean.wav" },
+    { "group": "wood", "file": "02_t0000.738_score4235_clean.wav" }
+  ],
+  "space": [
+    { "group": "wood", "file": "00_full_trimmed_clean.wav" }
+  ],
+  "return": [
+    { "group": "water", "file": "00_full_trimmed.wav" }
+  ],
+  "delete": [
+    { "group": "eating", "file": "00_full_trimmed.wav" }
+  ],
+  "modifier": [
+    { "group": "eating", "file": "01_t0000.485_score3646_wide.wav" }
+  ]
+}

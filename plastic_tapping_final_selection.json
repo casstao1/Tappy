@@ -1,0 +1,22 @@
+{
+  "default": [
+    { "group": "plastic", "file": "01_t0005.275_score4470.wav" },
+    { "group": "plastic", "file": "04_t0012.615_score4711.wav" },
+    { "group": "plastic", "file": "08_t0037.125_score4302.wav" },
+    { "group": "plastic", "file": "13_t0213.765_score3926.wav" },
+    { "group": "plastic", "file": "15_t0242.125_score6177.wav" },
+    { "group": "plastic", "file": "23_t0475.905_score4348.wav" }
+  ],
+  "space": [
+    { "group": "plastic", "file": "12_t0078.635_score3401.wav" }
+  ],
+  "return": [
+    { "group": "plastic", "file": "11_t0064.645_score5058.wav" }
+  ],
+  "delete": [
+    { "group": "plastic", "file": "03_t0011.075_score3915.wav" }
+  ],
+  "modifier": [
+    { "group": "plastic", "file": "02_t0010.895_score3479.wav" }
+  ]
+}

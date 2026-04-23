@@ -1,0 +1,7 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/bubble_sources/soundreality-pop-423717.wav
+Exported clips: 1
+Sample rate: 48000 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.156s score=26024.24 peak=32767 duration=107.0ms

@@ -1,0 +1,9 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/dragon-studio-hard-punch-sfx-515251.wav
+Exported clips: 3
+Sample rate: 44100 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.024s score=29375.21 peak=32768 duration=167.7ms
+- t=0.204s score=22189.32 peak=32768 duration=139.7ms
+- t=0.104s score=17491.42 peak=32768 duration=167.7ms

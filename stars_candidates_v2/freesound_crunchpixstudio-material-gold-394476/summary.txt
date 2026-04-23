@@ -1,0 +1,8 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/stars_sources/freesound_crunchpixstudio-material-gold-394476.wav
+Exported clips: 2
+Sample rate: 44100 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.132s score=4711.01 peak=12194 duration=220.0ms
+- t=0.235s score=3524.24 peak=12989 duration=220.0ms

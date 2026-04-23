@@ -1,0 +1,9 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/freesound_crunchpixstudio-rpg-sword-attack-combo-22-388940.wav
+Exported clips: 3
+Sample rate: 44100 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.379s score=7240.35 peak=17870 duration=229.5ms
+- t=0.116s score=5496.24 peak=14632 duration=240.0ms
+- t=0.283s score=4888.84 peak=14935 duration=240.0ms

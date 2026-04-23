@@ -1,0 +1,7 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/bubble_sources/dragon-studio-pop-402323.wav
+Exported clips: 1
+Sample rate: 48000 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=0.116s score=12998.86 peak=22775 duration=63.0ms

@@ -1,0 +1,20 @@
+{
+  "default": [
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_default_01.wav" },
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_default_02.wav" },
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_default_03.wav" },
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_default_04.wav" }
+  ],
+  "space": [
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_space_01.wav" }
+  ],
+  "return": [
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_return_01.wav" }
+  ],
+  "delete": [
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_delete_01.wav" }
+  ],
+  "modifier": [
+    { "group": "freesound_community-analog-stopwatch-winding-72055", "file": "single_modifier_01.wav" }
+  ]
+}

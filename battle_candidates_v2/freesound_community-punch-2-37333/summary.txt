@@ -1,0 +1,7 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/freesound_community-punch-2-37333.wav
+Exported clips: 1
+Sample rate: 44100 Hz
+Analysis window: 3.50 ms
+
+Top-scoring clips:
+- t=0.381s score=10951.67 peak=23438 duration=112.3ms

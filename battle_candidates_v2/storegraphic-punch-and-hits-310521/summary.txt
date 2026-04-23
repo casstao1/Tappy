@@ -1,0 +1,14 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/storegraphic-punch-and-hits-310521.wav
+Exported clips: 9
+Sample rate: 44100 Hz
+Analysis window: 4.00 ms
+
+Top-scoring clips:
+- t=17.157s score=13524.41 peak=17617 duration=90.0ms
+- t=2.123s score=13418.38 peak=21216 duration=183.6ms
+- t=10.484s score=13328.21 peak=30023 duration=171.7ms
+- t=0.287s score=12996.85 peak=23486 duration=175.6ms
+- t=3.133s score=11705.98 peak=17817 duration=143.7ms
+- t=8.784s score=11480.31 peak=16180 duration=171.7ms
+- t=12.348s score=11206.31 peak=16347 duration=183.6ms
+- t=5.064s score=11072.54 peak=15725 duration=135.7ms

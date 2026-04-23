@@ -1,0 +1,8 @@
+Source: /Users/castao/Downloads/chieuk-minecraft-villager-289282_converted.wav
+Exported clips: 2
+Sample rate: 44100 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=0.274s score=673.64 peak=2368 duration=140.0ms
+- t=0.359s score=476.09 peak=1483 duration=140.0ms

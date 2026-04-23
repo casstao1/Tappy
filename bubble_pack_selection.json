@@ -1,0 +1,20 @@
+{
+  "default": [
+    { "group": "dragon-studio-bubble-pop-406640", "file": "01b_t0000.024_split.wav" },
+    { "group": "dragon-studio-bubble-pop-406640", "file": "03_t0000.152_score17396.wav" },
+    { "group": "universfield-bubble-pop-02-293341", "file": "01_t0000.103_manual.wav" },
+    { "group": "dragon-studio-pop-402323", "file": "00_full_trimmed.wav" }
+  ],
+  "space": [
+    { "group": "soundreality-pop-423717", "file": "01_t0000.156_score26024.wav" }
+  ],
+  "return": [
+    { "group": "dragon-studio-pop-402323", "file": "01_t0000.116_score12999.wav" }
+  ],
+  "delete": [
+    { "group": "freesound_community-sci-fi-bubble-pop-89059", "file": "01_t0000.104_score4795.wav" }
+  ],
+  "modifier": [
+    { "group": "universfield-bubble-pop-06-351337", "file": "01_t0000.115_manual.wav" }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "default": [
+    { "group": "freesound_crunchpixstudio-rpg-sword-attack-combo-20-388935", "file": "00_full_trimmed.wav" },
+    { "group": "freesound_crunchpixstudio-rpg-sword-attack-combo-22-388940", "file": "00_full_trimmed.wav" },
+    { "group": "dragon-studio-hard-punch-sfx-515251", "file": "00_full_trimmed.wav" },
+    { "group": "storegraphic-punch-and-hits-310521", "file": "00_full_trimmed.wav" },
+    { "group": "storegraphic-punch-and-hits-310521", "file": "02_t0002.123_score13418.wav" },
+    { "group": "storegraphic-punch-and-hits-310521", "file": "05_t0006.832_score10505.wav" },
+    { "group": "storegraphic-punch-and-hits-310521", "file": "08_t0012.348_score11206.wav" },
+    { "group": "storegraphic-punch-and-hits-310521", "file": "04_t0005.064_score11073.wav" },
+    { "group": "universfield-punch-03-352040", "file": "01_t0000.335_score12526.wav" }
+  ],
+  "space": [
+    { "group": "freesound_crunchpixstudio-cloud-spread-394490", "file": "00_full_trimmed.wav" }
+  ],
+  "return": [
+    { "group": "freesound_crunchpixstudio-rpg-sword-attack-combo-12-388934", "file": "00_full_trimmed.wav" }
+  ],
+  "delete": [
+    { "group": "freesound_crunchpixstudio-rpg-sword-attack-combo-34-388950", "file": "00_full_trimmed.wav" }
+  ],
+  "modifier": [
+    { "group": "freesound_crunchpixstudio-rpg-sword-attack-combo-20-388935", "file": "00_full_trimmed.wav" }
+  ]
+}

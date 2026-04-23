@@ -1,0 +1,27 @@
+{
+  "default": [
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "02_t0001.945_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "03_t0003.247_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "04_t0004.445_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "05_t0005.629_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "06_t0006.983_manual.wav" }
+  ],
+  "space": [
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "08_t0009.054_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "09_t0010.689_manual.wav" }
+  ],
+  "return": [
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "07_t0007.832_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "08_t0009.054_manual.wav" }
+  ],
+  "delete": [
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "02_t0001.945_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "03_t0003.247_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "04_t0004.445_manual.wav" }
+  ],
+  "modifier": [
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "01_t0000.706_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "05_t0005.629_manual.wav" },
+    { "group": "masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724", "file": "06_t0006.983_manual.wav" }
+  ]
+}

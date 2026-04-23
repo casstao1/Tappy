@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	    Tappy is distributed as a sandboxed macOS app.
+	    Keyboard event monitoring is performed through Input Monitoring,
+	    using a listen-only event tap. The app observes key events to play
+	    local audio feedback and does not store or transmit keystrokes.
+	-->
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/fart_sources/freesound_community-farts-2-38757.wav
+Exported clips: 3
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=0.455s score=8256.65 peak=21063 duration=115.0ms
+- t=0.370s score=5544.81 peak=17405 duration=180.0ms
+- t=0.215s score=4929.04 peak=10057 duration=180.0ms

@@ -1,0 +1,11 @@
+.DS_Store
+.derivedData/
+DerivedData/
+build/
+.preview-build/
+.swift-module-cache/
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+*.app
+*.dSYM

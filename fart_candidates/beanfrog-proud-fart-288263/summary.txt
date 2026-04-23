@@ -1,0 +1,9 @@
+Source: /Users/castao/Desktop/KeyboardSoundApp/fart_sources/beanfrog-proud-fart-288263.wav
+Exported clips: 3
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=0.310s score=11185.39 peak=21878 duration=180.0ms
+- t=0.400s score=5608.49 peak=21812 duration=180.0ms
+- t=0.825s score=5510.48 peak=18881 duration=180.0ms

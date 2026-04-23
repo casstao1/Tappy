@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Tappy — UI Mockups v2 · Icon-Integrated</title>
+<style>
+  :root {
+    /* Icon palette — extracted directly from the icon */
+    --shell:   #0d0b1a;   /* outermost dark navy shell */
+    --cavity:  #181528;   /* the recessed inner well */
+    --keycap:  #c8c4e0;   /* frosted lavender-white keycap face */
+    --glow:    #7b5af0;   /* purple underglow */
+    --glow-bright: #9b7aff;
+    --glow-edge:   #5a3dc8;
+    --ink:     #0a0814;
+    --text-hi: #ede9ff;
+    --text-lo: #9a91b6;
+    --amber:   #f5e2ae;
+    --amber-1: #deb87a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    color: var(--text-hi);
+    background:
+      radial-gradient(1400px 900px at 70% -5%, rgba(123,90,240,0.18), transparent 55%),
+      radial-gradient(800px 600px at 5% 100%, rgba(90,61,200,0.12), transparent 55%),
+      linear-gradient(180deg, #0a0814 0%, #060510 100%);
+    min-height: 100vh;
+    padding: 48px 28px 80px;
+  }
+
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  /* ── Header ── */
+  header.hero {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: center;
+    padding: 28px 32px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, rgba(123,90,240,0.12), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .app-icon {
+    width: 120px; height: 120px;
+    border-radius: 27px;
+    background-image: url('Tappy_icon_1024.png');
+    background-size: cover;
+    box-shadow:
+      0 0 0 1px rgba(123,90,240,0.3),
+      0 20px 50px -15px rgba(123,90,240,0.7),
+      0 8px 24px rgba(0,0,0,0.5);
+  }
+  header h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 700; }
+  header p  { margin: 0; color: var(--text-lo); font-size: 14.5px; line-height: 1.6; max-width: 680px; }
+
+  h2.section {
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-lo); font-weight: 600;
+    margin: 52px 4px 20px;
+  }
+
+  /* ── Mockup shell ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+  .mockup {
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(18,14,32,0.6);
+    box-shadow: 0 40px 100px -40px rgba(0,0,0,0.95), 0 0 60px -30px rgba(123,90,240,0.15);
+  }
+  .win {
+    aspect-ratio: 640 / 480;
+    border-radius: 14px 14px 0 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .titlebar {
+    height: 30px;
+    display: flex; align-items: center;
+    padding: 0 14px; gap: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.2);
+    position: relative; z-index: 2;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .d-r { background: #ff5f56; } .d-y { background: #ffbd2e; } .d-g { background: #27c93f; }
+  .t-title { margin: 0 auto; font-size: 11.5px; opacity: 0.55; }
+
+  .content { position: absolute; inset: 30px 0 0 0; padding: 20px 22px; }
+
+  /* Shared primitives */
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .wordmark { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
+  .spacer { flex: 1; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600;
+  }
+  .toggle {
+    width: 42px; height: 24px; border-radius: 999px; position: relative;
+    border: 1px solid rgba(255,255,255,0.1); flex: 0 0 auto;
+  }
+  .toggle::after {
+    content: ""; position: absolute; top: 2px; left: 19px;
+    width: 18px; height: 18px; border-radius: 50%; background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .pack-label {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+    opacity: 0.55; margin-bottom: 10px; text-transform: uppercase;
+  }
+  .packs { display: flex; gap: 9px; }
+  .pack {
+    flex: 1; aspect-ratio: 1 / 1;
+    border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 18px;
+    position: relative; overflow: visible;
+    cursor: pointer;
+  }
+  .detail {
+    margin-top: 16px; border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .detail .disc {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex: 0 0 auto;
+  }
+  .detail h3 { margin: 0 0 3px; font-size: 14px; font-weight: 600; }
+  .detail p  { margin: 0; font-size: 11.5px; opacity: 0.65; }
+  .detail .play {
+    margin-left: auto; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex: 0 0 auto;
+  }
+
+  .caption { padding: 16px 20px 20px; }
+  .caption .name { font-size: 14px; font-weight: 700; margin: 0 0 5px; }
+  .caption .desc { font-size: 12px; color: var(--text-lo); line-height: 1.6; margin: 0; }
+
+  /* ════════════════════════════════════════════
+     E — KEYCAP TILES
+     Each pack card IS the icon: dark outer shell,
+     inner cavity, frosted keycap face, purple glow.
+  ════════════════════════════════════════════ */
+  .E .win {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 110%, rgba(123,90,240,0.18), transparent 65%),
+      linear-gradient(180deg, #100d1f 0%, #08060f 100%);
+    color: var(--text-hi);
+  }
+  .E .titlebar { background: rgba(0,0,0,0.4); color: var(--text-lo); border-bottom-color: rgba(255,255,255,0.04); }
+  .E .wordmark { color: var(--text-hi); }
+  .E .pill {
+    background: linear-gradient(135deg, #f5e2ae, #c89c5a);
+    color: #2a1e06;
+    box-shadow: 0 8px 20px -8px rgba(200,156,90,0.6);
+  }
+  .E .toggle { background: linear-gradient(135deg, #6a3de8, #a07cf0); }
+  .E .pack-label { color: var(--text-lo); }
+
+  /* The keycap tile: a tiny version of the app icon */
+  .E .pack {
+    background: var(--shell);                        /* icon outer shell */
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:
+      inset 0 -2px 6px rgba(0,0,0,0.6),
+      0 2px 6px rgba(0,0,0,0.4);
+    flex-direction: column;
+    gap: 0;
+  }
+  /* The inner cavity recess */
+  .E .pack::before {
+    content: "";
+    position: absolute;
+    inset: 16% 16% 20% 16%;
+    border-radius: 8px;
+    background: var(--cavity);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+  }
+  /* The keycap face floating above the cavity */
+  .E .pack .key-face {
+    position: absolute;
+    inset: 20% 20% 26% 20%;
+    border-radius: 6px;
+    background: linear-gradient(145deg, rgba(210,205,235,0.75) 0%, rgba(175,168,215,0.55) 100%);
+    backdrop-filter: blur(2px);
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.5),
+      inset 0 1px 1px rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .E .pack.active {
+    border-color: rgba(123,90,240,0.5);
+    box-shadow:
+      inset 0 -2px 6px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(123,90,240,0.4),
+      0 8px 28px -8px rgba(123,90,240,0.8),
+      0 0 40px -15px rgba(123,90,240,0.5);
+  }
+  /* Active: purple glow bleeds out from under the keycap */
+  .E .pack.active::after {
+    content: "";
+    position: absolute;
+    inset: 40% 10% -10% 10%;
+    background: radial-gradient(ellipse, rgba(123,90,240,0.7), transparent 70%);
+    filter: blur(6px);
+    border-radius: 50%;
+    z-index: 0;
+  }
+  .E .pack.active .key-face {
+    background: linear-gradient(145deg, rgba(220,215,250,0.9) 0%, rgba(180,170,240,0.75) 100%);
+    box-shadow:
+      0 2px 6px rgba(0,0,0,0.4),
+      inset 0 1px 2px rgba(255,255,255,0.6),
+      0 0 16px rgba(123,90,240,0.4);
+  }
+  .E .detail {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .E .detail .disc {
+    background: var(--shell);
+    border: 1px solid rgba(123,90,240,0.35);
+    box-shadow: 0 0 20px rgba(123,90,240,0.35);
+  }
+  .E .detail h3 { color: var(--text-hi); }
+  .E .detail p  { color: var(--text-lo); }
+  .E .detail .play {
+    background: linear-gradient(135deg, #7b5af0, #5a3dc8);
+    color: white;
+    box-shadow: 0 6px 18px -6px rgba(123,90,240,0.7);
+  }
+
+  /* ════════════════════════════════════════════
+     F — ICON SHELL WINDOW
+     The window frame IS the icon. The outer titlebar
+     area = icon's dark outer shell. Content area =
+     the cavity. Interactive elements = keycap tiles.
+  ════════════════════════════════════════════ */
+  .F .win {
+    background: var(--shell);
+    color: var(--text-hi);
+  }
+  /* The content area represents the icon's inner cavity/recess */
+  .F .content-shell {
+    position: absolute;
+    inset: 30px 10px 10px 10px;
+    border-radius: 12px;
+    background: var(--cavity);
+    box-shadow:
+      inset 0 4px 16px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(0,0,0,0.4);
+    /* The purple glow underneath — icon's signature */
+    overflow: hidden;
+  }
+  .F .content-shell::after {
+    content: "";
+    position: absolute;
+    inset: 55% 5% -5% 5%;
+    background: radial-gradient(ellipse, rgba(123,90,240,0.5), transparent 70%);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+  .F .content {
+    position: absolute;
+    inset: 30px 10px 10px 10px;
+    padding: 18px 20px;
+    z-index: 1;
+  }
+  .F .titlebar {
+    background: var(--shell);
+    color: rgba(200,196,224,0.5);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-radius: 14px 14px 0 0;
+  }
+  .F .wordmark { color: var(--keycap); }
+  .F .pill {
+    background: linear-gradient(135deg, rgba(200,196,224,0.15), rgba(200,196,224,0.08));
+    color: var(--keycap);
+    border: 1px solid rgba(200,196,224,0.2);
+    backdrop-filter: blur(4px);
+  }
+  .F .toggle { background: linear-gradient(135deg, #7b5af0, #9b7aff); }
+  .F .pack-label { color: rgba(200,196,224,0.45); }
+  .F .pack {
+    /* keycap tiles: frosted surface sitting above the cavity */
+    background: linear-gradient(145deg, rgba(210,205,238,0.12) 0%, rgba(170,165,210,0.06) 100%);
+    border: 1px solid rgba(200,196,224,0.12);
+    backdrop-filter: blur(6px);
+    box-shadow:
+      0 4px 12px rgba(0,0,0,0.4),
+      inset 0 1px 1px rgba(255,255,255,0.08);
+  }
+  .F .pack.active {
+    background: linear-gradient(145deg, rgba(210,205,238,0.28) 0%, rgba(170,165,210,0.18) 100%);
+    border-color: rgba(123,90,240,0.5);
+    box-shadow:
+      0 0 0 1px rgba(123,90,240,0.4),
+      0 8px 24px -8px rgba(123,90,240,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.15);
+  }
+  .F .detail {
+    background: linear-gradient(145deg, rgba(200,196,224,0.08), rgba(160,155,200,0.04));
+    border: 1px solid rgba(200,196,224,0.1);
+    backdrop-filter: blur(6px);
+  }
+  .F .detail .disc {
+    background: linear-gradient(135deg, var(--glow-edge), var(--glow));
+    box-shadow: 0 0 24px rgba(123,90,240,0.5);
+    color: #fff;
+  }
+  .F .detail h3 { color: var(--keycap); }
+  .F .detail p  { color: rgba(200,196,224,0.5); }
+  .F .detail .play {
+    background: linear-gradient(135deg, rgba(210,205,238,0.25), rgba(180,175,225,0.15));
+    color: var(--keycap);
+    border: 1px solid rgba(200,196,224,0.2);
+  }
+
+  /* ════════════════════════════════════════════
+     G — LIFTED KEYCAP HERO
+     The selected pack is displayed as a large
+     "keycap" card — exactly the icon's anatomy
+     — dark outer frame, cavity, frosted face,
+     purple underglow. The pack row is secondary.
+  ════════════════════════════════════════════ */
+  .G .win {
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 120%, rgba(123,90,240,0.2), transparent 60%),
+      linear-gradient(160deg, #120f22 0%, #07060e 100%);
+    color: var(--text-hi);
+  }
+  .G .titlebar { background: rgba(0,0,0,0.35); color: var(--text-lo); border-bottom-color: rgba(255,255,255,0.04); }
+  .G .wordmark { color: var(--text-hi); }
+  .G .pill {
+    background: linear-gradient(135deg, #f5e2ae, #c89c5a);
+    color: #2a1e06;
+    box-shadow: 0 6px 16px -6px rgba(200,156,90,0.55);
+  }
+  .G .toggle { background: linear-gradient(135deg, #7b5af0, #a07cf0); }
+  .G .pack-label { color: var(--text-lo); }
+  /* Small pack tiles — minimal, just glyphs */
+  .G .pack {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    color: var(--text-lo);
+    font-size: 16px;
+  }
+  .G .pack.active {
+    background: rgba(123,90,240,0.15);
+    border-color: rgba(123,90,240,0.4);
+    color: var(--text-hi);
+    box-shadow: 0 0 20px -5px rgba(123,90,240,0.5);
+  }
+
+  /* The hero keycap card — icon anatomy as a detail card */
+  .G .keycap-hero {
+    margin-top: 14px;
+    position: relative;
+    border-radius: 16px;
+    padding: 3px;
+    background: var(--shell);
+    box-shadow:
+      0 0 0 1px rgba(123,90,240,0.25),
+      0 16px 48px -16px rgba(123,90,240,0.6),
+      0 8px 32px rgba(0,0,0,0.6);
+  }
+  /* Cavity */
+  .G .keycap-hero-inner {
+    background: var(--cavity);
+    border-radius: 13px;
+    box-shadow: inset 0 3px 12px rgba(0,0,0,0.7);
+    padding: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Purple underglow inside the cavity */
+  .G .keycap-hero-inner::after {
+    content: "";
+    position: absolute;
+    inset: 50% 5% -5% 5%;
+    background: radial-gradient(ellipse, rgba(123,90,240,0.65), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+  }
+  /* Frosted keycap face */
+  .G .keycap-face {
+    background: linear-gradient(150deg, rgba(218,214,242,0.18) 0%, rgba(180,175,228,0.10) 100%);
+    border: 1px solid rgba(210,205,238,0.18);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    position: relative; z-index: 1;
+    box-shadow:
+      0 3px 10px rgba(0,0,0,0.4),
+      inset 0 1px 1px rgba(255,255,255,0.12);
+  }
+  .G .keycap-face .disc {
+    width: 40px; height: 40px; border-radius: 11px;
+    background: linear-gradient(135deg, #7b5af0, #5a3dc8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex: 0 0 auto;
+    box-shadow: 0 4px 14px rgba(123,90,240,0.5);
+  }
+  .G .keycap-face h3 { margin: 0 0 3px; font-size: 14px; color: var(--keycap); }
+  .G .keycap-face p  { margin: 0; font-size: 11px; color: rgba(200,196,224,0.5); }
+  .G .keycap-face .play {
+    margin-left: auto; width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, rgba(210,205,238,0.2), rgba(180,175,225,0.1));
+    border: 1px solid rgba(200,196,224,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--keycap); flex: 0 0 auto;
+  }
+
+  /* ════════════════════════════════════════════
+     H — FULL ICON SKIN (dark mode)
+     Sidebar = icon outer shell. Content = cavity.
+     Pack tiles and controls = frosted keycap faces.
+     Every interactive surface is a "keycap."
+  ════════════════════════════════════════════ */
+  .H .win {
+    background: var(--shell);
+    color: var(--text-hi);
+    display: flex;
+    flex-direction: column;
+  }
+  .H .titlebar {
+    background: rgba(0,0,0,0.5);
+    color: rgba(200,196,224,0.4);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    flex: 0 0 auto;
+  }
+  /* Two-column layout: sidebar + main */
+  .H .content {
+    position: absolute;
+    inset: 30px 0 0 0;
+    padding: 0;
+    display: flex;
+  }
+  .H .sidebar {
+    width: 64px;
+    background: rgba(0,0,0,0.35);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 14px 0; gap: 10px;
+  }
+  /* Sidebar nav items are mini keycaps */
+  .H .nav-key {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    background: linear-gradient(145deg, rgba(200,196,224,0.08), rgba(160,155,200,0.04));
+    border: 1px solid rgba(200,196,224,0.08);
+    box-shadow:
+      0 3px 8px rgba(0,0,0,0.35),
+      inset 0 1px 1px rgba(255,255,255,0.05);
+    color: var(--text-lo);
+  }
+  .H .nav-key.active {
+    background: linear-gradient(145deg, rgba(200,196,224,0.16), rgba(155,122,255,0.1));
+    border-color: rgba(123,90,240,0.45);
+    color: var(--text-hi);
+    box-shadow:
+      0 0 0 1px rgba(123,90,240,0.3),
+      0 6px 18px -6px rgba(123,90,240,0.55),
+      inset 0 1px 1px rgba(255,255,255,0.1);
+  }
+  /* Main content area = the cavity */
+  .H .main {
+    flex: 1;
+    background: var(--cavity);
+    box-shadow: inset 4px 0 20px rgba(0,0,0,0.4);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* The ambient glow at the bottom of the cavity */
+  .H .main::after {
+    content: "";
+    position: absolute;
+    inset: 60% 10% -10% 10%;
+    background: radial-gradient(ellipse, rgba(123,90,240,0.22), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+  .H .wordmark { color: var(--keycap); font-size: 16px; }
+  .H .pill {
+    background: linear-gradient(135deg, rgba(200,196,224,0.12), rgba(200,196,224,0.06));
+    color: var(--keycap);
+    border: 1px solid rgba(200,196,224,0.15);
+    font-size: 10.5px;
+  }
+  .H .toggle { background: linear-gradient(135deg, #6a3de8, #9b7aff); width: 36px; height: 20px; }
+  .H .toggle::after { width: 14px; height: 14px; left: 18px; }
+  .H .pack-label { color: rgba(200,196,224,0.35); font-size: 9.5px; }
+  /* Pack tiles = keycap keys */
+  .H .pack {
+    background: linear-gradient(145deg, rgba(200,196,224,0.09) 0%, rgba(160,155,200,0.05) 100%);
+    border: 1px solid rgba(200,196,224,0.09);
+    border-radius: 10px;
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.4),
+      inset 0 1px 1px rgba(255,255,255,0.06);
+    color: var(--text-lo);
+    font-size: 16px;
+  }
+  .H .pack.active {
+    background: linear-gradient(145deg, rgba(200,196,224,0.18) 0%, rgba(155,122,255,0.12) 100%);
+    border-color: rgba(123,90,240,0.5);
+    color: var(--text-hi);
+    box-shadow:
+      0 0 0 1px rgba(123,90,240,0.35),
+      0 8px 22px -8px rgba(123,90,240,0.65),
+      inset 0 1px 2px rgba(255,255,255,0.1);
+  }
+  .H .detail {
+    background: linear-gradient(145deg, rgba(200,196,224,0.08), rgba(155,122,255,0.05));
+    border: 1px solid rgba(200,196,224,0.08);
+    border-radius: 12px;
+    box-shadow:
+      0 4px 12px rgba(0,0,0,0.3),
+      inset 0 1px 1px rgba(255,255,255,0.05);
+  }
+  .H .detail .disc {
+    background: linear-gradient(135deg, #7b5af0, #5a3dc8);
+    box-shadow: 0 0 20px rgba(123,90,240,0.45);
+    color: white;
+  }
+  .H .detail h3 { color: var(--keycap); }
+  .H .detail p  { color: rgba(200,196,224,0.45); }
+  .H .detail .play {
+    background: linear-gradient(135deg, rgba(200,196,224,0.14), rgba(155,122,255,0.08));
+    border: 1px solid rgba(200,196,224,0.15);
+    color: var(--keycap);
+  }
+
+  footer.note {
+    margin-top: 52px;
+    padding: 22px 26px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--text-lo); font-size: 13.5px; line-height: 1.7;
+  }
+  footer.note strong { color: var(--text-hi); }
+
+  /* Icon glow color chip */
+  .swatch {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="app-icon"></div>
+    <div>
+      <h1>Tappy — UI Mockups v2</h1>
+      <p>Same layout you liked, now with the icon's visual DNA baked directly into the components. Every concept pulls from the icon's three-layer anatomy: <strong>dark outer shell → recessed cavity → frosted keycap face → purple underglow</strong>. The question is how literally you apply it.</p>
+    </div>
+  </header>
+
+  <h2 class="section">Four icon-integrated directions</h2>
+  <div class="grid">
+
+    <!-- ══ E ══ -->
+    <div class="mockup E">
+      <div class="win">
+        <div class="titlebar">
+          <span class="dot d-r"></span><span class="dot d-y"></span><span class="dot d-g"></span>
+          <span class="t-title">Tappy</span>
+        </div>
+        <div class="content">
+          <div class="topbar">
+            <span class="wordmark">Tappy</span>
+            <span class="spacer"></span>
+            <span class="pill">✦ Diagnose</span>
+            <span class="toggle"></span>
+          </div>
+          <div class="pack-label">Packs</div>
+          <div class="packs">
+            <div class="pack"><div class="key-face">🌾</div></div>
+            <div class="pack active"><div class="key-face">⌨</div></div>
+            <div class="pack"><div class="key-face">⭐</div></div>
+            <div class="pack"><div class="key-face">🫧</div></div>
+            <div class="pack"><div class="key-face">🌳</div></div>
+          </div>
+          <div class="detail">
+            <div class="disc">⌨</div>
+            <div>
+              <h3>Plastic Tapping</h3>
+              <p>Crisp, dry, laptop-style clicks</p>
+            </div>
+            <div class="play">▶</div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">E · Keycap Tiles — the icon as a component</div>
+        <p class="desc">Each pack tile is a miniature of the icon itself: dark outer shell, inner cavity recess, frosted translucent face, and a purple underglow that activates on selection. The rest of the UI stays clean and dark so the tiles read as physical objects — you're literally picking up a keycap.</p>
+      </div>
+    </div>
+
+    <!-- ══ F ══ -->
+    <div class="mockup F">
+      <div class="win">
+        <div class="titlebar">
+          <span class="dot d-r"></span><span class="dot d-y"></span><span class="dot d-g"></span>
+          <span class="t-title">Tappy</span>
+        </div>
+        <div class="content-shell"></div>
+        <div class="content">
+          <div class="topbar">
+            <span class="wordmark">Tappy</span>
+            <span class="spacer"></span>
+            <span class="pill">✦ Diagnose</span>
+            <span class="toggle"></span>
+          </div>
+          <div class="pack-label">Packs</div>
+          <div class="packs">
+            <div class="pack">🌾</div>
+            <div class="pack active">⌨</div>
+            <div class="pack">⭐</div>
+            <div class="pack">🫧</div>
+            <div class="pack">🌳</div>
+          </div>
+          <div class="detail">
+            <div class="disc">⌨</div>
+            <div>
+              <h3>Plastic Tapping</h3>
+              <p>Crisp, dry, laptop-style clicks</p>
+            </div>
+            <div class="play">▶</div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">F · Icon Shell Window — you're inside the icon</div>
+        <p class="desc">The window frame is the icon's outer shell. The entire content area is the cavity — inset, recessed, with the same ambient purple glow pooling at the bottom. Interactive elements are frosted keycap-glass surfaces floating above it. You're not just launching the app, you're stepping inside the icon.</p>
+      </div>
+    </div>
+
+    <!-- ══ G ══ -->
+    <div class="mockup G">
+      <div class="win">
+        <div class="titlebar">
+          <span class="dot d-r"></span><span class="dot d-y"></span><span class="dot d-g"></span>
+          <span class="t-title">Tappy</span>
+        </div>
+        <div class="content">
+          <div class="topbar">
+            <span class="wordmark">Tappy</span>
+            <span class="spacer"></span>
+            <span class="pill">✦ Diagnose</span>
+            <span class="toggle"></span>
+          </div>
+          <div class="pack-label">Packs</div>
+          <div class="packs">
+            <div class="pack">🌾</div>
+            <div class="pack active">⌨</div>
+            <div class="pack">⭐</div>
+            <div class="pack">🫧</div>
+            <div class="pack">🌳</div>
+          </div>
+          <!-- The big keycap hero detail card -->
+          <div class="keycap-hero">
+            <div class="keycap-hero-inner">
+              <div class="keycap-face">
+                <div class="disc">⌨</div>
+                <div>
+                  <h3>Plastic Tapping</h3>
+                  <p>Crisp, dry, laptop-style clicks</p>
+                </div>
+                <div class="play">▶</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">G · Lifted Keycap Detail — icon anatomy as the hero card</div>
+        <p class="desc">The active pack detail card is a full recreation of the icon's anatomy at card scale: outer shell border, cavity shadow, frosted face surface, purple underglow bleeding up from underneath. The pack row stays minimal so the hero card stands out as the focal point — it's the icon, alive in the layout.</p>
+      </div>
+    </div>
+
+    <!-- ══ H ══ -->
+    <div class="mockup H">
+      <div class="win">
+        <div class="titlebar">
+          <span class="dot d-r"></span><span class="dot d-y"></span><span class="dot d-g"></span>
+          <span class="t-title">Tappy</span>
+        </div>
+        <div class="content">
+          <!-- Sidebar = icon outer shell -->
+          <div class="sidebar">
+            <div class="nav-key active">⌨</div>
+            <div class="nav-key">🌾</div>
+            <div class="nav-key">⭐</div>
+            <div class="nav-key">🫧</div>
+            <div class="nav-key">🌳</div>
+          </div>
+          <!-- Main = icon cavity -->
+          <div class="main">
+            <div class="topbar">
+              <span class="wordmark">Tappy</span>
+              <span class="spacer"></span>
+              <span class="pill">✦ Diagnose</span>
+              <span class="toggle"></span>
+            </div>
+            <div class="pack-label">Packs</div>
+            <div class="packs">
+              <div class="pack">🌾</div>
+              <div class="pack active">⌨</div>
+              <div class="pack">⭐</div>
+              <div class="pack">🫧</div>
+              <div class="pack">🌳</div>
+            </div>
+            <div class="detail">
+              <div class="disc">⌨</div>
+              <div>
+                <h3>Plastic Tapping</h3>
+                <p>Crisp, dry, laptop-style clicks</p>
+              </div>
+              <div class="play">▶</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">H · Full Icon Skin — every surface speaks keycap</div>
+        <p class="desc">The icon's three-layer language applied system-wide: sidebar = outer shell (darkest, most recessed), main area = cavity (mid-dark, inset shadow, ambient purple glow at the floor), every interactive tile = a frosted keycap surface. Two-column layout adds breathing room and makes each nav item a pressable key — very on-theme.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="note">
+    <strong>Reading the concepts:</strong> <strong>E</strong> is the lightest lift — just swap the pack tiles for icon-anatomy cards. <strong>F</strong> wraps the whole window in the icon shell (most immersive, lowest layout change). <strong>G</strong> promotes the detail card into a full keycap object while keeping the rest clean. <strong>H</strong> goes all-in: sidebar as shell, content as cavity, everything interactive is a keycap. All four share the same extracted icon tokens — shell <span class="swatch" style="background:#0d0b1a; border:1px solid rgba(255,255,255,0.2)"></span><code>#0d0b1a</code>, cavity <span class="swatch" style="background:#181528; border:1px solid rgba(255,255,255,0.15)"></span><code>#181528</code>, keycap face <span class="swatch" style="background:#c8c4e0; border:1px solid rgba(0,0,0,0.2)"></span><code>#c8c4e0</code>, glow <span class="swatch" style="background:#7b5af0"></span><code>#7b5af0</code>.
+  </footer>
+
+</div>
+</body>
+</html>
