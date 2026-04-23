@@ -1,7 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/fart_sources/freesound_community-fart-83471.wav
-Exported clips: 1
-Sample rate: 48000 Hz
-Analysis window: 5.00 ms
-
-Top-scoring clips:
-- t=0.290s score=4269.41 peak=10627 duration=125.0ms

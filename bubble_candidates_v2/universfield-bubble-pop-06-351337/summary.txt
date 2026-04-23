@@ -1,3 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/bubble_sources/universfield-bubble-pop-06-351337.wav
-Exported clips: 1
-Manual bubble cut around the only active pop segment (roughly 0.115s).

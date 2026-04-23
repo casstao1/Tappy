@@ -1,9 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/bubble_sources/dragon-studio-bubble-pop-406640.wav
-Exported clips: 3
-Sample rate: 48000 Hz
-Analysis window: 4.00 ms
-
-Top-scoring clips:
-- t=0.024s score=19449.99 peak=32768 duration=130.0ms
-- t=0.088s score=18542.29 peak=32767 duration=130.0ms
-- t=0.152s score=17395.78 peak=32768 duration=79.0ms

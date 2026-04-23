@@ -1,7 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/stars_sources/freesound_crunchpixstudio-fall-394469.wav
-Exported clips: 1
-Sample rate: 44100 Hz
-Analysis window: 4.00 ms
-
-Top-scoring clips:
-- t=0.064s score=4142.71 peak=6448 duration=81.8ms

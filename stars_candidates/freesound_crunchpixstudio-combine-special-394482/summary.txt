@@ -1,8 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/stars_sources/freesound_crunchpixstudio-combine-special-394482.wav
-Exported clips: 2
-Sample rate: 44100 Hz
-Analysis window: 4.00 ms
-
-Top-scoring clips:
-- t=0.096s score=4225.01 peak=11821 duration=220.0ms
-- t=0.188s score=2724.42 peak=7287 duration=220.0ms

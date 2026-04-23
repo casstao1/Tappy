@@ -1,8 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/universfield-punch-03-352040.wav
-Exported clips: 2
-Sample rate: 44100 Hz
-Analysis window: 4.00 ms
-
-Top-scoring clips:
-- t=0.335s score=12526.07 peak=32302 duration=200.0ms
-- t=0.399s score=12264.38 peak=31454 duration=200.0ms

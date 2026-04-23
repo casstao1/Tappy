@@ -1,8 +1,0 @@
-Source: /Users/castao/Downloads/u_scysdwddsp-stone-effect-254998_converted.wav
-Exported clips: 2
-Sample rate: 44100 Hz
-Analysis window: 4.50 ms
-
-Top-scoring clips:
-- t=0.184s score=7834.60 peak=13407 duration=117.8ms
-- t=0.139s score=4256.73 peak=7542 duration=162.7ms

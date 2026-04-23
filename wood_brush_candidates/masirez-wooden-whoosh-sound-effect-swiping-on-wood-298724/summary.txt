@@ -1,3 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/wood_brush_sources/masirez-wooden-whoosh-sound-effect-swiping-on-wood-298724.wav
-Exported clips: 9
-Manual wood-brush swipe cuts pulled from each distinct non-silent pass in the source.

@@ -1,6 +1,17 @@
 # Tappy
 
-`Tappy` is a sandboxed macOS Swift app that plays low-latency keyboard click sounds from user-provided audio files.
+`Tappy` is a sandboxed macOS Swift app that plays low-latency keyboard click sounds from bundled and user-provided audio files.
+
+## Repo Scope
+
+This public repo is intentionally slimmed down to the shippable app:
+
+- Swift source in [Tappy](/Users/castao/Desktop/KeyboardSoundApp/Tappy)
+- Xcode project in [Tappy.xcodeproj](/Users/castao/Desktop/KeyboardSoundApp/Tappy.xcodeproj)
+- bundled launch-ready packs in [BundledSounds](/Users/castao/Desktop/KeyboardSoundApp/Tappy/Resources/BundledSounds)
+- GitHub Pages / App Store support assets in [docs](/Users/castao/Desktop/KeyboardSoundApp/docs)
+
+The local sound-design pipeline used to cut candidates, build review boards, and iterate on source clips is not tracked in the public repo.
 
 ## Open In Xcode
 

@@ -1,8 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/stars_sources/freesound_crunchpixstudio-material-add-item-394485.wav
-Exported clips: 2
-Sample rate: 44100 Hz
-Analysis window: 4.00 ms
-
-Top-scoring clips:
-- t=0.064s score=3084.02 peak=6823 duration=220.0ms
-- t=0.128s score=2834.45 peak=6899 duration=220.0ms

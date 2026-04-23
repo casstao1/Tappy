@@ -1,7 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/farming_sources/universfield-water-191999.wav
-Exported clips: 1
-Sample rate: 44100 Hz
-Analysis window: full trimmed
-
-Top-scoring clips:
-- full trimmed duration=3106.7ms

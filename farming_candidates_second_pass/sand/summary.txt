@@ -1,8 +1,0 @@
-Source: /Users/castao/Downloads/u_scysdwddsp-sand-effect-254993_converted.wav
-Exported clips: 2
-Sample rate: 44100 Hz
-Analysis window: 4.50 ms
-
-Top-scoring clips:
-- t=0.489s score=932.14 peak=2534 duration=220.0ms
-- t=0.673s score=473.25 peak=1893 duration=59.4ms

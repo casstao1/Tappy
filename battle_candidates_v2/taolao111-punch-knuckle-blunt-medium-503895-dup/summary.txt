@@ -1,8 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/battle_sources/taolao111-punch-knuckle-blunt-medium-503895-dup.wav
-Exported clips: 2
-Sample rate: 44100 Hz
-Analysis window: 3.50 ms
-
-Top-scoring clips:
-- t=0.286s score=16326.83 peak=30975 duration=105.3ms
-- t=0.171s score=12327.64 peak=22087 duration=77.4ms

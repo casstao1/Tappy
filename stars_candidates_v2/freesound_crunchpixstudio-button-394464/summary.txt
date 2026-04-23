@@ -1,7 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/stars_sources/freesound_crunchpixstudio-button-394464.wav
-Exported clips: 1
-Sample rate: 44100 Hz
-Analysis window: 3.00 ms
-
-Top-scoring clips:
-- t=0.045s score=7199.04 peak=11022 duration=55.9ms

@@ -1,7 +1,0 @@
-Source: /Users/castao/Desktop/KeyboardSoundApp/fart_sources/apebble-fart-4-228244.wav
-Exported clips: 1
-Sample rate: 48000 Hz
-Analysis window: 5.00 ms
-
-Top-scoring clips:
-- t=0.790s score=10677.71 peak=21342 duration=180.0ms
