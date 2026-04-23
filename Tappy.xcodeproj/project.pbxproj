@@ -11,14 +11,14 @@
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* ContentView.swift */; };
 		A10000000000000000000003 /* KeyboardSoundController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* KeyboardSoundController.swift */; };
 		A10000000000000000000004 /* SoundCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* SoundCategory.swift */; };
-		A10000000000000000000035 /* TechPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000036 /* TechPack.swift */; };
 		A10000000000000000000005 /* InputMonitoringPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* InputMonitoringPermissionManager.swift */; };
 		A10000000000000000000006 /* KeyboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* KeyboardMonitor.swift */; };
 		A10000000000000000000007 /* LowLatencyAudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* LowLatencyAudioEngine.swift */; };
 		A10000000000000000000008 /* SoundLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* SoundLibrary.swift */; };
-		A10000000000000000000037 /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000038 /* PremiumStore.swift */; };
 		A10000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* Assets.xcassets */; };
 		A1000000000000000000000B /* BundledSounds in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000034 /* BundledSounds */; };
+		A10000000000000000000035 /* TechPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000036 /* TechPack.swift */; };
+		A10000000000000000000037 /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000038 /* PremiumStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,16 +27,16 @@
 		A10000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A10000000000000000000013 /* KeyboardSoundController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSoundController.swift; sourceTree = "<group>"; };
 		A10000000000000000000014 /* SoundCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundCategory.swift; sourceTree = "<group>"; };
-		A10000000000000000000036 /* TechPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechPack.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* InputMonitoringPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputMonitoringPermissionManager.swift; sourceTree = "<group>"; };
 		A10000000000000000000016 /* KeyboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardMonitor.swift; sourceTree = "<group>"; };
 		A10000000000000000000017 /* LowLatencyAudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowLatencyAudioEngine.swift; sourceTree = "<group>"; };
 		A10000000000000000000018 /* SoundLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundLibrary.swift; sourceTree = "<group>"; };
-		A10000000000000000000038 /* PremiumStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStore.swift; sourceTree = "<group>"; };
 		A10000000000000000000019 /* AppInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = AppInfo.plist; sourceTree = "<group>"; };
 		A10000000000000000000020 /* Tappy.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tappy.entitlements; sourceTree = "<group>"; };
 		A10000000000000000000021 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000034 /* BundledSounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledSounds; sourceTree = "<group>"; };
+		A10000000000000000000036 /* TechPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechPack.swift; sourceTree = "<group>"; };
+		A10000000000000000000038 /* PremiumStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +213,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Tappy/Support/Tappy.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -239,6 +240,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Tappy/Support/Tappy.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;

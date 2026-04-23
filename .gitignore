@@ -1,5 +1,6 @@
 .DS_Store
 .derivedData/
+.archive-derived/
 DerivedData/
 build/
 .preview-build/
@@ -9,6 +10,7 @@ build/
 xcuserdata/
 *.app
 *.dSYM
+*.xcarchive
 
 # Local-only sound design pipeline and generated review assets
 AppStoreScreenshots_raw/
