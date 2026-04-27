@@ -1,18 +1,17 @@
 #!/bin/zsh
 #
 # Tappy — Rebuild & Launch
-# Double-click this file to rebuild Tappy from source, reinstall the
-# preview app at ~/Applications/Tappy Preview.app, and open a fresh
-# instance so any Input Monitoring / entitlements changes take effect.
+# Double-click this file to rebuild Tappy from source, replace the
+# workspace app bundle, and open a fresh instance so any Input
+# Monitoring / entitlements changes take effect.
 #
 
 set -euo pipefail
 
 APP_ROOT="/Users/castao/Desktop/KeyboardSoundApp"
 PROJECT_PATH="$APP_ROOT/Tappy.xcodeproj"
-DERIVED_DATA_PATH="$APP_ROOT/.preview-build"
-INSTALL_DIR="$HOME/Applications"
-INSTALL_PATH="$INSTALL_DIR/Tappy Preview.app"
+DERIVED_DATA_PATH="$APP_ROOT/.rebuild-build"
+INSTALL_PATH="$APP_ROOT/Tappy.app"
 BUILT_APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/Tappy.app"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -35,8 +34,6 @@ if pgrep -x "Tappy" >/dev/null 2>&1; then
     sleep 1
 fi
 
-mkdir -p "$INSTALL_DIR"
-
 echo "Building Tappy Release..."
 xcodebuild build \
   -project "$PROJECT_PATH" \
@@ -53,12 +50,10 @@ if [[ ! -d "$BUILT_APP_PATH" ]]; then
 fi
 
 echo ""
-echo "Installing preview app to:"
+echo "Installing app to:"
 echo "  $INSTALL_PATH"
+rm -rf "$INSTALL_PATH"
 ditto "$BUILT_APP_PATH" "$INSTALL_PATH"
-
-echo ""
-echo "Launching fresh Tappy Preview..."
 open -na "$INSTALL_PATH"
 
 echo ""

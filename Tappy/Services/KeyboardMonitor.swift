@@ -2,9 +2,15 @@ import AppKit
 import CoreGraphics
 import Foundation
 
+enum KeyboardTriggerOrigin {
+    case localApp
+    case globalBackground
+}
+
 struct KeyboardTrigger {
     let category: SoundCategory
     let keyCode: UInt16
+    let origin: KeyboardTriggerOrigin
 }
 
 final class KeyboardMonitor {
@@ -43,12 +49,12 @@ final class KeyboardMonitor {
 
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             self?.processKeyDown(event)
-            return event
+            return nil
         }
 
         localFlagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             self?.processFlagsChanged(event)
-            return event
+            return nil
         }
 
         localKeyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { [weak self] event in
@@ -114,7 +120,7 @@ final class KeyboardMonitor {
 
     private func processKeyDown(_ event: NSEvent) {
         guard !event.isARepeat else { return }
-        let trigger = triggerForKeyCode(event.keyCode)
+        let trigger = triggerForKeyCode(event.keyCode, origin: .localApp)
         emit(trigger)
     }
 
@@ -124,18 +130,10 @@ final class KeyboardMonitor {
 
     private func processFlagsChanged(_ event: NSEvent) {
         guard isModifierPress(event) else { return }
-        emit(.modifier, keyCode: event.keyCode)
+        emit(.modifier, keyCode: event.keyCode, origin: .localApp)
     }
 
     private func startEventTap() {
-        // Preflight: refuse to claim "ready" if macOS hasn't actually granted
-        // Input Monitoring to this running process. Without this guard we'd
-        // flip into .ready on a zombie tap and mislead the diagnostics UI.
-        guard CGPreflightListenEventAccess() else {
-            updateCaptureState(.unavailable)
-            return
-        }
-
         let mask =
             (CGEventMask(1) << CGEventType.keyDown.rawValue) |
             (CGEventMask(1) << CGEventType.keyUp.rawValue) |
@@ -147,7 +145,46 @@ final class KeyboardMonitor {
             }
 
             let monitor = Unmanaged<KeyboardMonitor>.fromOpaque(userInfo).takeUnretainedValue()
-            return monitor.handleEventTap(type: type, event: event)
+
+            // Re-enable the tap immediately on the tap thread — this must be
+            // synchronous; deferring it would drop events during the gap.
+            if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                if let tap = monitor.eventTap {
+                    CGEvent.tapEnable(tap: tap, enable: true)
+                }
+                return Unmanaged.passUnretained(event)
+            }
+
+            // Extract all needed values from the CGEvent right here on the tap
+            // thread (safe — CGEvent field reads are immutable/thread-safe), then
+            // dispatch the actual sound logic to the main thread.
+            //
+            // This eliminates the data race between the tap thread and the local
+            // NSEvent monitors (which run on main). Before this fix, both threads
+            // could simultaneously read/write lastTriggerKeyCode and lastTriggerTime,
+            // corrupting the duplicate-suppression window and silencing subsequent
+            // keys after a Command combo.
+            switch type {
+            case .keyDown:
+                let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+                let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+                guard !isRepeat else { break }
+                DispatchQueue.main.async {
+                    monitor.handleGlobalKeyDown(keyCode: keyCode)
+                }
+
+            case .flagsChanged:
+                let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+                let rawFlags = event.flags.rawValue
+                DispatchQueue.main.async {
+                    monitor.handleGlobalFlagsChanged(keyCode: keyCode, rawFlags: rawFlags)
+                }
+
+            default:
+                break
+            }
+
+            return Unmanaged.passUnretained(event)
         }
 
         guard let tap = CGEvent.tapCreate(
@@ -218,59 +255,37 @@ final class KeyboardMonitor {
         eventTap = nil
     }
 
-    private func handleEventTap(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-            if let tap = eventTap {
-                CGEvent.tapEnable(tap: tap, enable: true)
-            }
-            return Unmanaged.passUnretained(event)
-        }
+    // Called on the main thread — safe to read/write all shared state.
+    fileprivate func handleGlobalKeyDown(keyCode: UInt16) {
+        guard !isAppActive else { return }
+        let trigger = triggerForKeyCode(keyCode, origin: .globalBackground)
+        emit(trigger)
+    }
 
-        if isAppActive {
-            return Unmanaged.passUnretained(event)
-        }
-
-        switch type {
-        case .keyDown:
-            let keyCodeValue = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-            let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
-            guard !isRepeat else {
-                return Unmanaged.passUnretained(event)
-            }
-            let trigger = triggerForKeyCode(keyCodeValue)
-            emit(trigger)
-        case .keyUp:
-            break
-        case .flagsChanged:
-            let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-            let flags = NSEvent.ModifierFlags(rawValue: UInt(event.flags.rawValue))
-            guard isModifierPress(keyCode: keyCode, modifierFlags: flags) else {
-                return Unmanaged.passUnretained(event)
-            }
-            emit(.modifier, keyCode: keyCode)
-        default:
-            break
-        }
-
-        return Unmanaged.passUnretained(event)
+    // Called on the main thread — safe to read/write all shared state.
+    fileprivate func handleGlobalFlagsChanged(keyCode: UInt16, rawFlags: CGEventFlags.RawValue) {
+        guard !isAppActive else { return }
+        let flags = NSEvent.ModifierFlags(rawValue: UInt(rawFlags))
+        guard isModifierPress(keyCode: keyCode, modifierFlags: flags) else { return }
+        emit(.modifier, keyCode: keyCode, origin: .globalBackground)
     }
 
     private func processKeyCode(_ keyCode: CGKeyCode, isModifier: Bool) {
         if isModifier {
             switch keyCode {
             case 54, 55, 56, 57, 58, 59, 60, 61, 62, 63:
-                emit(.modifier, keyCode: UInt16(keyCode))
+                emit(.modifier, keyCode: UInt16(keyCode), origin: .localApp)
             default:
                 break
             }
             return
         }
 
-        emit(triggerForKeyCode(UInt16(keyCode)))
+        emit(triggerForKeyCode(UInt16(keyCode), origin: .localApp))
     }
 
-    private func emit(_ category: SoundCategory, keyCode: UInt16) {
-        emit(KeyboardTrigger(category: category, keyCode: keyCode))
+    private func emit(_ category: SoundCategory, keyCode: UInt16, origin: KeyboardTriggerOrigin) {
+        emit(KeyboardTrigger(category: category, keyCode: keyCode, origin: origin))
     }
 
     private func emit(_ trigger: KeyboardTrigger, bypassSuppression: Bool = false) {
@@ -320,16 +335,16 @@ final class KeyboardMonitor {
         }
     }
 
-    private func triggerForKeyCode(_ keyCode: UInt16) -> KeyboardTrigger {
+    private func triggerForKeyCode(_ keyCode: UInt16, origin: KeyboardTriggerOrigin) -> KeyboardTrigger {
         switch keyCode {
         case 49:
-            return KeyboardTrigger(category: .space, keyCode: keyCode)
+            return KeyboardTrigger(category: .space, keyCode: keyCode, origin: origin)
         case 36, 76:
-            return KeyboardTrigger(category: .returnKey, keyCode: keyCode)
+            return KeyboardTrigger(category: .returnKey, keyCode: keyCode, origin: origin)
         case 51, 117:
-            return KeyboardTrigger(category: .delete, keyCode: keyCode)
+            return KeyboardTrigger(category: .delete, keyCode: keyCode, origin: origin)
         default:
-            return KeyboardTrigger(category: .standard, keyCode: keyCode)
+            return KeyboardTrigger(category: .standard, keyCode: keyCode, origin: origin)
         }
     }
 

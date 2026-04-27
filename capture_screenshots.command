@@ -9,7 +9,7 @@ capture_state() {
     local FILENAME="$1"
     
     # Bring Tappy to front so it looks active
-    osascript -e 'tell application "Tappy Preview" to activate' 2>/dev/null || \
+    osascript -e 'tell application "Tappy" to activate' 2>/dev/null || \
     osascript -e 'tell application "Tappy" to activate' 2>/dev/null
     sleep 0.8
 

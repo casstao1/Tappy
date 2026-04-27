@@ -1,16 +1,34 @@
 import AppKit
 import Combine
 import Foundation
+import SwiftUI
+import UniformTypeIdentifiers
+
+// MARK: - Setup Phase
+
+/// Describes where the user is in the Input Monitoring setup flow.
+/// Evaluated synchronously at launch so the correct screen is shown immediately
+/// with no flash or delay.
+enum SetupPhase: Equatable {
+    /// No TCC entry exists yet. User must open System Settings and grant access.
+    case needsPermission
+    /// TCC permission is now detected but this process's event tap still cannot
+    /// attach — macOS requires a relaunch before a newly granted permission
+    /// takes effect for running processes. One restart fixes it.
+    case needsRestart
+    /// Event tap is active and TCC permission is confirmed. App is fully functional.
+    case complete
+}
 
 @MainActor
 final class KeyboardSoundController: ObservableObject {
     private enum DefaultsKey {
-        static let inputMonitoringPromptShown = "Tappy.inputMonitoringPromptShown"
-        static let setupCompleted = "Tappy.setupCompleted"
-        static let manualPermissionOverride = "Tappy.inputMonitoringManualOverride"
         static let selectedPackID = "Tappy.selectedPackID"
-        static let premiumUnlocked = "Tappy.premiumUnlocked"
+        static let clickVolume = "Tappy.clickVolume"
+        static let trialedPackIDs = "Tappy.trialedPackIDs"
     }
+
+    private static let livePreviewDurationSeconds = 90
 
     @Published var isEnabled = true {
         didSet {
@@ -22,9 +40,21 @@ final class KeyboardSoundController: ObservableObject {
     @Published private(set) var currentPack = TechPack.plasticTapping
     @Published var highlightedPackID = TechPack.plasticTapping.id
     @Published private(set) var backgroundCaptureState: KeyboardMonitor.CaptureState = .stopped
-    @Published private(set) var setupCompleted = false
-    @Published private(set) var manualPermissionOverride = false
     @Published private(set) var premiumUnlocked = false
+    @Published private(set) var trialedPackIDs: Set<String> = []
+    @Published private(set) var setupPhase: SetupPhase
+    @Published var clickVolume: Double {
+        didSet {
+            let clampedVolume = min(max(clickVolume, 0), 1)
+            if clampedVolume != clickVolume {
+                clickVolume = clampedVolume
+                return
+            }
+
+            userDefaults.set(clampedVolume, forKey: DefaultsKey.clickVolume)
+            audioEngine.setVolume(clampedVolume)
+        }
+    }
 
     @Published private(set) var statusMessage = "Preparing audio engine..."
     @Published private(set) var errorMessage: String?
@@ -42,17 +72,30 @@ final class KeyboardSoundController: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        setupCompleted = userDefaults.bool(forKey: DefaultsKey.setupCompleted)
-        manualPermissionOverride = userDefaults.bool(forKey: DefaultsKey.manualPermissionOverride)
-        premiumUnlocked = userDefaults.bool(forKey: DefaultsKey.premiumUnlocked)
+        premiumUnlocked = false
+        trialedPackIDs = Set(userDefaults.stringArray(forKey: DefaultsKey.trialedPackIDs) ?? [])
+        if userDefaults.object(forKey: DefaultsKey.clickVolume) == nil {
+            clickVolume = 1.0
+        } else {
+            clickVolume = min(max(userDefaults.double(forKey: DefaultsKey.clickVolume), 0), 1)
+        }
 
-        // The manual override is only meant to paper over a macOS reporting
-        // quirk within a single session. If we relaunch and the OS still
-        // reports Input Monitoring as denied, drop the stale override so the
-        // setup gate reappears instead of pretending everything is fine.
-        if manualPermissionOverride, !permissionManager.isTrusted {
-            manualPermissionOverride = false
-            userDefaults.set(false, forKey: DefaultsKey.manualPermissionOverride)
+        // Evaluate setup phase synchronously so the correct screen is shown
+        // on the very first SwiftUI render — no flash, no async race.
+        //
+        // CGPreflightListenEventAccess() alone is unreliable: it caches stale
+        // TCC results across launches. We also probe whether an event tap can
+        // actually be created in this process, which is the definitive test.
+        let trusted = CGPreflightListenEventAccess()
+        if !trusted {
+            setupPhase = .needsPermission
+        } else if Self.canCreateEventTap() {
+            setupPhase = .complete
+        } else {
+            // TCC says yes but the tap creation fails — this happens when
+            // permission was just granted and the running process hasn't
+            // received it yet. A relaunch resolves it (macOS requirement).
+            setupPhase = .needsRestart
         }
 
         let savedPackID = userDefaults.string(forKey: DefaultsKey.selectedPackID)
@@ -74,9 +117,20 @@ final class KeyboardSoundController: ObservableObject {
             guard let self else { return }
 
             self.premiumUnlocked = unlocked
-            self.userDefaults.set(unlocked, forKey: DefaultsKey.premiumUnlocked)
 
-            if !unlocked, self.currentPack.isPremium {
+            if unlocked {
+                // Premium was just confirmed — restore the user's saved premium pack if
+                // they had one. This corrects the startup race where premiumUnlocked is
+                // always false during init(), causing startupPack() to fall back to
+                // plasticTapping even for paying users.
+                let savedPackID = self.userDefaults.string(forKey: DefaultsKey.selectedPackID)
+                if let pack = Self.startupPack(from: savedPackID, premiumUnlocked: true),
+                   pack.isPremium {
+                    self.currentPack = pack
+                    self.highlightedPackID = pack.id
+                    self.restoreBuiltInPack(packID: pack.id)
+                }
+            } else if self.currentPack.isPremium {
                 self.currentPack = .plasticTapping
                 self.highlightedPackID = TechPack.plasticTapping.id
                 self.persistSelectedPack(.plasticTapping)
@@ -90,50 +144,163 @@ final class KeyboardSoundController: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
 
-                if trusted {
-                    // Real permission confirmed by macOS — drop any stale
-                    // manual override the user set before permission existed.
-                    if self.manualPermissionOverride {
-                        self.manualPermissionOverride = false
-                        self.userDefaults.set(false, forKey: DefaultsKey.manualPermissionOverride)
-                    }
-
-                    // If the event tap hasn't actually attached yet, (re)start
-                    // it now that permission is live. Without this the app
-                    // keeps running with a zombie tap even after the user
-                    // flips the switch in Settings.
-                    if self.isEnabled, self.backgroundCaptureState != .ready {
-                        self.keyboardMonitor.start { [weak self] trigger in
-                            DispatchQueue.main.async {
-                                self?.handle(trigger: trigger)
-                            }
-                        }
+                if trusted && self.setupPhase == .needsPermission {
+                    // Permission was just granted while the app was open.
+                    // Probe whether this process can use it without relaunching.
+                    if Self.canCreateEventTap() {
+                        self.setupPhase = .complete
+                    } else {
+                        // Most common path: tap doesn't work until relaunch.
+                        self.setupPhase = .needsRestart
                     }
                 }
 
+                self.attemptListenerAttachIfNeeded()
                 self.statusMessage = self.monitoringSummary()
             }
         }
+
         keyboardMonitor.onCaptureStateChange = { [weak self] state in
             Task { @MainActor in
-                self?.backgroundCaptureState = state
-                self?.statusMessage = self?.monitoringSummary() ?? ""
+                guard let self else { return }
+                self.backgroundCaptureState = state
+                self.statusMessage = self.monitoringSummary()
+
+                // If the tap attaches AND TCC confirms trust, we're fully live.
+                if state == .ready && self.permissionManager.isTrusted {
+                    self.setupPhase = .complete
+                }
             }
         }
 
         _ = try? soundLibrary.restoreBundledPack(packID: currentPack.id)
+        audioEngine.setVolume(clickVolume)
         reloadSounds()
         updateMonitoringState()
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(700))
-            self.autoRequestInputMonitoringIfNeeded()
-        }
+        setupMenuBarItem()
     }
 
     deinit {
         keyboardMonitor.stop()
+        if let item = menuStatusItem {
+            NSStatusBar.system.removeStatusItem(item)
+        }
     }
+
+    // MARK: - Menu bar status item (NSStatusItem-based)
+
+    private var menuStatusItem: NSStatusItem?
+    private var menuPopover: NSPopover?
+
+    private func setupMenuBarItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        menuStatusItem = item
+
+        if let button = item.button {
+            updateMenuBarIcon()
+            button.target = self
+            button.action = #selector(handleStatusItemClick)
+        }
+
+        let hosting = NSHostingController(
+            rootView: MenuBarView().environmentObject(self)
+        )
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.contentViewController = hosting
+        menuPopover = popover
+
+        // Keep icon in sync with state changes.
+        Publishers.CombineLatest($setupPhase, $isEnabled)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _, _ in self?.updateMenuBarIcon() }
+            .store(in: &cancellables)
+
+        // Close the popover immediately when the app loses focus so it never
+        // shows the inactive/glossy window appearance while dangling open.
+        NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.menuPopover?.close() }
+            .store(in: &cancellables)
+    }
+
+    @objc private func handleStatusItemClick(_ sender: AnyObject) {
+        guard let button = menuStatusItem?.button else { return }
+        guard let popover = menuPopover else { return }
+
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
+    }
+
+    private func updateMenuBarIcon() {
+        guard let button = menuStatusItem?.button else { return }
+        button.image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "Tappy")
+        // Orange tint signals setup is incomplete; default (template) color = ready.
+        switch setupPhase {
+        case .needsPermission, .needsRestart:
+            button.contentTintColor = .systemOrange
+        case .complete:
+            button.contentTintColor = nil  // system default (adapts to light/dark)
+        }
+    }
+
+    // MARK: - Routing
+
+    var shouldShowSetupGate: Bool {
+        setupPhase != .complete
+    }
+
+    // MARK: - Setup screen content
+
+    var setupHeadline: String {
+        switch setupPhase {
+        case .needsPermission:
+            return "Enable Input Monitoring"
+        case .needsRestart:
+            return "Almost there — restart to activate"
+        case .complete:
+            return ""
+        }
+    }
+
+    var setupDetail: String {
+        switch setupPhase {
+        case .needsPermission:
+            return "Tappy needs Input Monitoring permission to play sounds while you type in any app. Open System Settings → Privacy & Security → Input Monitoring and switch on Tappy."
+        case .needsRestart:
+            return "Permission granted! macOS requires Tappy to restart once before the keyboard listener can attach. This only happens on first-time setup."
+        case .complete:
+            return ""
+        }
+    }
+
+    var setupPrimaryButtonTitle: String {
+        switch setupPhase {
+        case .needsPermission:
+            return "Open Input Monitoring"
+        case .needsRestart:
+            return "Restart Tappy"
+        case .complete:
+            return ""
+        }
+    }
+
+    func performSetupPrimaryAction() {
+        switch setupPhase {
+        case .needsPermission:
+            openInputMonitoringSettings()
+        case .needsRestart:
+            relaunchApp()
+        case .complete:
+            break
+        }
+    }
+
+    // MARK: - Status
 
     var soundsFolderPath: String {
         soundLibrary.soundsRootURL.path
@@ -149,90 +316,45 @@ final class KeyboardSoundController: ObservableObject {
         Bundle.main.bundleURL.path.contains("/DerivedData/")
     }
 
-    var shouldShowSetupGate: Bool {
-        !setupCompleted || !hasSatisfiedSetupAccess
-    }
-
-    var isReadyForHomeScreen: Bool {
-        manualPermissionOverride ||
-            (permissionManager.hasGlobalMonitoringAccess && backgroundCaptureState != .unavailable)
-    }
-
-    var canUseManualPermissionOverride: Bool {
-        !permissionManager.hasGlobalMonitoringAccess
-    }
-
-    private var hasSatisfiedSetupAccess: Bool {
-        permissionManager.hasGlobalMonitoringAccess || manualPermissionOverride
-    }
-
-    var setupHeadline: String {
-        if permissionManager.hasGlobalMonitoringAccess {
-            if backgroundCaptureState == .unavailable {
-                return "Almost there"
-            }
-            return "You’re ready"
-        }
-
-        return "Enable keyboard access"
-    }
-
-    var setupDetail: String {
-        if permissionManager.hasGlobalMonitoringAccess {
-            if backgroundCaptureState == .unavailable {
-                return "Tappy has permission, but the background listener did not attach on this launch. Refresh once or relaunch the app."
-            }
-            return "Tappy can play your clicks across the Mac. Press the button below to enter the home screen."
-        }
-
-        return "Tappy could not confirm Input Monitoring for this launch. If Tappy is already enabled in System Settings, quit and reopen the app once, then check again."
-    }
-
-    var setupChecklist: [SetupItem] {
-        return [
-            SetupItem(
-                title: "Input Monitoring",
-                detail: permissionManager.isTrusted
-                    ? "Tappy is approved in Privacy & Security."
-                    : manualPermissionOverride
-                        ? "You manually confirmed the setting because macOS did not report it back to the app."
-                        : "If Tappy is already enabled in Privacy & Security, relaunch the app once. Otherwise turn it on there first.",
-                isComplete: permissionManager.isTrusted || manualPermissionOverride,
-                actionTitle: "Open Settings",
-                action: { [weak self] in
-                    self?.openInputMonitoringSettings()
-                }
-            ),
-            SetupItem(
-                title: "Listener Ready",
-                detail: backgroundCaptureState == .ready
-                    ? "The background keyboard listener is attached."
-                    : "If access is already enabled, refresh or relaunch Tappy once.",
-                isComplete: permissionManager.isTrusted && backgroundCaptureState == .ready,
-                actionTitle: "Refresh",
-                action: { [weak self] in
-                    self?.refreshInputMonitoringStatus()
-                }
-            )
-        ]
+    /// True when both TCC permission and the event tap are confirmed working.
+    /// Used by diagnostics and the warning banner.
+    var hasConfirmedInputMonitoring: Bool {
+        setupPhase == .complete
     }
 
     var compactStatus: String {
-        if !isEnabled {
-            return "Paused"
-        }
-        if permissionManager.hasGlobalMonitoringAccess {
-            return "Live"
-        }
+        if !isEnabled { return "Paused" }
+        if setupPhase == .complete { return "Live" }
         return "Window Only"
     }
 
-    var permissionDebugSummary: String {
-        "Input \(permissionManager.isTrusted ? "On" : "Off")"
+    var launchWarning: String? {
+        // Only show warnings on the home screen (after setup is complete)
+        guard setupPhase == .complete else { return nil }
+
+        if !permissionManager.isTrusted {
+            return "Input Monitoring was revoked. Re-enable Tappy in System Settings → Privacy & Security → Input Monitoring."
+        }
+
+        if isEnabled && backgroundCaptureState == .unavailable {
+            return "Background capture failed to start. Try relaunching Tappy."
+        }
+
+        return nil
     }
+
+    var permissionDebugSummary: String {
+        "TCC preflight: \(permissionManager.isTrusted ? "✓" : "✗"), event tap: \(backgroundCaptureState == .ready ? "✓" : "✗")"
+    }
+
+    // MARK: - Pack access
 
     var highlightedPack: TechPack {
         availablePacks.first(where: { $0.id == highlightedPackID }) ?? currentPack
+    }
+
+    var selectedPackID: String {
+        currentPack.id
     }
 
     var highlightedPackIsLocked: Bool {
@@ -263,44 +385,16 @@ final class KeyboardSoundController: ObservableObject {
         premiumStore.isPurchasing
     }
 
-    var launchWarning: String? {
-        if !permissionManager.isTrusted {
-            return "Tappy could not confirm Input Monitoring for this launch."
-        }
-
-        if isEnabled && backgroundCaptureState == .unavailable {
-            return "Background capture failed to start for this launch."
-        }
-
-        return nil
-    }
-
     var stableAppPath: String {
-        stableAppURL.path
-    }
-
-    var installedPreviewAppPath: String {
-        installedPreviewAppURL.path
-    }
-
-    private var stableAppURL: URL {
-        if fileManager.fileExists(atPath: installedPreviewAppURL.path) {
-            return installedPreviewAppURL
-        }
-
-        return workspaceAppURL
-    }
-
-    private var installedPreviewAppURL: URL {
-        fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent("Applications", isDirectory: true)
-            .appendingPathComponent("Tappy Preview.app", isDirectory: true)
+        workspaceAppURL.path
     }
 
     private var workspaceAppURL: URL {
         URL(fileURLWithPath: fileManager.currentDirectoryPath)
             .appendingPathComponent("Tappy.app", isDirectory: true)
     }
+
+    // MARK: - Public actions
 
     func reloadSounds() {
         do {
@@ -323,23 +417,20 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func openStableApp() {
-        NSWorkspace.shared.openApplication(at: stableAppURL, configuration: NSWorkspace.OpenConfiguration())
+        NSWorkspace.shared.openApplication(at: workspaceAppURL, configuration: NSWorkspace.OpenConfiguration())
     }
 
-    /// Spawns a fresh instance of the current app and quits this one. After
-    /// enabling Input Monitoring in System Settings, macOS often requires a
-    /// relaunch before the event tap can actually attach.
+    /// Spawns a fresh instance of the current app and quits this one.
+    /// Required after granting Input Monitoring — macOS does not allow a
+    /// running process to attach an event tap until it relaunches.
     func relaunchApp() {
         let bundleURL = Bundle.main.bundleURL
+        let escapedPath = bundleURL.path.replacingOccurrences(of: "'", with: "'\\''")
         let task = Process()
-        task.launchPath = "/usr/bin/open"
-        task.arguments = ["-n", bundleURL.path]
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = ["-c", "sleep 0.6; open '\(escapedPath)'"]
         try? task.run()
-
-        // Give the new instance a moment to start before we exit.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            NSApp.terminate(nil)
-        }
+        NSApp.terminate(nil)
     }
 
     func importSounds(into category: SoundCategory = .standard) {
@@ -348,7 +439,10 @@ final class KeyboardSoundController: ObservableObject {
         panel.message = "Choose audio files to copy into the app's \(category.displayName) sound folder."
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.allowedContentTypes = []
+        panel.allowedContentTypes = [
+            .wav, .aiff, .mp3, .mpeg4Audio,
+            UTType("com.apple.coreaudio-format"),  // caf
+        ].compactMap { $0 }
 
         guard panel.runModal() == .OK else { return }
 
@@ -404,10 +498,13 @@ final class KeyboardSoundController: ObservableObject {
             return
         }
 
-        guard !isPackLocked(pack) else {
-            statusMessage = "Preview \(pack.name) here. Unlock premium packs to activate it."
+        if isPackLocked(pack) {
+            // Just highlight — user starts a trial explicitly via the Try Free button
             return
         }
+
+        // Selecting a free pack cancels any active preview
+        if previewPack != nil { cancelLivePreview() }
 
         guard pack.id != currentPack.id else {
             restoreBuiltInPack(packID: pack.id)
@@ -421,18 +518,26 @@ final class KeyboardSoundController: ObservableObject {
 
     func previewHighlightedPack(category: SoundCategory) {
         let pack = highlightedPack
-
         if isPackLocked(pack) {
-            do {
-                try soundLibrary.previewBundledSound(packID: pack.id, category: category, using: audioEngine)
-                statusMessage = "Previewing \(pack.name) \(category.displayName.lowercased()) sound."
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+            playPremiumDemo()
+            return
+        }
+        preview(category: category)
+    }
+
+    func playPremiumDemo() {
+        let pack = highlightedPack
+        guard isPackLocked(pack) else {
+            preview(category: .standard)
             return
         }
 
-        preview(category: category)
+        do {
+            try soundLibrary.previewBundledDemo(packID: pack.id, using: audioEngine)
+            statusMessage = "Playing \(pack.name) demo."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func beginUnlockPremiumFlow() {
@@ -443,22 +548,24 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func purchasePremiumUnlock() async {
+        cancelPendingCTA()
         await premiumStore.purchaseUnlockAll()
-
         if premiumUnlocked, highlightedPack.isPremium {
+            showUpgradeCTA = false
+            ctaPack = nil
             highlightPack(highlightedPack)
         }
-
         statusMessage = premiumStore.lastMessage ?? monitoringSummary()
     }
 
     func restorePremiumPurchases() async {
+        cancelPendingCTA()
         await premiumStore.restorePurchases()
-
         if premiumUnlocked, highlightedPack.isPremium {
+            showUpgradeCTA = false
+            ctaPack = nil
             highlightPack(highlightedPack)
         }
-
         statusMessage = premiumStore.lastMessage ?? monitoringSummary()
     }
 
@@ -469,13 +576,8 @@ final class KeyboardSoundController: ObservableObject {
 
     func refreshInputMonitoringStatus() {
         permissionManager.refreshStatus()
-        if permissionManager.hasGlobalMonitoringAccess, isEnabled {
-            keyboardMonitor.start { [weak self] trigger in
-                DispatchQueue.main.async {
-                    self?.handle(trigger: trigger)
-                }
-            }
-        }
+        permissionManager.scheduleRefreshBurst()
+        attemptListenerAttachIfNeeded()
         statusMessage = monitoringSummary()
     }
 
@@ -487,34 +589,147 @@ final class KeyboardSoundController: ObservableObject {
         permissionManager.openSoundSettings()
     }
 
+    /// Called when the setup screen appears. Triggers the macOS permission
+    /// dialog so the user sees it immediately without having to press a button.
+    func requestStartupInputMonitoringPromptIfNeeded() {
+        guard setupPhase == .needsPermission else { return }
+        permissionManager.requestListenAccessPrompt()
+        statusMessage = monitoringSummary()
+    }
+
+    func handleAppDidBecomeActive() {
+        permissionManager.refreshStatus()
+        permissionManager.scheduleRefreshBurst()
+        attemptListenerAttachIfNeeded()
+    }
+
+    func handleAppDidResignActive() {
+        permissionManager.scheduleRefreshBurst()
+    }
+
     func preview(category: SoundCategory) {
         audioEngine.play(category: category, keyCode: nil)
     }
 
-    func completeSetupAndEnterHome() {
-        guard isReadyForHomeScreen else { return }
-        setupCompleted = true
-        userDefaults.set(true, forKey: DefaultsKey.setupCompleted)
+    func isPackLocked(_ pack: TechPack) -> Bool {
+        pack.isPremium && !premiumUnlocked
+    }
+
+    func hasTrialedPack(_ pack: TechPack) -> Bool {
+        trialedPackIDs.contains(pack.id)
+    }
+
+    // MARK: - Live Preview (90-second trial)
+
+    @Published private(set) var previewPack: TechPack? = nil
+    @Published private(set) var previewSecondsRemaining: Int = 0
+    @Published private(set) var showUpgradeCTA: Bool = false
+    @Published private(set) var ctaPack: TechPack? = nil
+
+    private var lastFreePack: TechPack = .plasticTapping
+    private var previewTimerCancellable: AnyCancellable?
+    private var pendingCTAWorkItem: DispatchWorkItem?
+
+    var previewProgress: Double {
+        guard previewPack != nil else { return 0 }
+        return Double(previewSecondsRemaining) / Double(Self.livePreviewDurationSeconds)
+    }
+
+    var previewCountdownText: String {
+        let minutes = previewSecondsRemaining / 60
+        let seconds = previewSecondsRemaining % 60
+        return String(format: "%d:%02d left", minutes, seconds)
+    }
+
+    var livePreviewDurationText: String {
+        "\(Self.livePreviewDurationSeconds)-second"
+    }
+
+    func startLivePreview(_ pack: TechPack) {
+        guard !hasTrialedPack(pack) else { return }
+
+        cancelPendingCTA()
+        stopRunningPreview()
+
+        // Record this trial permanently so it can't be repeated
+        trialedPackIDs.insert(pack.id)
+        userDefaults.set(Array(trialedPackIDs), forKey: DefaultsKey.trialedPackIDs)
+
+        // Remember the free pack to revert to
+        if !currentPack.isPremium { lastFreePack = currentPack }
+
+        previewPack = pack
+        previewSecondsRemaining = Self.livePreviewDurationSeconds
+        showUpgradeCTA = false
+        ctaPack = nil
+
+        // Switch sounds immediately — full quality, no degradation
+        currentPack = pack
+        restoreBuiltInPack(packID: pack.id)
+        statusMessage = "Trying \(pack.name) for \(livePreviewDurationText)."
+
+        // Countdown — fires on main thread, safe to mutate @MainActor state
+        previewTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.previewSecondsRemaining -= 1
+                if self.previewSecondsRemaining <= 0 { self.endLivePreview() }
+            }
+    }
+
+    private func stopRunningPreview() {
+        previewTimerCancellable?.cancel()
+        previewTimerCancellable = nil
+        previewPack = nil
+        previewSecondsRemaining = 0
+    }
+
+    private func endLivePreview() {
+        let previewed = previewPack
+        stopRunningPreview()
+        ctaPack = previewed
+
+        // Revert to the free pack they were on
+        currentPack = lastFreePack
+        restoreBuiltInPack(packID: lastFreePack.id)
+        if let previewed {
+            statusMessage = "\(previewed.name) trial ended."
+        }
+
+        // Brief pause so the reversion is felt before the CTA appears
+        cancelPendingCTA()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self, self.ctaPack != nil, self.previewPack == nil, !self.premiumUnlocked else { return }
+            self.showUpgradeCTA = true
+        }
+        pendingCTAWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
+    }
+
+    func dismissUpgradeCTA() {
+        cancelPendingCTA()
+        showUpgradeCTA = false
+        ctaPack = nil
+    }
+
+    /// Cancels any active live preview and reverts to the last free pack.
+    func cancelLivePreview() {
+        guard previewPack != nil else { return }
+        cancelPendingCTA()
+        stopRunningPreview()
+        currentPack = lastFreePack
+        restoreBuiltInPack(packID: lastFreePack.id)
         statusMessage = monitoringSummary()
     }
 
-    func confirmPermissionOverride() {
-        manualPermissionOverride = true
-        userDefaults.set(true, forKey: DefaultsKey.manualPermissionOverride)
-        setupCompleted = true
-        userDefaults.set(true, forKey: DefaultsKey.setupCompleted)
-        statusMessage = "Continuing with your manual Input Monitoring confirmation."
-    }
+    // MARK: - Private
 
     private func updateMonitoringState() {
         audioEngine.setEnabled(isEnabled)
 
         if isEnabled {
-            keyboardMonitor.start { [weak self] trigger in
-                DispatchQueue.main.async {
-                    self?.handle(trigger: trigger)
-                }
-            }
+            attemptListenerAttachIfNeeded()
             statusMessage = monitoringSummary()
         } else {
             keyboardMonitor.stop()
@@ -528,44 +743,63 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     private func monitoringSummary() -> String {
-        guard isEnabled else {
-            return "Keyboard sounds are paused."
-        }
+        guard isEnabled else { return "Keyboard sounds are paused." }
+        guard soundLibrary.totalSoundCount > 0 else { return soundLibrary.lastLoadMessage }
 
-        guard soundLibrary.totalSoundCount > 0 else {
-            return soundLibrary.lastLoadMessage
-        }
-
-        if permissionManager.hasGlobalMonitoringAccess {
+        switch setupPhase {
+        case .needsPermission:
+            return "Waiting for Input Monitoring permission."
+        case .needsRestart:
+            return "Permission granted — restart Tappy to activate system-wide sounds."
+        case .complete:
             if backgroundCaptureState == .unavailable {
                 return "Input Monitoring appears available, but the background event tap failed to start."
             }
             return "Keyboard sounds are active system-wide."
         }
-
-        return "Keyboard sounds are active in this window. If Input Monitoring is already enabled, relaunch the app once to restore system-wide clicks."
     }
 
-    private func autoRequestInputMonitoringIfNeeded() {
-        // Always ask on launch when we aren't trusted. CGRequestListenEventAccess
-        // is idempotent — macOS only shows the dialog the first time per install
-        // (or after the user removes us from Input Monitoring), so calling it
-        // every cold start is safe and crucial: without this the user can
-        // revoke permission, relaunch, and get no prompt at all.
-        if !permissionManager.isTrusted {
-            userDefaults.set(true, forKey: DefaultsKey.inputMonitoringPromptShown)
-            permissionManager.requestListenAccessPrompt()
-        }
+    private func attemptListenerAttachIfNeeded() {
+        guard isEnabled else { return }
+        guard backgroundCaptureState != .ready else { return }
 
-        statusMessage = monitoringSummary()
+        keyboardMonitor.start { [weak self] trigger in
+            DispatchQueue.main.async {
+                self?.handle(trigger: trigger)
+            }
+        }
     }
 
     private func persistSelectedPack(_ pack: TechPack) {
         userDefaults.set(pack.id, forKey: DefaultsKey.selectedPackID)
     }
 
-    func isPackLocked(_ pack: TechPack) -> Bool {
-        pack.isPremium && !premiumUnlocked
+    private func cancelPendingCTA() {
+        pendingCTAWorkItem?.cancel()
+        pendingCTAWorkItem = nil
+    }
+
+    /// Synchronously probes whether this process can create and enable a
+    /// CGEvent tap. This is the definitive test for whether Input Monitoring
+    /// is functional — more reliable than CGPreflightListenEventAccess() alone.
+    private static func canCreateEventTap() -> Bool {
+        let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+
+        guard let tap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .listenOnly,
+            eventsOfInterest: mask,
+            callback: { _, _, event, _ in Unmanaged.passUnretained(event) },
+            userInfo: nil
+        ) else {
+            return false
+        }
+
+        CGEvent.tapEnable(tap: tap, enable: true)
+        let isEnabled = CGEvent.tapIsEnabled(tap: tap)
+        CGEvent.tapEnable(tap: tap, enable: false)
+        return isEnabled
     }
 
     private static func startupPack(from savedPackID: String?, premiumUnlocked: Bool) -> TechPack? {
@@ -579,16 +813,5 @@ final class KeyboardSoundController: ObservableObject {
         guard savedPack.isAvailable else { return TechPack.plasticTapping }
         guard !savedPack.isPremium || premiumUnlocked else { return TechPack.plasticTapping }
         return savedPack
-    }
-}
-
-extension KeyboardSoundController {
-    struct SetupItem: Identifiable {
-        let id = UUID()
-        let title: String
-        let detail: String
-        let isComplete: Bool
-        let actionTitle: String
-        let action: () -> Void
     }
 }

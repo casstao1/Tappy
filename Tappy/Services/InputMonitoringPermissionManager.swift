@@ -8,14 +8,17 @@ final class InputMonitoringPermissionManager: ObservableObject {
 
     var onStatusChange: ((Bool) -> Void)?
 
-    private var pollTimer: Timer?
+    private var pollTimer: DispatchSourceTimer?
+    private var burstRefreshWorkItems: [DispatchWorkItem] = []
+    private let pollQueue = DispatchQueue(label: "com.castao.tappy.input-monitoring-poll")
 
     init() {
         startPolling()
     }
 
     deinit {
-        pollTimer?.invalidate()
+        pollTimer?.cancel()
+        burstRefreshWorkItems.forEach { $0.cancel() }
     }
 
     func refreshStatus() {
@@ -27,10 +30,16 @@ final class InputMonitoringPermissionManager: ObservableObject {
     }
 
     func requestListenAccessPrompt() {
-        let granted = CGRequestListenEventAccess()
-        if granted != isTrusted {
-            isTrusted = granted
-            onStatusChange?(isTrusted)
+        // Do NOT activate the app before calling CGRequestListenEventAccess().
+        // Activating first brings the Tappy window to the front, which causes
+        // the macOS permission dialog to appear behind it. Let the dialog appear
+        // naturally — macOS will place it in front of the app window on its own.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            let granted = CGRequestListenEventAccess()
+            if granted != self.isTrusted {
+                self.isTrusted = granted
+                self.onStatusChange?(self.isTrusted)
+            }
         }
     }
 
@@ -39,11 +48,14 @@ final class InputMonitoringPermissionManager: ObservableObject {
     }
 
     func openInputMonitoringSettings() {
+        refreshStatus()
+
         guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") else {
             return
         }
 
-        NSWorkspace.shared.open(url)
+        openAndFocusSystemSettings(url: url)
+        scheduleRefreshBurst()
     }
 
     func openSoundSettings() {
@@ -51,14 +63,62 @@ final class InputMonitoringPermissionManager: ObservableObject {
             return
         }
 
-        NSWorkspace.shared.open(url)
+        openAndFocusSystemSettings(url: url)
+    }
+
+    private func openAndFocusSystemSettings(url: URL) {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+
+        if let settingsURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.systempreferences") {
+            NSWorkspace.shared.open([url], withApplicationAt: settingsURL, configuration: configuration) { _, _ in
+                Task { @MainActor in
+                    self.activateSystemSettings()
+                }
+            }
+        } else {
+            NSWorkspace.shared.open(url)
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            Task { @MainActor in
+                self.activateSystemSettings()
+            }
+        }
+    }
+
+    private func activateSystemSettings() {
+        NSRunningApplication
+            .runningApplications(withBundleIdentifier: "com.apple.systempreferences")
+            .first?
+            .activate(options: [.activateAllWindows])
     }
 
     private func startPolling() {
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+        let timer = DispatchSource.makeTimerSource(queue: pollQueue)
+        timer.schedule(deadline: .now() + 0.75, repeating: 0.75)
+        timer.setEventHandler { [weak self] in
             Task { @MainActor in
                 self?.refreshStatus()
             }
+        }
+        pollTimer = timer
+        timer.resume()
+    }
+
+    func scheduleRefreshBurst() {
+        burstRefreshWorkItems.forEach { $0.cancel() }
+        burstRefreshWorkItems.removeAll()
+
+        let delays: [TimeInterval] = [0.15, 0.4, 0.8, 1.4, 2.2, 3.0]
+        for delay in delays {
+            let workItem = DispatchWorkItem { [weak self] in
+                Task { @MainActor in
+                    self?.refreshStatus()
+                }
+            }
+            burstRefreshWorkItems.append(workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
         }
     }
 }

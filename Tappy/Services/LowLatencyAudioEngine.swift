@@ -33,10 +33,15 @@ final class LowLatencyAudioEngine {
     private var players: [AVAudioPlayerNode] = []
     private var loadedSounds: [SoundCategory: [LoadedSound]] = [:]
     private var loadedKeySounds: [UInt16: [LoadedSound]] = [:]
+    private var previewSounds: [SoundCategory: [LoadedSound]] = [:]
+    private var previewKeySounds: [UInt16: [LoadedSound]] = [:]
     private var lastPlayedIndex: [SoundCategory: Int] = [:]
     private var lastPlayedKeyIndex: [UInt16: Int] = [:]
+    private var lastPlayedPreviewIndex: [SoundCategory: Int] = [:]
+    private var lastPlayedPreviewKeyIndex: [UInt16: Int] = [:]
     private var nextPlayerIndex = 0
     private var isEnabled = true
+    private var outputVolume: Float = 1.0
 
     init(concurrentVoices: Int = 12) {
         self.concurrentVoices = concurrentVoices
@@ -111,6 +116,26 @@ final class LowLatencyAudioEngine {
         }
     }
 
+    func setPreviewSounds(_ sounds: [SoundCategory: [LoadedSound]], keySounds: [UInt16: [LoadedSound]]) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            self.previewSounds = sounds
+            self.previewKeySounds = keySounds
+            self.lastPlayedPreviewIndex.removeAll()
+            self.lastPlayedPreviewKeyIndex.removeAll()
+        }
+    }
+
+    func clearPreviewSounds() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            self.previewSounds.removeAll()
+            self.previewKeySounds.removeAll()
+            self.lastPlayedPreviewIndex.removeAll()
+            self.lastPlayedPreviewKeyIndex.removeAll()
+        }
+    }
+
     func setEnabled(_ enabled: Bool) {
         queue.async { [weak self] in
             guard let self else { return }
@@ -128,17 +153,58 @@ final class LowLatencyAudioEngine {
         }
     }
 
+    func setVolume(_ volume: Double) {
+        let clampedVolume = Float(min(max(volume, 0), 1))
+
+        queue.async { [weak self] in
+            guard let self else { return }
+            self.outputVolume = clampedVolume
+            for player in self.players {
+                player.volume = clampedVolume
+            }
+        }
+    }
+
     func play(category: SoundCategory, keyCode: UInt16? = nil) {
         queue.async { [weak self] in
             guard let self else { return }
             guard self.isEnabled else { return }
-            guard let sound = self.pickSound(for: category, keyCode: keyCode) else { return }
+            guard let sound = self.pickSound(
+                for: category,
+                keyCode: keyCode,
+                sounds: self.loadedSounds,
+                keySounds: self.loadedKeySounds,
+                categoryHistory: &self.lastPlayedIndex,
+                keyHistory: &self.lastPlayedKeyIndex
+            ) else { return }
 
             do {
                 try self.startEngineIfNeeded()
                 self.playBuffer(sound.buffer)
             } catch {
                 NSLog("Tappy audio engine start failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func playPreview(category: SoundCategory, keyCode: UInt16? = nil) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            guard self.isEnabled else { return }
+            guard let sound = self.pickSound(
+                for: category,
+                keyCode: keyCode,
+                sounds: self.previewSounds,
+                keySounds: self.previewKeySounds,
+                categoryHistory: &self.lastPlayedPreviewIndex,
+                keyHistory: &self.lastPlayedPreviewKeyIndex
+            ) else { return }
+
+            do {
+                try self.startEngineIfNeeded()
+                self.playBuffer(sound.buffer)
+            } catch {
+                NSLog("Tappy audio engine preview failed: \(error.localizedDescription)")
             }
         }
     }
@@ -162,7 +228,7 @@ final class LowLatencyAudioEngine {
             let player = AVAudioPlayerNode()
             engine.attach(player)
             engine.connect(player, to: engine.mainMixerNode, format: outputFormat)
-            player.volume = 1.0
+            player.volume = outputVolume
             return player
         }
 
@@ -186,50 +252,62 @@ final class LowLatencyAudioEngine {
         }
     }
 
-    private func pickSound(for category: SoundCategory, keyCode: UInt16?) -> LoadedSound? {
-        let keyOptions = keyCode.flatMap { loadedKeySounds[$0] }
-        let options = candidateSounds(for: category, keyCode: keyCode)
+    private func pickSound(
+        for category: SoundCategory,
+        keyCode: UInt16?,
+        sounds: [SoundCategory: [LoadedSound]],
+        keySounds: [UInt16: [LoadedSound]],
+        categoryHistory: inout [SoundCategory: Int],
+        keyHistory: inout [UInt16: Int]
+    ) -> LoadedSound? {
+        let keyOptions = keyCode.flatMap { keySounds[$0] }
+        let options = candidateSounds(for: category, keyCode: keyCode, sounds: sounds, keySounds: keySounds)
         guard !options.isEmpty else { return nil }
 
         if let keyCode, let keyOptions, !keyOptions.isEmpty {
             if options.count == 1 {
-                lastPlayedKeyIndex[keyCode] = 0
+                keyHistory[keyCode] = 0
                 return options[0]
             }
 
             var nextIndex = Int.random(in: 0..<options.count)
-            if let lastIndex = lastPlayedKeyIndex[keyCode], nextIndex == lastIndex {
+            if let lastIndex = keyHistory[keyCode], nextIndex == lastIndex {
                 nextIndex = (nextIndex + 1) % options.count
             }
 
-            lastPlayedKeyIndex[keyCode] = nextIndex
+            keyHistory[keyCode] = nextIndex
             return options[nextIndex]
         }
 
         if options.count == 1 {
-            lastPlayedIndex[category] = 0
+            categoryHistory[category] = 0
             return options[0]
         }
 
         var nextIndex = Int.random(in: 0..<options.count)
-        if let lastIndex = lastPlayedIndex[category], nextIndex == lastIndex {
+        if let lastIndex = categoryHistory[category], nextIndex == lastIndex {
             nextIndex = (nextIndex + 1) % options.count
         }
 
-        lastPlayedIndex[category] = nextIndex
+        categoryHistory[category] = nextIndex
         return options[nextIndex]
     }
 
-    private func candidateSounds(for category: SoundCategory, keyCode: UInt16?) -> [LoadedSound] {
-        if let keyCode, let keySounds = loadedKeySounds[keyCode], !keySounds.isEmpty {
+    private func candidateSounds(
+        for category: SoundCategory,
+        keyCode: UInt16?,
+        sounds: [SoundCategory: [LoadedSound]],
+        keySounds: [UInt16: [LoadedSound]]
+    ) -> [LoadedSound] {
+        if let keyCode, let keySounds = keySounds[keyCode], !keySounds.isEmpty {
             return keySounds
         }
 
-        if let categorySounds = loadedSounds[category], !categorySounds.isEmpty {
+        if let categorySounds = sounds[category], !categorySounds.isEmpty {
             return categorySounds
         }
 
-        return loadedSounds[.standard] ?? []
+        return sounds[.standard] ?? []
     }
 
     private func playBuffer(_ buffer: AVAudioPCMBuffer) {

@@ -148,6 +148,17 @@ final class SoundLibrary: ObservableObject {
         return counts.values.reduce(0, +)
     }
 
+    func loadBundledPreviewPack(
+        packID: String,
+        using audioEngine: LowLatencyAudioEngine
+    ) throws -> (
+        sounds: [SoundCategory: [LoadedSound]],
+        keySounds: [UInt16: [LoadedSound]]
+    ) {
+        try prepareFolderStructure()
+        return try bundledPackContents(packID: packID, using: audioEngine)
+    }
+
     func previewBundledSound(packID: String, category: SoundCategory, using audioEngine: LowLatencyAudioEngine) throws {
         guard let bundledPackURL = bundledPackURL(for: packID) else { return }
 
@@ -156,6 +167,19 @@ final class SoundLibrary: ObservableObject {
         guard let url = urls.randomElement() else { return }
 
         let buffer = try audioEngine.makeBuffer(from: url)
+        audioEngine.play(buffer: buffer)
+    }
+
+    func previewBundledDemo(packID: String, using audioEngine: LowLatencyAudioEngine) throws {
+        guard let bundledPackURL = bundledPackURL(for: packID) else { return }
+
+        let demoURL = bundledPackURL
+            .appendingPathComponent("demo", isDirectory: true)
+            .appendingPathComponent("demo.wav", isDirectory: false)
+
+        guard fileManager.fileExists(atPath: demoURL.path) else { return }
+
+        let buffer = try audioEngine.makeBuffer(from: demoURL)
         audioEngine.play(buffer: buffer)
     }
 
@@ -177,6 +201,40 @@ final class SoundLibrary: ObservableObject {
         return urls
             .filter { supportedExtensions.contains($0.pathExtension.lowercased()) }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+    }
+
+    private func bundledPackContents(
+        packID: String,
+        using audioEngine: LowLatencyAudioEngine
+    ) throws -> (
+        sounds: [SoundCategory: [LoadedSound]],
+        keySounds: [UInt16: [LoadedSound]]
+    ) {
+        guard let bundledPackURL = bundledPackURL(for: packID) else {
+            return ([:], [:])
+        }
+
+        var loadedSounds: [SoundCategory: [LoadedSound]] = [:]
+        var loadedKeySounds: [UInt16: [LoadedSound]] = [:]
+
+        for category in SoundCategory.allCases {
+            let urls = try soundURLs(in: bundledPackURL.appendingPathComponent(category.folderName, isDirectory: true))
+            loadedSounds[category] = try urls.map { url in
+                LoadedSound(category: category, url: url, buffer: try audioEngine.makeBuffer(from: url))
+            }
+        }
+
+        let keyFolderURL = bundledPackURL.appendingPathComponent(keyFolderName, isDirectory: true)
+        var isDirectory: ObjCBool = false
+        if fileManager.fileExists(atPath: keyFolderURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+            for url in try soundURLs(in: keyFolderURL) {
+                guard let keyCode = keyCode(from: url) else { continue }
+                let sound = LoadedSound(category: .standard, url: url, buffer: try audioEngine.makeBuffer(from: url))
+                loadedKeySounds[keyCode, default: []].append(sound)
+            }
+        }
+
+        return (loadedSounds, loadedKeySounds)
     }
 
     private func installBundledSoundsIfNeeded() throws {

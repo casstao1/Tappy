@@ -10,6 +10,7 @@
 		A10000000000000000000001 /* TappyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* TappyApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* ContentView.swift */; };
 		A10000000000000000000003 /* KeyboardSoundController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* KeyboardSoundController.swift */; };
+		A10000000000000000000039 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000040 /* MenuBarView.swift */; };
 		A10000000000000000000004 /* SoundCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* SoundCategory.swift */; };
 		A10000000000000000000005 /* InputMonitoringPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* InputMonitoringPermissionManager.swift */; };
 		A10000000000000000000006 /* KeyboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* KeyboardMonitor.swift */; };
@@ -26,6 +27,7 @@
 		A10000000000000000000011 /* TappyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TappyApp.swift; sourceTree = "<group>"; };
 		A10000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A10000000000000000000013 /* KeyboardSoundController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSoundController.swift; sourceTree = "<group>"; };
+		A10000000000000000000040 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		A10000000000000000000014 /* SoundCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundCategory.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* InputMonitoringPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputMonitoringPermissionManager.swift; sourceTree = "<group>"; };
 		A10000000000000000000016 /* KeyboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardMonitor.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				A10000000000000000000011 /* TappyApp.swift */,
 				A10000000000000000000012 /* ContentView.swift */,
 				A10000000000000000000013 /* KeyboardSoundController.swift */,
+				A10000000000000000000040 /* MenuBarView.swift */,
 				A10000000000000000000026 /* Models */,
 				A10000000000000000000027 /* Services */,
 				A10000000000000000000028 /* Resources */,
@@ -192,6 +195,7 @@
 				A10000000000000000000001 /* TappyApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* KeyboardSoundController.swift in Sources */,
+				A10000000000000000000039 /* MenuBarView.swift in Sources */,
 				A10000000000000000000004 /* SoundCategory.swift in Sources */,
 				A10000000000000000000035 /* TechPack.swift in Sources */,
 				A10000000000000000000005 /* InputMonitoringPermissionManager.swift in Sources */,
@@ -215,7 +219,7 @@
 				CODE_SIGN_ENTITLEMENTS = Tappy/Support/Tappy.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = Z8V566C555;
@@ -242,7 +246,7 @@
 				CODE_SIGN_ENTITLEMENTS = Tappy/Support/Tappy.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = Z8V566C555;

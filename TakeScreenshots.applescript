@@ -5,7 +5,7 @@ set outputDir to "/Users/castao/Desktop/KeyboardSoundApp/AppStoreScreenshots_raw
 do shell script "mkdir -p " & quoted form of outputDir
 
 -- Bring Tappy to front
-tell application "Tappy Preview" to activate
+tell application "Tappy" to activate
 delay 1
 
 -- Get window bounds
@@ -22,7 +22,7 @@ tell application "System Events"
 end tell
 
 -- Screenshot 1: Farming selected (current state)
-tell application "Tappy Preview" to activate
+tell application "Tappy" to activate
 delay 0.3
 do shell script "screencapture -R " & x1 & "," & y1 & "," & w1 & "," & h1 & " -x " & quoted form of (outputDir & "01_farming.png")
 
@@ -35,7 +35,7 @@ tell application "System Events"
 	end tell
 end tell
 delay 0.5
-tell application "Tappy Preview" to activate
+tell application "Tappy" to activate
 delay 0.3
 do shell script "screencapture -R " & x1 & "," & y1 & "," & w1 & "," & h1 & " -x " & quoted form of (outputDir & "02_plastic.png")
 
@@ -48,7 +48,7 @@ tell application "System Events"
 	end tell
 end tell
 delay 0.5
-tell application "Tappy Preview" to activate
+tell application "Tappy" to activate
 delay 0.3
 do shell script "screencapture -R " & x1 & "," & y1 & "," & w1 & "," & h1 & " -x " & quoted form of (outputDir & "03_sword.png")
 
@@ -61,7 +61,7 @@ tell application "System Events"
 	end tell
 end tell
 delay 0.5
-tell application "Tappy Preview" to activate
+tell application "Tappy" to activate
 delay 0.3
 do shell script "screencapture -R " & x1 & "," & y1 & "," & w1 & "," & h1 & " -x " & quoted form of (outputDir & "04_bubble.png")
 
