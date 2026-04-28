@@ -21,12 +21,17 @@ final class InputMonitoringPermissionManager: ObservableObject {
         burstRefreshWorkItems.forEach { $0.cancel() }
     }
 
-    func refreshStatus() {
+    func refreshStatus(forceNotify: Bool = false) {
         let trusted = CGPreflightListenEventAccess()
 
-        guard trusted != isTrusted else { return }
-        isTrusted = trusted
-        onStatusChange?(isTrusted)
+        let didChange = trusted != isTrusted
+        if didChange {
+            isTrusted = trusted
+        }
+
+        if didChange || forceNotify {
+            onStatusChange?(isTrusted)
+        }
     }
 
     func requestListenAccessPrompt() {
@@ -36,10 +41,9 @@ final class InputMonitoringPermissionManager: ObservableObject {
         // naturally — macOS will place it in front of the app window on its own.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             let granted = CGRequestListenEventAccess()
-            if granted != self.isTrusted {
-                self.isTrusted = granted
-                self.onStatusChange?(self.isTrusted)
-            }
+            self.isTrusted = granted
+            self.onStatusChange?(self.isTrusted)
+            self.scheduleRefreshBurst()
         }
     }
 
@@ -48,7 +52,7 @@ final class InputMonitoringPermissionManager: ObservableObject {
     }
 
     func openInputMonitoringSettings() {
-        refreshStatus()
+        refreshStatus(forceNotify: true)
 
         guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") else {
             return
@@ -114,7 +118,7 @@ final class InputMonitoringPermissionManager: ObservableObject {
         for delay in delays {
             let workItem = DispatchWorkItem { [weak self] in
                 Task { @MainActor in
-                    self?.refreshStatus()
+                    self?.refreshStatus(forceNotify: true)
                 }
             }
             burstRefreshWorkItems.append(workItem)

@@ -32,7 +32,11 @@ final class SoundLibrary: ObservableObject {
         for category in SoundCategory.allCases {
             let urls = try soundURLs(in: soundFolderURL(for: category))
             let sounds = try urls.map { url in
-                LoadedSound(category: category, url: url, buffer: try audioEngine.makeBuffer(from: url))
+                LoadedSound(
+                    category: category,
+                    url: url,
+                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+                )
             }
 
             newCounts[category] = sounds.count
@@ -41,7 +45,11 @@ final class SoundLibrary: ObservableObject {
 
         for url in try soundURLs(in: keySoundsFolderURL()) {
             guard let keyCode = keyCode(from: url) else { continue }
-            let sound = LoadedSound(category: .standard, url: url, buffer: try audioEngine.makeBuffer(from: url))
+            let sound = LoadedSound(
+                category: .standard,
+                url: url,
+                buffer: try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+            )
             loadedKeySounds[keyCode, default: []].append(sound)
         }
 
@@ -166,7 +174,7 @@ final class SoundLibrary: ObservableObject {
         let urls = try soundURLs(in: categoryFolder)
         guard let url = urls.randomElement() else { return }
 
-        let buffer = try audioEngine.makeBuffer(from: url)
+        let buffer = try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
         audioEngine.play(buffer: buffer)
     }
 
@@ -220,7 +228,11 @@ final class SoundLibrary: ObservableObject {
         for category in SoundCategory.allCases {
             let urls = try soundURLs(in: bundledPackURL.appendingPathComponent(category.folderName, isDirectory: true))
             loadedSounds[category] = try urls.map { url in
-                LoadedSound(category: category, url: url, buffer: try audioEngine.makeBuffer(from: url))
+                LoadedSound(
+                    category: category,
+                    url: url,
+                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+                )
             }
         }
 
@@ -229,7 +241,11 @@ final class SoundLibrary: ObservableObject {
         if fileManager.fileExists(atPath: keyFolderURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
             for url in try soundURLs(in: keyFolderURL) {
                 guard let keyCode = keyCode(from: url) else { continue }
-                let sound = LoadedSound(category: .standard, url: url, buffer: try audioEngine.makeBuffer(from: url))
+                let sound = LoadedSound(
+                    category: .standard,
+                    url: url,
+                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+                )
                 loadedKeySounds[keyCode, default: []].append(sound)
             }
         }

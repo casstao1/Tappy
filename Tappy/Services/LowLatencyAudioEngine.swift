@@ -25,12 +25,16 @@ enum AudioEngineError: LocalizedError {
 }
 
 final class LowLatencyAudioEngine {
+    static let maximumClickDuration: TimeInterval = 2.0
+
     private let queue = DispatchQueue(label: "Tappy.LowLatencyAudioEngine", qos: .userInitiated)
     private let engine = AVAudioEngine()
     private let outputFormat: AVAudioFormat
     private let concurrentVoices: Int
+    private let voiceReleasePadding: TimeInterval = 0.01
 
     private var players: [AVAudioPlayerNode] = []
+    private var voiceNextAvailableAt: [TimeInterval] = []
     private var loadedSounds: [SoundCategory: [LoadedSound]] = [:]
     private var loadedKeySounds: [UInt16: [LoadedSound]] = [:]
     private var previewSounds: [SoundCategory: [LoadedSound]] = [:]
@@ -43,7 +47,7 @@ final class LowLatencyAudioEngine {
     private var isEnabled = true
     private var outputVolume: Float = 1.0
 
-    init(concurrentVoices: Int = 12) {
+    init(concurrentVoices: Int = 8) {
         self.concurrentVoices = concurrentVoices
 
         let hardwareFormat = engine.outputNode.outputFormat(forBus: 0)
@@ -54,10 +58,10 @@ final class LowLatencyAudioEngine {
         configureEngine()
     }
 
-    func makeBuffer(from url: URL) throws -> AVAudioPCMBuffer {
+    func makeBuffer(from url: URL, maximumDuration: TimeInterval? = nil) throws -> AVAudioPCMBuffer {
         let sourceFile = try AVAudioFile(forReading: url)
         let sourceFormat = sourceFile.processingFormat
-        let frameCount = AVAudioFrameCount(sourceFile.length)
+        let frameCount = frameCountToRead(from: sourceFile, maximumDuration: maximumDuration)
 
         guard let sourceBuffer = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: frameCount) else {
             throw AudioEngineError.unreadableFile(url)
@@ -66,7 +70,7 @@ final class LowLatencyAudioEngine {
         try sourceFile.read(into: sourceBuffer)
 
         if sourceFormat == outputFormat {
-            return sourceBuffer
+            return durationLimitedBuffer(sourceBuffer, maximumDuration: maximumDuration)
         }
 
         guard let converter = AVAudioConverter(from: sourceFormat, to: outputFormat) else {
@@ -101,7 +105,7 @@ final class LowLatencyAudioEngine {
             throw AudioEngineError.conversionFailed(url)
         }
 
-        return convertedBuffer
+        return durationLimitedBuffer(convertedBuffer, maximumDuration: maximumDuration)
     }
 
     func setLoadedSounds(_ sounds: [SoundCategory: [LoadedSound]], keySounds: [UInt16: [LoadedSound]]) throws {
@@ -231,6 +235,7 @@ final class LowLatencyAudioEngine {
             player.volume = outputVolume
             return player
         }
+        voiceNextAvailableAt = Array(repeating: 0, count: concurrentVoices)
 
         engine.mainMixerNode.outputVolume = 1.0
     }
@@ -240,12 +245,21 @@ final class LowLatencyAudioEngine {
             engine.prepare()
             try engine.start()
         }
+
+        startPlayersIfNeeded()
+    }
+
+    private func startPlayersIfNeeded() {
+        for player in players where !player.isPlaying {
+            player.play()
+        }
     }
 
     private func stopPlayback() {
         for player in players {
             player.stop()
         }
+        voiceNextAvailableAt = Array(repeating: 0, count: players.count)
 
         if engine.isRunning {
             engine.pause()
@@ -311,10 +325,126 @@ final class LowLatencyAudioEngine {
     }
 
     private func playBuffer(_ buffer: AVAudioPCMBuffer) {
-        let player = players[nextPlayerIndex]
-        nextPlayerIndex = (nextPlayerIndex + 1) % players.count
-        player.stop()
+        guard !players.isEmpty else { return }
+
+        let now = ProcessInfo.processInfo.systemUptime
+        guard let playerIndex = firstIdlePlayerIndex(at: now) else {
+            return
+        }
+
+        let player = players[playerIndex]
         player.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
-        player.play()
+        voiceNextAvailableAt[playerIndex] = now + bufferDuration(buffer) + voiceReleasePadding
+        nextPlayerIndex = (playerIndex + 1) % players.count
+    }
+
+    private func firstIdlePlayerIndex(at now: TimeInterval) -> Int? {
+        guard !players.isEmpty else { return nil }
+
+        for offset in 0..<players.count {
+            let index = (nextPlayerIndex + offset) % players.count
+            if voiceNextAvailableAt[index] <= now {
+                return index
+            }
+        }
+
+        return nil
+    }
+
+    private func bufferDuration(_ buffer: AVAudioPCMBuffer) -> TimeInterval {
+        let sampleRate = buffer.format.sampleRate > 0 ? buffer.format.sampleRate : outputFormat.sampleRate
+        guard sampleRate > 0 else { return 0 }
+        return Double(buffer.frameLength) / sampleRate
+    }
+
+    private func frameCountToRead(from sourceFile: AVAudioFile, maximumDuration: TimeInterval?) -> AVAudioFrameCount {
+        let availableFrames = min(max(sourceFile.length, 0), AVAudioFramePosition(UInt32.max))
+        guard let maximumDuration, maximumDuration > 0, sourceFile.processingFormat.sampleRate > 0 else {
+            return AVAudioFrameCount(availableFrames)
+        }
+
+        let limitedFrames = AVAudioFramePosition(ceil(maximumDuration * sourceFile.processingFormat.sampleRate))
+        return AVAudioFrameCount(max(1, min(availableFrames, limitedFrames)))
+    }
+
+    private func durationLimitedBuffer(
+        _ buffer: AVAudioPCMBuffer,
+        maximumDuration: TimeInterval?
+    ) -> AVAudioPCMBuffer {
+        guard let maximumDuration, maximumDuration > 0, buffer.format.sampleRate > 0 else {
+            return buffer
+        }
+
+        let maximumFrames = AVAudioFrameCount(ceil(maximumDuration * buffer.format.sampleRate))
+        guard maximumFrames > 0, buffer.frameLength > maximumFrames else {
+            return buffer
+        }
+
+        guard let trimmedBuffer = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: maximumFrames) else {
+            return buffer
+        }
+
+        copyFrames(maximumFrames, from: buffer, to: trimmedBuffer)
+        trimmedBuffer.frameLength = maximumFrames
+        applyFadeOut(to: trimmedBuffer)
+        return trimmedBuffer
+    }
+
+    private func copyFrames(
+        _ frameCount: AVAudioFrameCount,
+        from source: AVAudioPCMBuffer,
+        to destination: AVAudioPCMBuffer
+    ) {
+        let frameCount = Int(frameCount)
+        let channelCount = Int(source.format.channelCount)
+        let sampleCount = source.format.isInterleaved ? frameCount * channelCount : frameCount
+        let planeCount = source.format.isInterleaved ? 1 : channelCount
+
+        switch source.format.commonFormat {
+        case .pcmFormatFloat32:
+            guard let sourceData = source.floatChannelData, let destinationData = destination.floatChannelData else { return }
+            for plane in 0..<planeCount {
+                destinationData[plane].update(from: sourceData[plane], count: sampleCount)
+            }
+        case .pcmFormatInt16:
+            guard let sourceData = source.int16ChannelData, let destinationData = destination.int16ChannelData else { return }
+            for plane in 0..<planeCount {
+                destinationData[plane].update(from: sourceData[plane], count: sampleCount)
+            }
+        case .pcmFormatInt32:
+            guard let sourceData = source.int32ChannelData, let destinationData = destination.int32ChannelData else { return }
+            for plane in 0..<planeCount {
+                destinationData[plane].update(from: sourceData[plane], count: sampleCount)
+            }
+        default:
+            break
+        }
+    }
+
+    private func applyFadeOut(to buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData, buffer.frameLength > 0 else {
+            return
+        }
+
+        let sampleRate = buffer.format.sampleRate > 0 ? buffer.format.sampleRate : outputFormat.sampleRate
+        let fadeFrameCount = min(Int(buffer.frameLength), max(1, Int(sampleRate * 0.01)))
+        let startFrame = Int(buffer.frameLength) - fadeFrameCount
+        let channelCount = Int(buffer.format.channelCount)
+        let planeCount = buffer.format.isInterleaved ? 1 : channelCount
+
+        for plane in 0..<planeCount {
+            let samples = channelData[plane]
+            for frameOffset in 0..<fadeFrameCount {
+                let gain = Float(fadeFrameCount - frameOffset) / Float(fadeFrameCount)
+                let frame = startFrame + frameOffset
+                if buffer.format.isInterleaved {
+                    for channel in 0..<channelCount {
+                        samples[frame * channelCount + channel] *= gain
+                    }
+                } else {
+                    samples[frame] *= gain
+                }
+            }
+        }
     }
 }

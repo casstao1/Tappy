@@ -19,6 +19,10 @@ struct MenuBarView: View {
 
             header
             Divider()
+            if let storeStatus = controller.premiumStoreStatusText {
+                storeStatusBar(storeStatus)
+                Divider()
+            }
             if controller.setupPhase != .complete {
                 setupBar
                 Divider()
@@ -29,7 +33,7 @@ struct MenuBarView: View {
             Divider()
             footer
         }
-        .frame(width: 268)
+        .frame(width: 320)
     }
 
     // MARK: - Header
@@ -67,6 +71,24 @@ struct MenuBarView: View {
         }
     }
 
+    private func storeStatusBar(_ message: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            ProgressView()
+                .controlSize(.mini)
+                .opacity(controller.isPremiumStoreBusy ? 1 : 0)
+
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.accentColor.opacity(0.04))
+    }
+
     // MARK: - Setup bar
 
     private var setupBar: some View {
@@ -85,6 +107,7 @@ struct MenuBarView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -131,12 +154,19 @@ struct MenuBarView: View {
 
                 Spacer()
 
+                Button("Restore") {
+                    Task { await controller.restorePremiumPurchases() }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+                .disabled(controller.isPremiumStoreBusy)
+
                 Button("Unlock \(controller.premiumUnlockPrice)") {
                     Task { await controller.purchasePremiumUnlock() }
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.mini)
-                .disabled(controller.isPremiumPurchaseInFlight)
+                .disabled(controller.isPremiumStoreBusy)
             }
         }
         .padding(.horizontal, 14)
@@ -162,14 +192,14 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .disabled(controller.isPremiumPurchaseInFlight)
+                .disabled(controller.isPremiumStoreBusy)
 
                 Button("Restore") {
                     Task { await controller.restorePremiumPurchases() }
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .disabled(controller.isPremiumStoreLoading || controller.isPremiumPurchaseInFlight)
+                .disabled(controller.isPremiumStoreBusy)
 
                 Button("Not Now") {
                     controller.dismissUpgradeCTA()
@@ -363,6 +393,10 @@ private struct PackRow: View {
             Button("Unlock All — \(controller.premiumUnlockPrice)") {
                 controller.highlightPack(pack)
                 Task { await controller.purchasePremiumUnlock() }
+            }
+            Button("Restore Purchase") {
+                controller.highlightPack(pack)
+                Task { await controller.restorePremiumPurchases() }
             }
             Button("Not Now", role: .cancel) {}
         } message: {

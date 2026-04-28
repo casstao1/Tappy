@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import Foundation
+import StoreKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -22,13 +23,43 @@ enum SetupPhase: Equatable {
 
 @MainActor
 final class KeyboardSoundController: ObservableObject {
+    private enum StorePresentationMode {
+        case purchase
+        case restore
+
+        var title: String {
+            switch self {
+            case .purchase:
+                return "Unlocking Premium"
+            case .restore:
+                return "Restoring Purchase"
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .purchase:
+                return "Complete the App Store confirmation to unlock all premium sound packs."
+            case .restore:
+                return "Tappy is checking the App Store for a previous premium purchase."
+            }
+        }
+    }
+
     private enum DefaultsKey {
         static let selectedPackID = "Tappy.selectedPackID"
         static let clickVolume = "Tappy.clickVolume"
         static let trialedPackIDs = "Tappy.trialedPackIDs"
+        static let reviewFirstUseTimestamp = "Tappy.reviewFirstUseTimestamp"
+        static let reviewLastActiveDayTimestamp = "Tappy.reviewLastActiveDayTimestamp"
+        static let reviewActiveDayCount = "Tappy.reviewActiveDayCount"
+        static let reviewPromptedTimestamp = "Tappy.reviewPromptedTimestamp"
     }
 
     private static let livePreviewDurationSeconds = 90
+    private static let reviewPromptDelaySeconds: TimeInterval = 0.8
+    private static let reviewMinimumElapsedTime: TimeInterval = 60 * 60 * 24 * 2
+    private static let reviewMinimumActiveDays = 2
 
     @Published var isEnabled = true {
         didSet {
@@ -43,6 +74,7 @@ final class KeyboardSoundController: ObservableObject {
     @Published private(set) var premiumUnlocked = false
     @Published private(set) var trialedPackIDs: Set<String> = []
     @Published private(set) var setupPhase: SetupPhase
+    @Published private(set) var isPremiumFlowInFlight = false
     @Published var clickVolume: Double {
         didSet {
             let clampedVolume = min(max(clickVolume, 0), 1)
@@ -72,6 +104,7 @@ final class KeyboardSoundController: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+
         premiumUnlocked = false
         trialedPackIDs = Set(userDefaults.stringArray(forKey: DefaultsKey.trialedPackIDs) ?? [])
         if userDefaults.object(forKey: DefaultsKey.clickVolume) == nil {
@@ -87,16 +120,11 @@ final class KeyboardSoundController: ObservableObject {
         // TCC results across launches. We also probe whether an event tap can
         // actually be created in this process, which is the definitive test.
         let trusted = CGPreflightListenEventAccess()
-        if !trusted {
-            setupPhase = .needsPermission
-        } else if Self.canCreateEventTap() {
-            setupPhase = .complete
-        } else {
-            // TCC says yes but the tap creation fails — this happens when
-            // permission was just granted and the running process hasn't
-            // received it yet. A relaunch resolves it (macOS requirement).
-            setupPhase = .needsRestart
-        }
+        setupPhase = Self.setupPhase(
+            trusted: trusted,
+            captureState: .stopped,
+            allowTapProbe: true
+        )
 
         let savedPackID = userDefaults.string(forKey: DefaultsKey.selectedPackID)
 
@@ -144,18 +172,8 @@ final class KeyboardSoundController: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
 
-                if trusted && self.setupPhase == .needsPermission {
-                    // Permission was just granted while the app was open.
-                    // Probe whether this process can use it without relaunching.
-                    if Self.canCreateEventTap() {
-                        self.setupPhase = .complete
-                    } else {
-                        // Most common path: tap doesn't work until relaunch.
-                        self.setupPhase = .needsRestart
-                    }
-                }
-
                 self.attemptListenerAttachIfNeeded()
+                self.reconcileSetupPhase(allowTapProbe: true)
                 self.statusMessage = self.monitoringSummary()
             }
         }
@@ -164,12 +182,8 @@ final class KeyboardSoundController: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 self.backgroundCaptureState = state
+                self.reconcileSetupPhase(allowTapProbe: false)
                 self.statusMessage = self.monitoringSummary()
-
-                // If the tap attaches AND TCC confirms trust, we're fully live.
-                if state == .ready && self.permissionManager.isTrusted {
-                    self.setupPhase = .complete
-                }
             }
         }
 
@@ -177,6 +191,7 @@ final class KeyboardSoundController: ObservableObject {
         audioEngine.setVolume(clickVolume)
         reloadSounds()
         updateMonitoringState()
+        reconcileSetupPhase(allowTapProbe: true)
         setupMenuBarItem()
     }
 
@@ -185,12 +200,19 @@ final class KeyboardSoundController: ObservableObject {
         if let item = menuStatusItem {
             NSStatusBar.system.removeStatusItem(item)
         }
+        if let outsideClickMonitor {
+            NSEvent.removeMonitor(outsideClickMonitor)
+        }
     }
 
     // MARK: - Menu bar status item (NSStatusItem-based)
 
     private var menuStatusItem: NSStatusItem?
     private var menuPopover: NSPopover?
+    private var outsideClickMonitor: Any?
+    private var pendingReviewPromptWorkItem: DispatchWorkItem?
+    private var storePresentationWindowController: NSWindowController?
+    private var storePresentationPreviousActivationPolicy: NSApplication.ActivationPolicy?
 
     private func setupMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -220,8 +242,23 @@ final class KeyboardSoundController: ObservableObject {
         // shows the inactive/glossy window appearance while dangling open.
         NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.menuPopover?.close() }
+            .sink { [weak self] _ in
+                self?.cancelPendingReviewPrompt()
+                self?.menuPopover?.close()
+            }
             .store(in: &cancellables)
+
+        // Global mouse-down monitor: dismiss the popover when the user clicks
+        // outside the app. This handles the case where the popover window becomes
+        // key after a StoreKit payment sheet is presented and dismissed — in that
+        // state NSPopover's built-in .transient auto-dismiss stops firing because
+        // it only applies to non-key windows.
+        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { [weak self] _ in
+            guard let self, let popover = self.menuPopover, popover.isShown else { return }
+            DispatchQueue.main.async { popover.performClose(nil) }
+        }
     }
 
     @objc private func handleStatusItemClick(_ sender: AnyObject) {
@@ -229,10 +266,14 @@ final class KeyboardSoundController: ObservableObject {
         guard let popover = menuPopover else { return }
 
         if popover.isShown {
+            cancelPendingReviewPrompt()
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
+            if let controller = popover.contentViewController {
+                maybeRequestReview(in: controller)
+            }
         }
     }
 
@@ -307,19 +348,27 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     var accessibilitySummary: String {
-        permissionManager.hasGlobalMonitoringAccess
+        hasConfirmedInputMonitoring
             ? "System-wide key monitoring is available."
             : "Background key clicks need confirmed Input Monitoring access."
     }
 
     var isRunningFromDerivedData: Bool {
-        Bundle.main.bundleURL.path.contains("/DerivedData/")
+        currentAppPath.contains("/DerivedData/")
+    }
+
+    var currentAppPath: String {
+        Bundle.main.bundleURL.standardizedFileURL.path
+    }
+
+    var runningAppLocationSummary: String {
+        abbreviatedPath(currentAppPath)
     }
 
     /// True when both TCC permission and the event tap are confirmed working.
     /// Used by diagnostics and the warning banner.
     var hasConfirmedInputMonitoring: Bool {
-        setupPhase == .complete
+        setupPhase == .complete || backgroundCaptureState == .ready
     }
 
     var compactStatus: String {
@@ -332,7 +381,7 @@ final class KeyboardSoundController: ObservableObject {
         // Only show warnings on the home screen (after setup is complete)
         guard setupPhase == .complete else { return nil }
 
-        if !permissionManager.isTrusted {
+        if backgroundCaptureState != .ready && !permissionManager.isTrusted {
             return "Input Monitoring was revoked. Re-enable Tappy in System Settings → Privacy & Security → Input Monitoring."
         }
 
@@ -344,7 +393,8 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     var permissionDebugSummary: String {
-        "TCC preflight: \(permissionManager.isTrusted ? "✓" : "✗"), event tap: \(backgroundCaptureState == .ready ? "✓" : "✗")"
+        let confirmed = hasConfirmedInputMonitoring ? "✓" : "✗"
+        return "confirmed: \(confirmed), TCC preflight: \(permissionManager.isTrusted ? "✓" : "✗"), event tap: \(backgroundCaptureState == .ready ? "✓" : "✗"), running: \(runningAppLocationSummary)"
     }
 
     // MARK: - Pack access
@@ -377,6 +427,22 @@ final class KeyboardSoundController: ObservableObject {
         premiumStore.lastMessage
     }
 
+    var premiumStoreStatusText: String? {
+        if premiumStore.isPurchasing {
+            return "Waiting for App Store confirmation..."
+        }
+
+        if premiumStore.isLoading {
+            return "Connecting to the App Store..."
+        }
+
+        if isPremiumFlowInFlight {
+            return "Preparing App Store purchase..."
+        }
+
+        return premiumStore.lastMessage
+    }
+
     var isPremiumStoreLoading: Bool {
         premiumStore.isLoading
     }
@@ -385,13 +451,8 @@ final class KeyboardSoundController: ObservableObject {
         premiumStore.isPurchasing
     }
 
-    var stableAppPath: String {
-        workspaceAppURL.path
-    }
-
-    private var workspaceAppURL: URL {
-        URL(fileURLWithPath: fileManager.currentDirectoryPath)
-            .appendingPathComponent("Tappy.app", isDirectory: true)
+    var isPremiumStoreBusy: Bool {
+        isPremiumFlowInFlight || premiumStore.isBusy
     }
 
     // MARK: - Public actions
@@ -410,14 +471,6 @@ final class KeyboardSoundController: ObservableObject {
 
     func revealSoundsFolder() {
         soundLibrary.revealInFinder()
-    }
-
-    func revealStableApp() {
-        NSWorkspace.shared.selectFile(stableAppPath, inFileViewerRootedAtPath: NSString(string: stableAppPath).deletingLastPathComponent)
-    }
-
-    func openStableApp() {
-        NSWorkspace.shared.openApplication(at: workspaceAppURL, configuration: NSWorkspace.OpenConfiguration())
     }
 
     /// Spawns a fresh instance of the current app and quits this one.
@@ -549,7 +602,35 @@ final class KeyboardSoundController: ObservableObject {
 
     func purchasePremiumUnlock() async {
         cancelPendingCTA()
-        await premiumStore.purchaseUnlockAll()
+
+        guard !isPremiumFlowInFlight else {
+            statusMessage = "The App Store is already processing a request."
+            return
+        }
+        isPremiumFlowInFlight = true
+        defer { isPremiumFlowInFlight = false }
+
+        statusMessage = "Connecting to the App Store..."
+        let productIsReady = await premiumStore.prepareUnlockAllForPurchase()
+
+        guard !premiumUnlocked else {
+            statusMessage = "Premium packs are already unlocked."
+            return
+        }
+
+        guard productIsReady else {
+            statusMessage = premiumStore.lastMessage ?? "Premium unlock is not available yet."
+            return
+        }
+
+        guard let window = beginStorePresentation(.purchase) else {
+            statusMessage = "Unable to open the App Store purchase window."
+            return
+        }
+
+        defer { endStorePresentation() }
+
+        await premiumStore.purchaseUnlockAll(confirmIn: window)
         if premiumUnlocked, highlightedPack.isPremium {
             showUpgradeCTA = false
             ctaPack = nil
@@ -560,6 +641,21 @@ final class KeyboardSoundController: ObservableObject {
 
     func restorePremiumPurchases() async {
         cancelPendingCTA()
+
+        guard !isPremiumFlowInFlight else {
+            statusMessage = "The App Store is already processing a request."
+            return
+        }
+        isPremiumFlowInFlight = true
+        defer { isPremiumFlowInFlight = false }
+
+        let didOpenPresentation = beginStorePresentation(.restore) != nil
+        defer {
+            if didOpenPresentation {
+                endStorePresentation()
+            }
+        }
+
         await premiumStore.restorePurchases()
         if premiumUnlocked, highlightedPack.isPremium {
             showUpgradeCTA = false
@@ -575,9 +671,10 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func refreshInputMonitoringStatus() {
-        permissionManager.refreshStatus()
+        permissionManager.refreshStatus(forceNotify: true)
         permissionManager.scheduleRefreshBurst()
         attemptListenerAttachIfNeeded()
+        reconcileSetupPhase(allowTapProbe: true)
         statusMessage = monitoringSummary()
     }
 
@@ -598,9 +695,10 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func handleAppDidBecomeActive() {
-        permissionManager.refreshStatus()
+        permissionManager.refreshStatus(forceNotify: true)
         permissionManager.scheduleRefreshBurst()
         attemptListenerAttachIfNeeded()
+        reconcileSetupPhase(allowTapProbe: true)
     }
 
     func handleAppDidResignActive() {
@@ -761,7 +859,14 @@ final class KeyboardSoundController: ObservableObject {
 
     private func attemptListenerAttachIfNeeded() {
         guard isEnabled else { return }
-        guard backgroundCaptureState != .ready else { return }
+
+        if keyboardMonitor.captureState == .ready {
+            if backgroundCaptureState != .ready {
+                backgroundCaptureState = .ready
+                reconcileSetupPhase(allowTapProbe: false)
+            }
+            return
+        }
 
         keyboardMonitor.start { [weak self] trigger in
             DispatchQueue.main.async {
@@ -770,8 +875,123 @@ final class KeyboardSoundController: ObservableObject {
         }
     }
 
+    private func reconcileSetupPhase(allowTapProbe: Bool) {
+        setupPhase = Self.setupPhase(
+            trusted: permissionManager.isTrusted,
+            captureState: backgroundCaptureState,
+            allowTapProbe: allowTapProbe
+        )
+    }
+
+    private func beginStorePresentation(_ mode: StorePresentationMode) -> NSWindow? {
+        cancelPendingReviewPrompt()
+        menuPopover?.performClose(nil)
+
+        storePresentationPreviousActivationPolicy = NSApp.activationPolicy()
+        if storePresentationPreviousActivationPolicy != .regular {
+            _ = NSApp.setActivationPolicy(.regular)
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        let controller = makeStorePresentationWindowController(mode: mode)
+        storePresentationWindowController = controller
+
+        guard let window = controller.window else { return nil }
+
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        return window
+    }
+
+    private func endStorePresentation() {
+        storePresentationWindowController?.close()
+        storePresentationWindowController = nil
+
+        if let previousPolicy = storePresentationPreviousActivationPolicy, previousPolicy != NSApp.activationPolicy() {
+            _ = NSApp.setActivationPolicy(previousPolicy)
+        }
+        storePresentationPreviousActivationPolicy = nil
+    }
+
+    private func makeStorePresentationWindowController(mode: StorePresentationMode) -> NSWindowController {
+        let hostingController = NSHostingController(
+            rootView: StorePresentationView(title: mode.title, message: mode.message)
+        )
+        let window = NSWindow(contentViewController: hostingController)
+        window.styleMask = [.titled, .closable]
+        window.title = mode.title
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isReleasedWhenClosed = false
+        window.collectionBehavior = [.moveToActiveSpace]
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        window.standardWindowButton(.zoomButton)?.isHidden = true
+        window.setContentSize(NSSize(width: 340, height: 140))
+        return NSWindowController(window: window)
+    }
+
     private func persistSelectedPack(_ pack: TechPack) {
         userDefaults.set(pack.id, forKey: DefaultsKey.selectedPackID)
+    }
+
+    private func maybeRequestReview(in controller: NSViewController, now: Date = Date()) {
+        guard setupPhase == .complete else { return }
+        guard userDefaults.object(forKey: DefaultsKey.reviewPromptedTimestamp) == nil else { return }
+
+        recordReviewUsage(for: now)
+
+        guard isEligibleForReviewRequest(at: now) else { return }
+        guard pendingReviewPromptWorkItem == nil else { return }
+
+        let workItem = DispatchWorkItem { [weak self, weak controller] in
+            guard let self else { return }
+            defer { self.pendingReviewPromptWorkItem = nil }
+
+            guard let controller else { return }
+            guard self.setupPhase == .complete else { return }
+            guard self.menuPopover?.isShown == true else { return }
+            guard NSApp.isActive else { return }
+
+            self.userDefaults.set(Date().timeIntervalSince1970, forKey: DefaultsKey.reviewPromptedTimestamp)
+            AppStore.requestReview(in: controller)
+        }
+
+        pendingReviewPromptWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.reviewPromptDelaySeconds, execute: workItem)
+    }
+
+    private func recordReviewUsage(for now: Date) {
+        if userDefaults.object(forKey: DefaultsKey.reviewFirstUseTimestamp) == nil {
+            userDefaults.set(now.timeIntervalSince1970, forKey: DefaultsKey.reviewFirstUseTimestamp)
+        }
+
+        let todayStart = Calendar.autoupdatingCurrent.startOfDay(for: now).timeIntervalSince1970
+        let lastRecordedDay = userDefaults.object(forKey: DefaultsKey.reviewLastActiveDayTimestamp) as? Double
+
+        guard lastRecordedDay != todayStart else { return }
+
+        let activeDayCount = userDefaults.integer(forKey: DefaultsKey.reviewActiveDayCount) + 1
+        userDefaults.set(todayStart, forKey: DefaultsKey.reviewLastActiveDayTimestamp)
+        userDefaults.set(activeDayCount, forKey: DefaultsKey.reviewActiveDayCount)
+    }
+
+    private func isEligibleForReviewRequest(at now: Date) -> Bool {
+        let activeDayCount = userDefaults.integer(forKey: DefaultsKey.reviewActiveDayCount)
+        guard activeDayCount >= Self.reviewMinimumActiveDays else { return false }
+
+        guard let firstUseTimestamp = userDefaults.object(forKey: DefaultsKey.reviewFirstUseTimestamp) as? Double else {
+            return false
+        }
+
+        let elapsedTime = now.timeIntervalSince1970 - firstUseTimestamp
+        return elapsedTime >= Self.reviewMinimumElapsedTime
+    }
+
+    private func cancelPendingReviewPrompt() {
+        pendingReviewPromptWorkItem?.cancel()
+        pendingReviewPromptWorkItem = nil
     }
 
     private func cancelPendingCTA() {
@@ -802,6 +1022,33 @@ final class KeyboardSoundController: ObservableObject {
         return isEnabled
     }
 
+    private static func setupPhase(
+        trusted: Bool,
+        captureState: KeyboardMonitor.CaptureState,
+        allowTapProbe: Bool
+    ) -> SetupPhase {
+        if captureState == .ready {
+            return .complete
+        }
+
+        if allowTapProbe && Self.canCreateEventTap() {
+            return .complete
+        }
+
+        guard trusted else { return .needsPermission }
+
+        return .needsRestart
+    }
+
+    private func abbreviatedPath(_ path: String) -> String {
+        let homePath = NSHomeDirectory()
+        if path.hasPrefix(homePath) {
+            return "~" + path.dropFirst(homePath.count)
+        }
+
+        return path
+    }
+
     private static func startupPack(from savedPackID: String?, premiumUnlocked: Bool) -> TechPack? {
         guard
             let savedPackID,
@@ -813,5 +1060,28 @@ final class KeyboardSoundController: ObservableObject {
         guard savedPack.isAvailable else { return TechPack.plasticTapping }
         guard !savedPack.isPremium || premiumUnlocked else { return TechPack.plasticTapping }
         return savedPack
+    }
+}
+
+private struct StorePresentationView: View {
+    let title: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .controlSize(.large)
+
+            Text(title)
+                .font(.headline)
+
+            Text(message)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(20)
+        .frame(width: 340, height: 140)
+        .background(Color(NSColor.windowBackgroundColor))
     }
 }

@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
 
@@ -20,7 +21,7 @@ final class KeyboardMonitor {
         case unavailable
     }
 
-    private let duplicateSuppressionWindow: TimeInterval = 0.035
+    private let duplicateTriggerSuppressionWindow: TimeInterval = 0.04
 
     private var localKeyMonitor: Any?
     private var localFlagsMonitor: Any?
@@ -33,9 +34,11 @@ final class KeyboardMonitor {
     private var eventTapRunLoop: CFRunLoop?
 
     private var handler: ((KeyboardTrigger) -> Void)?
-    private var lastTriggerKeyCode: UInt16?
-    private var lastTriggerTime: TimeInterval = 0
+    private var pressedKeyCodes = Set<UInt16>()
+    private var lastEmittedTrigger: KeyboardTrigger?
+    private var lastEmittedAt: TimeInterval = 0
     private var isAppActive = false
+    private var wasSecureEventInputEnabled = false
 
     private(set) var isMonitoring = false
     private(set) var captureState: CaptureState = .stopped
@@ -43,18 +46,26 @@ final class KeyboardMonitor {
     var onCaptureStateChange: ((CaptureState) -> Void)?
 
     func start(handler: @escaping (KeyboardTrigger) -> Void) {
-        stop()
         self.handler = handler
+
+        if isMonitoring {
+            if captureState != .ready {
+                stopEventTap()
+                startEventTap()
+            }
+            return
+        }
+
         installApplicationActivityObservers()
 
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.processKeyDown(event)
-            return nil
+            guard let self else { return event }
+            return self.processKeyDown(event) ? nil : event
         }
 
         localFlagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             self?.processFlagsChanged(event)
-            return nil
+            return event
         }
 
         localKeyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { [weak self] event in
@@ -77,6 +88,7 @@ final class KeyboardMonitor {
         localKeyUpMonitor = nil
         stopEventTap()
         handler = nil
+        clearPressedKeys()
         isMonitoring = false
         updateCaptureState(.stopped)
     }
@@ -94,6 +106,7 @@ final class KeyboardMonitor {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            self?.clearPressedKeys()
             self?.isAppActive = true
         }
 
@@ -102,6 +115,7 @@ final class KeyboardMonitor {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            self?.clearPressedKeys()
             self?.isAppActive = false
         }
     }
@@ -115,22 +129,24 @@ final class KeyboardMonitor {
         }
         appDidBecomeActiveObserver = nil
         appDidResignActiveObserver = nil
+        clearPressedKeys()
         isAppActive = false
     }
 
-    private func processKeyDown(_ event: NSEvent) {
-        guard !event.isARepeat else { return }
-        let trigger = triggerForKeyCode(event.keyCode, origin: .localApp)
-        emit(trigger)
+    private func processKeyDown(_ event: NSEvent) -> Bool {
+        if !event.isARepeat {
+            handleKeyDown(keyCode: event.keyCode, origin: .localApp)
+        }
+
+        return shouldConsumeLocalKeyDown(event)
     }
 
     private func processKeyUp(_ event: NSEvent) {
-        _ = event
+        handleKeyUp(keyCode: event.keyCode)
     }
 
     private func processFlagsChanged(_ event: NSEvent) {
-        guard isModifierPress(event) else { return }
-        emit(.modifier, keyCode: event.keyCode, origin: .localApp)
+        handleModifierFlagsChanged(keyCode: event.keyCode, modifierFlags: event.modifierFlags, origin: .localApp)
     }
 
     private func startEventTap() {
@@ -149,21 +165,19 @@ final class KeyboardMonitor {
             // Re-enable the tap immediately on the tap thread — this must be
             // synchronous; deferring it would drop events during the gap.
             if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                DispatchQueue.main.async {
+                    monitor.handleEventTapDisabled(type: type)
+                }
+
                 if let tap = monitor.eventTap {
                     CGEvent.tapEnable(tap: tap, enable: true)
                 }
                 return Unmanaged.passUnretained(event)
             }
 
-            // Extract all needed values from the CGEvent right here on the tap
-            // thread (safe — CGEvent field reads are immutable/thread-safe), then
-            // dispatch the actual sound logic to the main thread.
-            //
-            // This eliminates the data race between the tap thread and the local
-            // NSEvent monitors (which run on main). Before this fix, both threads
-            // could simultaneously read/write lastTriggerKeyCode and lastTriggerTime,
-            // corrupting the duplicate-suppression window and silencing subsequent
-            // keys after a Command combo.
+            // Extract event data on the tap thread, then dispatch all stateful
+            // key reconciliation back to main so local and global monitors share
+            // one consistent pressed-key model.
             switch type {
             case .keyDown:
                 let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
@@ -171,6 +185,12 @@ final class KeyboardMonitor {
                 guard !isRepeat else { break }
                 DispatchQueue.main.async {
                     monitor.handleGlobalKeyDown(keyCode: keyCode)
+                }
+
+            case .keyUp:
+                let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+                DispatchQueue.main.async {
+                    monitor.handleGlobalKeyUp(keyCode: keyCode)
                 }
 
             case .flagsChanged:
@@ -257,55 +277,167 @@ final class KeyboardMonitor {
 
     // Called on the main thread — safe to read/write all shared state.
     fileprivate func handleGlobalKeyDown(keyCode: UInt16) {
-        guard !isAppActive else { return }
-        let trigger = triggerForKeyCode(keyCode, origin: .globalBackground)
-        emit(trigger)
+        guard shouldHandleGlobalEvent() else { return }
+        handleKeyDown(keyCode: keyCode, origin: .globalBackground)
+    }
+
+    // Called on the main thread — safe to read/write all shared state.
+    fileprivate func handleGlobalKeyUp(keyCode: UInt16) {
+        guard shouldHandleGlobalEvent() else { return }
+        handleKeyUp(keyCode: keyCode)
     }
 
     // Called on the main thread — safe to read/write all shared state.
     fileprivate func handleGlobalFlagsChanged(keyCode: UInt16, rawFlags: CGEventFlags.RawValue) {
-        guard !isAppActive else { return }
+        guard shouldHandleGlobalEvent() else { return }
         let flags = NSEvent.ModifierFlags(rawValue: UInt(rawFlags))
-        guard isModifierPress(keyCode: keyCode, modifierFlags: flags) else { return }
-        emit(.modifier, keyCode: keyCode, origin: .globalBackground)
+        handleModifierFlagsChanged(keyCode: keyCode, modifierFlags: flags, origin: .globalBackground)
     }
 
-    private func processKeyCode(_ keyCode: CGKeyCode, isModifier: Bool) {
-        if isModifier {
-            switch keyCode {
-            case 54, 55, 56, 57, 58, 59, 60, 61, 62, 63:
-                emit(.modifier, keyCode: UInt16(keyCode), origin: .localApp)
-            default:
-                break
-            }
+    private func handleKeyDown(keyCode: UInt16, origin: KeyboardTriggerOrigin) {
+        guard !synchronizeSecureEventInputState() else { return }
+
+        // Normal keyDown events are already de-duped by the autorepeat flag.
+        // Do not keep them in pressedKeyCodes: password fields can suppress
+        // keyUp events, leaving stale standard keys that silence later typing.
+        emit(triggerForKeyCode(keyCode, origin: origin))
+    }
+
+    private func handleKeyUp(keyCode: UInt16) {
+        pressedKeyCodes.remove(keyCode)
+    }
+
+    private func handleModifierFlagsChanged(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags,
+        origin: KeyboardTriggerOrigin
+    ) {
+        guard !synchronizeSecureEventInputState() else { return }
+        guard isModifierKey(keyCode) else { return }
+
+        if isModifierPress(keyCode: keyCode, modifierFlags: modifierFlags) {
+            guard pressedKeyCodes.insert(keyCode).inserted else { return }
+            emit(KeyboardTrigger(category: .modifier, keyCode: keyCode, origin: origin))
             return
         }
 
-        emit(triggerForKeyCode(UInt16(keyCode), origin: .localApp))
+        pressedKeyCodes.remove(keyCode)
     }
 
-    private func emit(_ category: SoundCategory, keyCode: UInt16, origin: KeyboardTriggerOrigin) {
-        emit(KeyboardTrigger(category: category, keyCode: keyCode, origin: origin))
+    private func clearPressedKeys() {
+        pressedKeyCodes.removeAll()
+        lastEmittedTrigger = nil
+        lastEmittedAt = 0
     }
 
-    private func emit(_ trigger: KeyboardTrigger, bypassSuppression: Bool = false) {
-        if bypassSuppression || trigger.category == .delete {
-            handler?(trigger)
-            return
-        }
+    private func shouldHandleGlobalEvent() -> Bool {
+        // Menu-bar popovers can receive local key events even when NSApp's
+        // active-state notifications lag behind. If Tappy owns a key window,
+        // the local monitor is the authoritative source and the global tap
+        // would be a duplicate of the same physical key.
+        guard !isAppActive, !NSApp.isActive else { return false }
+        guard NSApp.keyWindow == nil else { return false }
 
+        return true
+    }
+
+    private func emit(_ trigger: KeyboardTrigger) {
         let now = ProcessInfo.processInfo.systemUptime
-        if lastTriggerKeyCode == trigger.keyCode, now - lastTriggerTime < duplicateSuppressionWindow {
+
+        if let lastEmittedTrigger,
+           trigger.keyCode == lastEmittedTrigger.keyCode,
+           trigger.category == lastEmittedTrigger.category,
+           now - lastEmittedAt < duplicateTriggerSuppressionWindow {
             return
         }
 
-        lastTriggerKeyCode = trigger.keyCode
-        lastTriggerTime = now
+        lastEmittedTrigger = trigger
+        lastEmittedAt = now
         handler?(trigger)
+    }
+
+    private func handleEventTapDisabled(type: CGEventType) {
+        clearPressedKeys()
+
+        if type == .tapDisabledByUserInput {
+            wasSecureEventInputEnabled = true
+        }
+    }
+
+    private func synchronizeSecureEventInputState() -> Bool {
+        let isSecureEventInputEnabled = IsSecureEventInputEnabled()
+
+        if isSecureEventInputEnabled || isSecureEventInputEnabled != wasSecureEventInputEnabled {
+            clearPressedKeys()
+        }
+
+        wasSecureEventInputEnabled = isSecureEventInputEnabled
+        return isSecureEventInputEnabled
+    }
+
+    private func shouldConsumeLocalKeyDown(_ event: NSEvent) -> Bool {
+        // Local monitors only see events being dispatched to Tappy. If no real
+        // text editor is focused, consume text-like keyDown events after Tappy
+        // plays its sound so AppKit does not also emit the system disabled beep.
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard !flags.contains(.command) else { return false }
+        guard !focusedResponderAcceptsTextInput() else { return false }
+
+        return isTextLikeLocalKeyDown(event)
+    }
+
+    private func focusedResponderAcceptsTextInput() -> Bool {
+        guard let firstResponder = NSApp.keyWindow?.firstResponder else {
+            return false
+        }
+
+        if firstResponder is NSTextView {
+            return true
+        }
+
+        return false
+    }
+
+    private func isTextLikeLocalKeyDown(_ event: NSEvent) -> Bool {
+        switch Int(event.keyCode) {
+        case kVK_Escape,
+             kVK_Tab,
+             kVK_Home,
+             kVK_End,
+             kVK_PageUp,
+             kVK_PageDown,
+             kVK_LeftArrow,
+             kVK_RightArrow,
+             kVK_DownArrow,
+             kVK_UpArrow:
+            return false
+        default:
+            break
+        }
+
+        guard let characters = event.charactersIgnoringModifiers, !characters.isEmpty else {
+            return false
+        }
+
+        // Function/navigation keys are represented as private-use Unicode
+        // scalars. Let those continue through so app/system keyboard handling
+        // is not swallowed just to suppress a beep.
+        return !characters.unicodeScalars.contains { scalar in
+            (0xF700...0xF8FF).contains(Int(scalar.value))
+        }
     }
 
     private func isModifierPress(_ event: NSEvent) -> Bool {
         isModifierPress(keyCode: event.keyCode, modifierFlags: event.modifierFlags)
+    }
+
+    private func isModifierKey(_ keyCode: UInt16) -> Bool {
+        switch keyCode {
+        case 54, 55, 56, 57, 58, 59, 60, 61, 62, 63:
+            return true
+        default:
+            return false
+        }
     }
 
     private func isModifierPress(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
@@ -330,8 +462,13 @@ final class KeyboardMonitor {
     private func updateCaptureState(_ newState: CaptureState) {
         guard captureState != newState else { return }
         captureState = newState
-        DispatchQueue.main.async { [weak self] in
-            self?.onCaptureStateChange?(newState)
+
+        if Thread.isMainThread {
+            onCaptureStateChange?(newState)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.onCaptureStateChange?(newState)
+            }
         }
     }
 
