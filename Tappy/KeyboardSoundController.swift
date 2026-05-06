@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import CoreGraphics
 import Foundation
 import StoreKit
 import SwiftUI
@@ -14,10 +15,10 @@ enum SetupPhase: Equatable {
     /// No TCC entry exists yet. User must open System Settings and grant access.
     case needsPermission
     /// TCC permission is now detected but this process's event tap still cannot
-    /// attach — macOS requires a relaunch before a newly granted permission
-    /// takes effect for running processes. One restart fixes it.
+    /// attach. macOS often requires a relaunch before newly granted permission
+    /// takes effect for the running process.
     case needsRestart
-    /// Event tap is active and TCC permission is confirmed. App is fully functional.
+    /// Event tap is active and TCC permission is confirmed.
     case complete
 }
 
@@ -113,12 +114,6 @@ final class KeyboardSoundController: ObservableObject {
             clickVolume = min(max(userDefaults.double(forKey: DefaultsKey.clickVolume), 0), 1)
         }
 
-        // Evaluate setup phase synchronously so the correct screen is shown
-        // on the very first SwiftUI render — no flash, no async race.
-        //
-        // CGPreflightListenEventAccess() alone is unreliable: it caches stale
-        // TCC results across launches. We also probe whether an event tap can
-        // actually be created in this process, which is the definitive test.
         let trusted = CGPreflightListenEventAccess()
         setupPhase = Self.setupPhase(
             trusted: trusted,
@@ -168,7 +163,7 @@ final class KeyboardSoundController: ObservableObject {
             self.statusMessage = unlocked ? "Premium packs unlocked." : self.monitoringSummary()
         }
 
-        permissionManager.onStatusChange = { [weak self] trusted in
+        permissionManager.onStatusChange = { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
 
@@ -200,16 +195,12 @@ final class KeyboardSoundController: ObservableObject {
         if let item = menuStatusItem {
             NSStatusBar.system.removeStatusItem(item)
         }
-        if let outsideClickMonitor {
-            NSEvent.removeMonitor(outsideClickMonitor)
-        }
     }
 
     // MARK: - Menu bar status item (NSStatusItem-based)
 
     private var menuStatusItem: NSStatusItem?
     private var menuPopover: NSPopover?
-    private var outsideClickMonitor: Any?
     private var pendingReviewPromptWorkItem: DispatchWorkItem?
     private var storePresentationWindowController: NSWindowController?
     private var storePresentationPreviousActivationPolicy: NSApplication.ActivationPolicy?
@@ -248,17 +239,6 @@ final class KeyboardSoundController: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Global mouse-down monitor: dismiss the popover when the user clicks
-        // outside the app. This handles the case where the popover window becomes
-        // key after a StoreKit payment sheet is presented and dismissed — in that
-        // state NSPopover's built-in .transient auto-dismiss stops firing because
-        // it only applies to non-key windows.
-        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
-            matching: [.leftMouseDown, .rightMouseDown]
-        ) { [weak self] _ in
-            guard let self, let popover = self.menuPopover, popover.isShown else { return }
-            DispatchQueue.main.async { popover.performClose(nil) }
-        }
     }
 
     @objc private func handleStatusItemClick(_ sender: AnyObject) {
@@ -280,29 +260,26 @@ final class KeyboardSoundController: ObservableObject {
     private func updateMenuBarIcon() {
         guard let button = menuStatusItem?.button else { return }
         button.image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "Tappy")
-        // Orange tint signals setup is incomplete; default (template) color = ready.
         switch setupPhase {
         case .needsPermission, .needsRestart:
             button.contentTintColor = .systemOrange
         case .complete:
-            button.contentTintColor = nil  // system default (adapts to light/dark)
+            button.contentTintColor = isEnabled ? nil : NSColor.secondaryLabelColor
         }
     }
 
-    // MARK: - Routing
+    // MARK: - Setup
 
     var shouldShowSetupGate: Bool {
         setupPhase != .complete
     }
-
-    // MARK: - Setup screen content
 
     var setupHeadline: String {
         switch setupPhase {
         case .needsPermission:
             return "Enable Input Monitoring"
         case .needsRestart:
-            return "Almost there — restart to activate"
+            return "Restart to activate"
         case .complete:
             return ""
         }
@@ -311,9 +288,9 @@ final class KeyboardSoundController: ObservableObject {
     var setupDetail: String {
         switch setupPhase {
         case .needsPermission:
-            return "Tappy needs Input Monitoring permission to play sounds while you type in any app. Open System Settings → Privacy & Security → Input Monitoring and switch on Tappy."
+            return "Tappy needs Input Monitoring permission to detect key presses and play sounds while you type in other apps."
         case .needsRestart:
-            return "Permission granted! macOS requires Tappy to restart once before the keyboard listener can attach. This only happens on first-time setup."
+            return "Permission is granted. Restart Tappy once so macOS applies Input Monitoring to this running app."
         case .complete:
             return ""
         }
@@ -347,54 +324,10 @@ final class KeyboardSoundController: ObservableObject {
         soundLibrary.soundsRootURL.path
     }
 
-    var accessibilitySummary: String {
-        hasConfirmedInputMonitoring
-            ? "System-wide key monitoring is available."
-            : "Background key clicks need confirmed Input Monitoring access."
-    }
-
-    var isRunningFromDerivedData: Bool {
-        currentAppPath.contains("/DerivedData/")
-    }
-
-    var currentAppPath: String {
-        Bundle.main.bundleURL.standardizedFileURL.path
-    }
-
-    var runningAppLocationSummary: String {
-        abbreviatedPath(currentAppPath)
-    }
-
-    /// True when both TCC permission and the event tap are confirmed working.
-    /// Used by diagnostics and the warning banner.
-    var hasConfirmedInputMonitoring: Bool {
-        setupPhase == .complete || backgroundCaptureState == .ready
-    }
-
     var compactStatus: String {
         if !isEnabled { return "Paused" }
         if setupPhase == .complete { return "Live" }
-        return "Window Only"
-    }
-
-    var launchWarning: String? {
-        // Only show warnings on the home screen (after setup is complete)
-        guard setupPhase == .complete else { return nil }
-
-        if backgroundCaptureState != .ready && !permissionManager.isTrusted {
-            return "Input Monitoring was revoked. Re-enable Tappy in System Settings → Privacy & Security → Input Monitoring."
-        }
-
-        if isEnabled && backgroundCaptureState == .unavailable {
-            return "Background capture failed to start. Try relaunching Tappy."
-        }
-
-        return nil
-    }
-
-    var permissionDebugSummary: String {
-        let confirmed = hasConfirmedInputMonitoring ? "✓" : "✗"
-        return "confirmed: \(confirmed), TCC preflight: \(permissionManager.isTrusted ? "✓" : "✗"), event tap: \(backgroundCaptureState == .ready ? "✓" : "✗"), running: \(runningAppLocationSummary)"
+        return "Setup"
     }
 
     // MARK: - Pack access
@@ -474,8 +407,7 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     /// Spawns a fresh instance of the current app and quits this one.
-    /// Required after granting Input Monitoring — macOS does not allow a
-    /// running process to attach an event tap until it relaunches.
+    /// Required after granting Input Monitoring on some macOS versions.
     func relaunchApp() {
         let bundleURL = Bundle.main.bundleURL
         let escapedPath = bundleURL.path.replacingOccurrences(of: "'", with: "'\\''")
@@ -686,8 +618,8 @@ final class KeyboardSoundController: ObservableObject {
         permissionManager.openSoundSettings()
     }
 
-    /// Called when the setup screen appears. Triggers the macOS permission
-    /// dialog so the user sees it immediately without having to press a button.
+    /// Called when the setup bar appears. Triggers the macOS Input Monitoring
+    /// prompt so users do not have to guess which privacy section to open.
     func requestStartupInputMonitoringPromptIfNeeded() {
         guard setupPhase == .needsPermission else { return }
         permissionManager.requestListenAccessPrompt()
@@ -848,10 +780,10 @@ final class KeyboardSoundController: ObservableObject {
         case .needsPermission:
             return "Waiting for Input Monitoring permission."
         case .needsRestart:
-            return "Permission granted — restart Tappy to activate system-wide sounds."
+            return "Permission granted. Restart Tappy to activate system-wide sounds."
         case .complete:
             if backgroundCaptureState == .unavailable {
-                return "Input Monitoring appears available, but the background event tap failed to start."
+                return "Input Monitoring appears available, but the listen-only event tap failed to start."
             }
             return "Keyboard sounds are active system-wide."
         }
@@ -1000,8 +932,8 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     /// Synchronously probes whether this process can create and enable a
-    /// CGEvent tap. This is the definitive test for whether Input Monitoring
-    /// is functional — more reliable than CGPreflightListenEventAccess() alone.
+    /// listen-only CGEvent tap. This is more reliable than TCC preflight alone
+    /// because macOS can require a relaunch after newly granted permission.
     private static func canCreateEventTap() -> Bool {
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
 
@@ -1019,6 +951,7 @@ final class KeyboardSoundController: ObservableObject {
         CGEvent.tapEnable(tap: tap, enable: true)
         let isEnabled = CGEvent.tapIsEnabled(tap: tap)
         CGEvent.tapEnable(tap: tap, enable: false)
+        CFMachPortInvalidate(tap)
         return isEnabled
     }
 
@@ -1038,15 +971,6 @@ final class KeyboardSoundController: ObservableObject {
         guard trusted else { return .needsPermission }
 
         return .needsRestart
-    }
-
-    private func abbreviatedPath(_ path: String) -> String {
-        let homePath = NSHomeDirectory()
-        if path.hasPrefix(homePath) {
-            return "~" + path.dropFirst(homePath.count)
-        }
-
-        return path
     }
 
     private static func startupPack(from savedPackID: String?, premiumUnlocked: Bool) -> TechPack? {

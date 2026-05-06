@@ -21,7 +21,7 @@ final class KeyboardMonitor {
         case unavailable
     }
 
-    private let duplicateTriggerSuppressionWindow: TimeInterval = 0.04
+    private let duplicateTriggerSuppressionWindow: TimeInterval = 0.08
 
     private var localKeyMonitor: Any?
     private var localFlagsMonitor: Any?
@@ -30,14 +30,11 @@ final class KeyboardMonitor {
     private var appDidResignActiveObserver: Any?
     private var eventTap: CFMachPort?
     private var eventTapSource: CFRunLoopSource?
-    private var eventTapThread: Thread?
-    private var eventTapRunLoop: CFRunLoop?
 
     private var handler: ((KeyboardTrigger) -> Void)?
     private var pressedKeyCodes = Set<UInt16>()
     private var lastEmittedTrigger: KeyboardTrigger?
     private var lastEmittedAt: TimeInterval = 0
-    private var isAppActive = false
     private var wasSecureEventInputEnabled = false
 
     private(set) var isMonitoring = false
@@ -99,15 +96,12 @@ final class KeyboardMonitor {
     }
 
     private func installApplicationActivityObservers() {
-        isAppActive = NSApp.isActive
-
         appDidBecomeActiveObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             self?.clearPressedKeys()
-            self?.isAppActive = true
         }
 
         appDidResignActiveObserver = NotificationCenter.default.addObserver(
@@ -116,7 +110,6 @@ final class KeyboardMonitor {
             queue: .main
         ) { [weak self] _ in
             self?.clearPressedKeys()
-            self?.isAppActive = false
         }
     }
 
@@ -130,7 +123,6 @@ final class KeyboardMonitor {
         appDidBecomeActiveObserver = nil
         appDidResignActiveObserver = nil
         clearPressedKeys()
-        isAppActive = false
     }
 
     private func processKeyDown(_ event: NSEvent) -> Bool {
@@ -162,8 +154,6 @@ final class KeyboardMonitor {
 
             let monitor = Unmanaged<KeyboardMonitor>.fromOpaque(userInfo).takeUnretainedValue()
 
-            // Re-enable the tap immediately on the tap thread — this must be
-            // synchronous; deferring it would drop events during the gap.
             if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
                 DispatchQueue.main.async {
                     monitor.handleEventTapDisabled(type: type)
@@ -175,9 +165,8 @@ final class KeyboardMonitor {
                 return Unmanaged.passUnretained(event)
             }
 
-            // Extract event data on the tap thread, then dispatch all stateful
-            // key reconciliation back to main so local and global monitors share
-            // one consistent pressed-key model.
+            // Extract event data on the tap thread, then dispatch stateful key
+            // reconciliation to main so local and background events share one model.
             switch type {
             case .keyDown:
                 let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
@@ -223,73 +212,41 @@ final class KeyboardMonitor {
         eventTap = tap
         eventTapSource = source
 
-        // Enable the tap synchronously here so the subsequent
-        // `tapIsEnabled` check reflects the truth. Doing it inside the
-        // worker thread (as we used to) created a race where we reported
-        // "unavailable" before the thread had a chance to enable the tap.
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, CFRunLoopMode.commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
 
         guard CGEvent.tapIsEnabled(tap: tap) else {
-            // macOS created the tap but immediately disabled it — almost
-            // always means permission hasn't fully taken effect for this
-            // running process and a relaunch is required.
             stopEventTap()
             updateCaptureState(.unavailable)
             return
         }
 
-        let thread = Thread { [weak self] in
-            guard let self else { return }
-
-            let runLoop = CFRunLoopGetCurrent()
-            self.eventTapRunLoop = runLoop
-            CFRunLoopAddSource(runLoop, source, CFRunLoopMode.commonModes)
-
-            while !Thread.current.isCancelled {
-                CFRunLoopRunInMode(.defaultMode, 0.5, true)
-            }
-
-            CFRunLoopRemoveSource(runLoop, source, CFRunLoopMode.commonModes)
-        }
-        thread.name = "Tappy.KeyboardEventTap"
-        eventTapThread = thread
-        thread.start()
-
         updateCaptureState(.ready)
     }
 
     private func stopEventTap() {
+        if let source = eventTapSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, CFRunLoopMode.commonModes)
+        }
+
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: false)
+            CFMachPortInvalidate(tap)
         }
 
-        if let runLoop = eventTapRunLoop {
-            CFRunLoopStop(runLoop)
-            CFRunLoopWakeUp(runLoop)
-        }
-
-        eventTapThread?.cancel()
-        eventTapThread = nil
-        eventTapRunLoop = nil
         eventTapSource = nil
         eventTap = nil
     }
 
-    // Called on the main thread — safe to read/write all shared state.
-    fileprivate func handleGlobalKeyDown(keyCode: UInt16) {
-        guard shouldHandleGlobalEvent() else { return }
+    private func handleGlobalKeyDown(keyCode: UInt16) {
         handleKeyDown(keyCode: keyCode, origin: .globalBackground)
     }
 
-    // Called on the main thread — safe to read/write all shared state.
-    fileprivate func handleGlobalKeyUp(keyCode: UInt16) {
-        guard shouldHandleGlobalEvent() else { return }
+    private func handleGlobalKeyUp(keyCode: UInt16) {
         handleKeyUp(keyCode: keyCode)
     }
 
-    // Called on the main thread — safe to read/write all shared state.
-    fileprivate func handleGlobalFlagsChanged(keyCode: UInt16, rawFlags: CGEventFlags.RawValue) {
-        guard shouldHandleGlobalEvent() else { return }
+    private func handleGlobalFlagsChanged(keyCode: UInt16, rawFlags: CGEventFlags.RawValue) {
         let flags = NSEvent.ModifierFlags(rawValue: UInt(rawFlags))
         handleModifierFlagsChanged(keyCode: keyCode, modifierFlags: flags, origin: .globalBackground)
     }
@@ -328,17 +285,6 @@ final class KeyboardMonitor {
         pressedKeyCodes.removeAll()
         lastEmittedTrigger = nil
         lastEmittedAt = 0
-    }
-
-    private func shouldHandleGlobalEvent() -> Bool {
-        // Menu-bar popovers can receive local key events even when NSApp's
-        // active-state notifications lag behind. If Tappy owns a key window,
-        // the local monitor is the authoritative source and the global tap
-        // would be a duplicate of the same physical key.
-        guard !isAppActive, !NSApp.isActive else { return false }
-        guard NSApp.keyWindow == nil else { return false }
-
-        return true
     }
 
     private func emit(_ trigger: KeyboardTrigger) {
@@ -391,11 +337,7 @@ final class KeyboardMonitor {
             return false
         }
 
-        if firstResponder is NSTextView {
-            return true
-        }
-
-        return false
+        return firstResponder is NSTextView
     }
 
     private func isTextLikeLocalKeyDown(_ event: NSEvent) -> Bool {
@@ -427,10 +369,6 @@ final class KeyboardMonitor {
         }
     }
 
-    private func isModifierPress(_ event: NSEvent) -> Bool {
-        isModifierPress(keyCode: event.keyCode, modifierFlags: event.modifierFlags)
-    }
-
     private func isModifierKey(_ keyCode: UInt16) -> Bool {
         switch keyCode {
         case 54, 55, 56, 57, 58, 59, 60, 61, 62, 63:
@@ -459,6 +397,19 @@ final class KeyboardMonitor {
         }
     }
 
+    private func triggerForKeyCode(_ keyCode: UInt16, origin: KeyboardTriggerOrigin) -> KeyboardTrigger {
+        switch Int(keyCode) {
+        case kVK_Space:
+            return KeyboardTrigger(category: .space, keyCode: keyCode, origin: origin)
+        case kVK_Return, kVK_ANSI_KeypadEnter:
+            return KeyboardTrigger(category: .returnKey, keyCode: keyCode, origin: origin)
+        case kVK_Delete, kVK_ForwardDelete:
+            return KeyboardTrigger(category: .delete, keyCode: keyCode, origin: origin)
+        default:
+            return KeyboardTrigger(category: .standard, keyCode: keyCode, origin: origin)
+        }
+    }
+
     private func updateCaptureState(_ newState: CaptureState) {
         guard captureState != newState else { return }
         captureState = newState
@@ -469,19 +420,6 @@ final class KeyboardMonitor {
             DispatchQueue.main.async { [weak self] in
                 self?.onCaptureStateChange?(newState)
             }
-        }
-    }
-
-    private func triggerForKeyCode(_ keyCode: UInt16, origin: KeyboardTriggerOrigin) -> KeyboardTrigger {
-        switch keyCode {
-        case 49:
-            return KeyboardTrigger(category: .space, keyCode: keyCode, origin: origin)
-        case 36, 76:
-            return KeyboardTrigger(category: .returnKey, keyCode: keyCode, origin: origin)
-        case 51, 117:
-            return KeyboardTrigger(category: .delete, keyCode: keyCode, origin: origin)
-        default:
-            return KeyboardTrigger(category: .standard, keyCode: keyCode, origin: origin)
         }
     }
 

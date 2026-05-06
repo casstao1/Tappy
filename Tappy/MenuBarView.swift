@@ -27,6 +27,8 @@ struct MenuBarView: View {
                 setupBar
                 Divider()
             }
+            statusBar
+            Divider()
             packList
             Divider()
             volumeControl
@@ -66,8 +68,8 @@ struct MenuBarView: View {
     private var statusLabel: String {
         switch controller.setupPhase {
         case .needsPermission: return "Setup needed"
-        case .needsRestart:    return "Restart required"
-        case .complete:        return controller.isEnabled ? "Active" : "Paused"
+        case .needsRestart: return "Restart required"
+        case .complete: return controller.isEnabled ? "Active" : "Paused"
         }
     }
 
@@ -89,6 +91,17 @@ struct MenuBarView: View {
         .background(Color.accentColor.opacity(0.04))
     }
 
+    private var statusBar: some View {
+        Text(controller.statusMessage)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.025))
+    }
+
     // MARK: - Setup bar
 
     private var setupBar: some View {
@@ -107,17 +120,19 @@ struct MenuBarView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
-
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(Color.orange.opacity(0.04))
+        .onAppear {
+            controller.requestStartupInputMonitoringPromptIfNeeded()
+        }
     }
 
     private var setupMenuDetail: String {
         switch controller.setupPhase {
         case .needsPermission:
-            return "Enable Input Monitoring so Tappy can play while you type."
+            return "Enable Input Monitoring so Tappy can play while you type in other apps."
         case .needsRestart:
             return "Restart once so macOS applies the new permission."
         case .complete:

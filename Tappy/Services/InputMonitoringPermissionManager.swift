@@ -1,5 +1,5 @@
 import AppKit
-import ApplicationServices
+import CoreGraphics
 import Foundation
 
 @MainActor
@@ -35,10 +35,8 @@ final class InputMonitoringPermissionManager: ObservableObject {
     }
 
     func requestListenAccessPrompt() {
-        // Do NOT activate the app before calling CGRequestListenEventAccess().
-        // Activating first brings the Tappy window to the front, which causes
-        // the macOS permission dialog to appear behind it. Let the dialog appear
-        // naturally — macOS will place it in front of the app window on its own.
+        // Let macOS present the Input Monitoring prompt naturally; activating
+        // Tappy first can place the system prompt behind the popover.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             let granted = CGRequestListenEventAccess()
             self.isTrusted = granted
