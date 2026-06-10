@@ -128,9 +128,7 @@ code {
   max-height: 820px;
   overflow: hidden;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 82% 28%, rgba(53, 105, 255, 0.34), transparent 33%),
-    linear-gradient(135deg, #08090c 0%, #111620 52%, #25364c 100%);
+  background: linear-gradient(135deg, #08090c 0%, #111620 54%, #223045 100%);
 }
 
 .hero::after {
@@ -223,8 +221,7 @@ h3 {
 }
 
 p,
-li,
-dd {
+li {
   color: var(--muted);
   font-size: 16px;
   line-height: 1.72;
@@ -312,54 +309,10 @@ button.button:disabled {
   background: rgba(255, 255, 255, 0.07);
 }
 
-.intro-band {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  width: min(1120px, calc(100% - 32px));
-  margin: -48px auto 0;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--line);
-  box-shadow: var(--shadow-lg);
-  position: relative;
-  z-index: 3;
-}
-
-.intro-band div {
-  min-height: 180px;
-  padding: 26px;
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.intro-band span,
-.feature-kicker {
-  display: block;
-  margin-bottom: 16px;
-  color: var(--blue);
-  font-size: 12px;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
-.intro-band strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 18px;
-}
-
-.intro-band p,
-.feature p,
-.release-copy p,
-.showcase-copy p {
-  margin-bottom: 0;
-}
-
 .asmr-gallery {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 88px 0 0;
+  padding: 96px 0 0;
 }
 
 .asmr-gallery-heading {
@@ -440,57 +393,19 @@ button.button:disabled {
   color: rgba(255, 255, 255, 0.68);
 }
 
-.section {
-  width: min(1120px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 108px 0;
-}
-
-.section-heading {
-  max-width: 760px;
-  margin-bottom: 34px;
-}
-
-.story-grid {
+.app-preview {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.feature {
-  min-height: 286px;
-  padding: 28px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 18px 45px rgba(18, 24, 35, 0.08);
-}
-
-.feature:nth-child(2) .feature-kicker {
-  color: var(--green);
-}
-
-.feature:nth-child(3) .feature-kicker {
-  color: var(--amber);
-}
-
-.showcase-band {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(0, 1.16fr) minmax(280px, 0.84fr);
   align-items: center;
   gap: clamp(36px, 6vw, 72px);
-  padding: clamp(76px, 9vw, 122px) clamp(20px, 6vw, 86px);
+  padding: clamp(82px, 9vw, 126px) clamp(20px, 6vw, 86px);
   background:
     linear-gradient(135deg, #f7f9fc 0%, #ffffff 45%, #eef3f8 100%);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
-.showcase-copy {
-  max-width: 460px;
-}
-
-.showcase-frame {
+.app-preview-frame {
   margin: 0;
   padding: clamp(10px, 1.5vw, 16px);
   border: 1px solid var(--line-strong);
@@ -499,9 +414,42 @@ button.button:disabled {
   box-shadow: var(--shadow-lg);
 }
 
-.showcase-frame img {
+.app-preview-frame img {
   width: 100%;
   border-radius: calc(var(--radius) - 2px);
+}
+
+.app-preview-copy {
+  max-width: 520px;
+}
+
+.app-preview-copy p {
+  margin-bottom: 0;
+}
+
+.app-preview-list {
+  display: grid;
+  gap: 14px;
+  padding: 24px 0 0;
+  margin: 26px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.app-preview-list li {
+  display: grid;
+  gap: 4px;
+}
+
+.app-preview-list strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.app-preview-list span {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 .purchase-section {
@@ -530,6 +478,12 @@ button.button:disabled {
 .purchase-copy p {
   max-width: 620px;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.purchase-copy .release-note {
+  margin-top: 18px;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 14px;
 }
 
 .purchase-panel {
@@ -610,62 +564,6 @@ button.button:disabled {
   font-weight: 850;
 }
 
-.release-section {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(300px, 0.72fr);
-  gap: clamp(34px, 6vw, 72px);
-  align-items: start;
-}
-
-.release-copy {
-  max-width: 680px;
-}
-
-.release-panel {
-  padding: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
-    var(--night);
-  color: #fff;
-  box-shadow: var(--shadow-lg);
-}
-
-dl {
-  display: grid;
-  gap: 1px;
-  margin: 0 0 24px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.10);
-}
-
-dl div {
-  display: grid;
-  grid-template-columns: 0.72fr 1fr;
-  gap: 16px;
-  padding: 15px 16px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-dt {
-  color: rgba(255, 255, 255, 0.52);
-  font-size: 13px;
-}
-
-dd {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.release-panel .button {
-  width: 100%;
-}
-
 .release-link {
   display: block;
   margin-top: 14px;
@@ -687,6 +585,16 @@ dd {
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 14px;
+}
+
+.site-footer a {
+  margin-left: 18px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--ink);
 }
 
 .success-page {
@@ -821,11 +729,8 @@ ul {
       linear-gradient(0deg, rgba(8, 9, 12, 0.20), rgba(8, 9, 12, 0.04));
   }
 
-  .intro-band,
-  .story-grid,
-  .showcase-band,
-  .purchase-section,
-  .release-section {
+  .app-preview,
+  .purchase-section {
     grid-template-columns: 1fr;
   }
 
@@ -834,15 +739,7 @@ ul {
       linear-gradient(180deg, #111317 0%, #18202b 58%, #f4f8f5 58%, #ffffff 100%);
   }
 
-  .intro-band {
-    margin-top: -34px;
-  }
-
-  .feature {
-    min-height: 0;
-  }
-
-  .showcase-copy {
+  .app-preview-copy {
     max-width: 720px;
   }
 
@@ -909,15 +806,10 @@ ul {
     width: 100%;
   }
 
-  .intro-band,
-  .asmr-gallery,
-  .section {
+  .asmr-gallery {
     width: calc(100% - 32px);
   }
 
-  .intro-band div,
-  .feature,
-  .release-panel,
   .pack-card-copy,
   .panel {
     padding: 22px;
@@ -935,21 +827,12 @@ ul {
     aspect-ratio: 16 / 9;
   }
 
-  .section {
-    padding: 70px 0;
-  }
-
-  .showcase-band {
+  .app-preview {
     padding: 64px 16px;
   }
 
   .purchase-section {
     padding: 64px 16px;
-  }
-
-  dl div {
-    grid-template-columns: 1fr;
-    gap: 4px;
   }
 
   .shell {
