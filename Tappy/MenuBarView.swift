@@ -124,7 +124,7 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Buy once, then paste your Gumroad license key here.")
+            Text("Buy once with Stripe, then paste your Tappy license key here.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

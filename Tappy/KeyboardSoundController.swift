@@ -361,11 +361,11 @@ final class KeyboardSoundController: ObservableObject {
 
     var premiumStoreStatusText: String? {
         if directLicenseStore.isActivating {
-            return "Activating Gumroad license..."
+            return "Activating Tappy license..."
         }
 
         if directLicenseStore.isValidating {
-            return "Checking Gumroad license..."
+            return "Checking Tappy license..."
         }
 
         if premiumStore.isPurchasing {
@@ -548,7 +548,7 @@ final class KeyboardSoundController: ObservableObject {
     func openDirectPurchasePage() {
         cancelPendingCTA()
         NSWorkspace.shared.open(DirectPurchaseConfig.purchaseURL)
-        statusMessage = "Opening Gumroad checkout. Paste the license key here after purchase."
+        statusMessage = "Opening Stripe checkout. Paste the Tappy license key here after purchase."
     }
 
     func activateDirectLicense() async {

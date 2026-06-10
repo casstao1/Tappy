@@ -21,6 +21,9 @@ xcuserdata/
 .buildcheck/
 .signedDerivedData/
 .last_fresh_install_bundle_id
+.env
+.env.*
+!.env.example
 
 # Local-only sound design pipeline and generated review assets
 AppStoreScreenshots_raw/

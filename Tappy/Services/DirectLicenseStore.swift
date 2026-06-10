@@ -3,7 +3,7 @@ import Foundation
 enum DirectPurchaseConfig {
     static let displayPrice = "$4.99"
     static let purchaseURL = URL(string: "https://tappy-plum.vercel.app/#buy")!
-    static let gumroadProductID = "rejkbe"
+    static let licenseVerificationURL = URL(string: "https://tappy-plum.vercel.app/api/verify-license")!
 }
 
 @MainActor
@@ -12,8 +12,6 @@ final class DirectLicenseStore: ObservableObject {
         static let licenseKey = "Tappy.directLicenseKey"
         static let unlocked = "Tappy.directLicenseUnlocked"
     }
-
-    private static let verifyURL = URL(string: "https://api.gumroad.com/v2/licenses/verify")!
 
     @Published private(set) var hasUnlockedPremium: Bool
     @Published private(set) var isActivating = false
@@ -42,7 +40,7 @@ final class DirectLicenseStore: ObservableObject {
         let licenseKey = rawLicenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !licenseKey.isEmpty else {
-            lastMessage = "Paste your Gumroad license key first."
+            lastMessage = "Paste your Tappy license key first."
             return
         }
 
@@ -51,16 +49,11 @@ final class DirectLicenseStore: ObservableObject {
             return
         }
 
-        guard !Self.productID.isEmpty else {
-            lastMessage = "Gumroad checkout is not connected yet. Add the Gumroad product ID before activating licenses."
-            return
-        }
-
         isActivating = true
         defer { isActivating = false }
 
         do {
-            let response = try await verify(licenseKey: licenseKey, shouldIncrementUses: true)
+            let response = try await verify(licenseKey: licenseKey)
 
             guard response.grantsAccess else {
                 lastMessage = response.userFacingError ?? "That license key could not be activated."
@@ -69,7 +62,7 @@ final class DirectLicenseStore: ObservableObject {
 
             userDefaults.set(licenseKey, forKey: DefaultsKey.licenseKey)
             applyUnlocked(true)
-            lastMessage = "Gumroad license activated. Premium ASMR packs unlocked."
+            lastMessage = "Tappy license activated. Premium ASMR packs unlocked."
         } catch {
             lastMessage = "License activation failed: \(error.localizedDescription)"
         }
@@ -83,13 +76,12 @@ final class DirectLicenseStore: ObservableObject {
         }
 
         guard !isBusy else { return }
-        guard !Self.productID.isEmpty else { return }
 
         isValidating = true
         defer { isValidating = false }
 
         do {
-            let response = try await verify(licenseKey: licenseKey, shouldIncrementUses: false)
+            let response = try await verify(licenseKey: licenseKey)
 
             if response.grantsAccess {
                 applyUnlocked(true)
@@ -116,19 +108,13 @@ final class DirectLicenseStore: ObservableObject {
         userDefaults.string(forKey: DefaultsKey.licenseKey)
     }
 
-    private static var productID: String {
-        DirectPurchaseConfig.gumroadProductID.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func verify(licenseKey: String, shouldIncrementUses: Bool) async throws -> LicenseAPIResponse {
-        var request = URLRequest(url: Self.verifyURL)
+    private func verify(licenseKey: String) async throws -> LicenseAPIResponse {
+        var request = URLRequest(url: DirectPurchaseConfig.licenseVerificationURL)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = Self.formURLEncoded([
-            "product_id": Self.productID,
             "license_key": licenseKey,
-            "increment_uses_count": shouldIncrementUses ? "true" : "false",
         ])
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -142,7 +128,7 @@ final class DirectLicenseStore: ObservableObject {
                 throw LicenseError.api(message)
             }
 
-            throw LicenseError.api("Gumroad returned an unexpected response.")
+            throw LicenseError.api("The Tappy license server returned an unexpected response.")
         }
 
         return try decoder.decode(LicenseAPIResponse.self, from: data)
@@ -174,16 +160,17 @@ final class DirectLicenseStore: ObservableObject {
 
 private struct LicenseAPIResponse: Decodable {
     let success: Bool
-    let uses: Int?
+    let active: Bool?
     let message: String?
     let error: String?
-    let purchase: LicensePurchase?
+    let product: String?
 
     var grantsAccess: Bool {
         guard success else { return false }
-        guard purchase?.refunded != true else { return false }
-        guard purchase?.chargebacked != true else { return false }
-        guard purchase?.disputed != true else { return false }
+        guard active != false else { return false }
+        if let product, product != "tappy-asmr-pack-unlock" {
+            return false
+        }
         return true
     }
 
@@ -196,31 +183,7 @@ private struct LicenseAPIResponse: Decodable {
             return error
         }
 
-        if purchase?.refunded == true {
-            return "That Gumroad purchase was refunded."
-        }
-
-        if purchase?.chargebacked == true || purchase?.disputed == true {
-            return "That Gumroad purchase is disputed."
-        }
-
         return nil
-    }
-}
-
-private struct LicensePurchase: Decodable {
-    let email: String?
-    let refunded: Bool?
-    let disputed: Bool?
-    let chargebacked: Bool?
-    let test: Bool?
-
-    private enum CodingKeys: String, CodingKey {
-        case email
-        case refunded
-        case disputed
-        case chargebacked
-        case test
     }
 }
 

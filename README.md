@@ -10,6 +10,8 @@ This repo includes a Vercel-ready website in [docs](/Users/castao/Desktop/Tappy/
 
 See [docs/VERCEL_RELEASES_SETUP.md](/Users/castao/Desktop/Tappy/docs/VERCEL_RELEASES_SETUP.md) for the Vercel + local Developer ID notarization setup. Apple signing secrets stay on your Mac and are not stored in GitHub.
 
+The direct-release build sells the premium ASMR pack unlock through Stripe Checkout. See [docs/STRIPE_CHECKOUT_SETUP.md](/Users/castao/Desktop/Tappy/docs/STRIPE_CHECKOUT_SETUP.md) for the Stripe product, Vercel environment variables, and license-key flow.
+
 ## Repo Scope
 
 This public repo is intentionally slimmed down to the shippable app:
