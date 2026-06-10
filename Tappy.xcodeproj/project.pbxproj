@@ -20,6 +20,7 @@
 		A1000000000000000000000B /* BundledSounds in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000034 /* BundledSounds */; };
 		A10000000000000000000035 /* TechPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000036 /* TechPack.swift */; };
 		A10000000000000000000037 /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000038 /* PremiumStore.swift */; };
+		A10000000000000000000041 /* DirectLicenseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000042 /* DirectLicenseStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		A10000000000000000000034 /* BundledSounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledSounds; sourceTree = "<group>"; };
 		A10000000000000000000036 /* TechPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechPack.swift; sourceTree = "<group>"; };
 		A10000000000000000000038 /* PremiumStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000042 /* DirectLicenseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectLicenseStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +97,7 @@
 		A10000000000000000000027 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				A10000000000000000000042 /* DirectLicenseStore.swift */,
 				A10000000000000000000015 /* InputMonitoringPermissionManager.swift */,
 				A10000000000000000000016 /* KeyboardMonitor.swift */,
 				A10000000000000000000017 /* LowLatencyAudioEngine.swift */,
@@ -202,6 +205,7 @@
 				A10000000000000000000006 /* KeyboardMonitor.swift in Sources */,
 				A10000000000000000000007 /* LowLatencyAudioEngine.swift in Sources */,
 				A10000000000000000000037 /* PremiumStore.swift in Sources */,
+				A10000000000000000000041 /* DirectLicenseStore.swift in Sources */,
 				A10000000000000000000008 /* SoundLibrary.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -23,6 +23,10 @@ struct MenuBarView: View {
                 storeStatusBar(storeStatus)
                 Divider()
             }
+            if controller.shouldShowDirectLicenseBar {
+                directLicenseBar
+                Divider()
+            }
             if controller.setupPhase != .complete {
                 setupBar
                 Divider()
@@ -107,6 +111,66 @@ struct MenuBarView: View {
             .background(Color.primary.opacity(0.025))
     }
 
+    private var directLicenseBar: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Label("Unlock ASMR Packs", systemImage: "sparkles")
+                    .font(.caption.weight(.semibold))
+
+                Spacer()
+
+                Text(controller.premiumUnlockPrice)
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Buy once, then paste your Gumroad license key here.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                controller.openDirectPurchasePage()
+            } label: {
+                Label("Buy \(controller.premiumUnlockPrice)", systemImage: "cart.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .disabled(controller.isPremiumStoreBusy)
+
+            HStack(spacing: 7) {
+                TextField("License key", text: $controller.directLicenseKeyEntry)
+                    .textFieldStyle(.roundedBorder)
+                    .controlSize(.small)
+
+                Button {
+                    Task { await controller.activateDirectLicense() }
+                } label: {
+                    Label("Activate", systemImage: "key.fill")
+                }
+                .labelStyle(.iconOnly)
+                .help("Activate license")
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(!controller.canActivateDirectLicense)
+            }
+
+            Button {
+                Task { await controller.restorePremiumPurchases() }
+            } label: {
+                Label("Restore App Store purchase", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.plain)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .disabled(controller.isPremiumStoreBusy)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.accentColor.opacity(0.04))
+    }
+
     // MARK: - Setup bar
 
     private var setupBar: some View {
@@ -181,8 +245,8 @@ struct MenuBarView: View {
                 .controlSize(.mini)
                 .disabled(controller.isPremiumStoreBusy)
 
-                Button("Unlock \(controller.premiumUnlockPrice)") {
-                    Task { await controller.purchasePremiumUnlock() }
+                Button("Buy \(controller.premiumUnlockPrice)") {
+                    controller.openDirectPurchasePage()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.mini)
@@ -207,8 +271,8 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
             HStack(spacing: 8) {
-                Button("Unlock \(controller.premiumUnlockPrice)") {
-                    Task { await controller.purchasePremiumUnlock() }
+                Button("Buy \(controller.premiumUnlockPrice)") {
+                    controller.openDirectPurchasePage()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
@@ -408,9 +472,9 @@ private struct PackRow: View {
                     controller.startLivePreview(pack)
                 }
             }
-            Button("Unlock All — \(controller.premiumUnlockPrice)") {
+            Button("Buy All Packs — \(controller.premiumUnlockPrice)") {
                 controller.highlightPack(pack)
-                Task { await controller.purchasePremiumUnlock() }
+                controller.openDirectPurchasePage()
             }
             Button("Restore Purchase") {
                 controller.highlightPack(pack)

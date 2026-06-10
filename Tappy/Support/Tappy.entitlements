@@ -4,6 +4,8 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
 	<!--
 	    Tappy is distributed as a sandboxed macOS app.
 	    System-wide auditory typing feedback is performed through Input

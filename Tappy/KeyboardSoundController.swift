@@ -74,6 +74,7 @@ final class KeyboardSoundController: ObservableObject {
     @Published var highlightedPackID = TechPack.plasticTapping.id
     @Published private(set) var backgroundCaptureState: KeyboardMonitor.CaptureState = .stopped
     @Published private(set) var premiumUnlocked = false
+    @Published var directLicenseKeyEntry = ""
     @Published private(set) var trialedPackIDs: Set<String> = []
     @Published private(set) var setupPhase: SetupPhase
     @Published private(set) var isPremiumFlowInFlight = false
@@ -96,7 +97,8 @@ final class KeyboardSoundController: ObservableObject {
 
     let permissionManager = InputMonitoringPermissionManager()
     let soundLibrary = SoundLibrary()
-    let premiumStore = PremiumStore()
+    let premiumStore: PremiumStore
+    let directLicenseStore: DirectLicenseStore
 
     private let keyboardMonitor = KeyboardMonitor()
     private let audioEngine = LowLatencyAudioEngine()
@@ -106,8 +108,10 @@ final class KeyboardSoundController: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+        premiumStore = PremiumStore()
+        directLicenseStore = DirectLicenseStore(userDefaults: userDefaults)
 
-        premiumUnlocked = false
+        premiumUnlocked = directLicenseStore.hasUnlockedPremium
         trialedPackIDs = Set(userDefaults.stringArray(forKey: DefaultsKey.trialedPackIDs) ?? [])
         if userDefaults.object(forKey: DefaultsKey.clickVolume) == nil {
             clickVolume = 1.0
@@ -137,31 +141,25 @@ final class KeyboardSoundController: ObservableObject {
             }
             .store(in: &cancellables)
 
-        premiumStore.onUnlockStateChange = { [weak self] unlocked in
-            guard let self else { return }
-
-            self.premiumUnlocked = unlocked
-
-            if unlocked {
-                // Premium was just confirmed — restore the user's saved premium pack if
-                // they had one. This corrects the startup race where premiumUnlocked is
-                // always false during init(), causing startupPack() to fall back to
-                // plasticTapping even for paying users.
-                let savedPackID = self.userDefaults.string(forKey: DefaultsKey.selectedPackID)
-                if let pack = Self.startupPack(from: savedPackID, premiumUnlocked: true),
-                   pack.isPremium {
-                    self.currentPack = pack
-                    self.highlightedPackID = pack.id
-                    self.restoreBuiltInPack(packID: pack.id)
-                }
-            } else if self.currentPack.isPremium {
-                self.currentPack = .plasticTapping
-                self.highlightedPackID = TechPack.plasticTapping.id
-                self.persistSelectedPack(.plasticTapping)
-                self.restoreBuiltInPack(packID: TechPack.plasticTapping.id)
+        directLicenseStore.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
             }
+            .store(in: &cancellables)
 
-            self.statusMessage = unlocked ? "Premium packs unlocked." : self.monitoringSummary()
+        premiumStore.onUnlockStateChange = { [weak self] _ in
+            self?.reconcilePremiumUnlockState()
+        }
+
+        directLicenseStore.onUnlockStateChange = { [weak self] _ in
+            self?.reconcilePremiumUnlockState()
+        }
+
+        if directLicenseStore.hasSavedLicense {
+            Task {
+                await directLicenseStore.validateSavedLicense()
+                reconcilePremiumUnlockState()
+            }
         }
 
         permissionManager.onStatusChange = { [weak self] _ in
@@ -354,14 +352,22 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     var premiumUnlockPrice: String {
-        premiumStore.unlockAllPrice
+        DirectPurchaseConfig.displayPrice
     }
 
     var premiumStoreMessage: String? {
-        premiumStore.lastMessage
+        directLicenseStore.lastMessage ?? premiumStore.lastMessage
     }
 
     var premiumStoreStatusText: String? {
+        if directLicenseStore.isActivating {
+            return "Activating Gumroad license..."
+        }
+
+        if directLicenseStore.isValidating {
+            return "Checking Gumroad license..."
+        }
+
         if premiumStore.isPurchasing {
             return "Waiting for App Store confirmation..."
         }
@@ -374,11 +380,11 @@ final class KeyboardSoundController: ObservableObject {
             return "Preparing App Store purchase..."
         }
 
-        return premiumStore.lastMessage
+        return directLicenseStore.lastMessage ?? premiumStore.lastMessage
     }
 
     var isPremiumStoreLoading: Bool {
-        premiumStore.isLoading
+        premiumStore.isLoading || directLicenseStore.isValidating
     }
 
     var isPremiumPurchaseInFlight: Bool {
@@ -386,7 +392,16 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     var isPremiumStoreBusy: Bool {
-        isPremiumFlowInFlight || premiumStore.isBusy
+        isPremiumFlowInFlight || premiumStore.isBusy || directLicenseStore.isBusy
+    }
+
+    var shouldShowDirectLicenseBar: Bool {
+        !premiumUnlocked
+    }
+
+    var canActivateDirectLicense: Bool {
+        !directLicenseKeyEntry.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !isPremiumStoreBusy
     }
 
     // MARK: - Public actions
@@ -527,6 +542,37 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func beginUnlockPremiumFlow() {
+        openDirectPurchasePage()
+    }
+
+    func openDirectPurchasePage() {
+        cancelPendingCTA()
+        NSWorkspace.shared.open(DirectPurchaseConfig.purchaseURL)
+        statusMessage = "Opening Gumroad checkout. Paste the license key here after purchase."
+    }
+
+    func activateDirectLicense() async {
+        cancelPendingCTA()
+        await directLicenseStore.activate(licenseKey: directLicenseKeyEntry)
+        reconcilePremiumUnlockState()
+
+        if directLicenseStore.hasUnlockedPremium {
+            directLicenseKeyEntry = ""
+            if highlightedPack.isPremium {
+                highlightPack(highlightedPack)
+            }
+        }
+
+        statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
+    }
+
+    func validateDirectLicense() async {
+        await directLicenseStore.validateSavedLicense()
+        reconcilePremiumUnlockState()
+        statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
+    }
+
+    func refreshAppStoreUnlock() {
         Task {
             await premiumStore.refreshStore()
             statusMessage = premiumStore.lastMessage ?? "Premium feedback packs are ready to unlock."
@@ -771,6 +817,50 @@ final class KeyboardSoundController: ObservableObject {
     private func handle(trigger: KeyboardTrigger) {
         guard isEnabled else { return }
         audioEngine.play(category: trigger.category, keyCode: trigger.keyCode)
+    }
+
+    private func reconcilePremiumUnlockState() {
+        let unlocked = premiumStore.hasUnlockedPremium || directLicenseStore.hasUnlockedPremium
+        premiumUnlocked = unlocked
+
+        if unlocked {
+            cancelPendingCTA()
+            showUpgradeCTA = false
+            ctaPack = nil
+
+            if let previewPack {
+                stopRunningPreview()
+                selectUnlockedPremiumPack(previewPack)
+            } else if highlightedPack.isPremium {
+                selectUnlockedPremiumPack(highlightedPack)
+            } else {
+                let savedPackID = userDefaults.string(forKey: DefaultsKey.selectedPackID)
+                if let savedPack = Self.startupPack(from: savedPackID, premiumUnlocked: true),
+                   savedPack.isPremium {
+                    selectUnlockedPremiumPack(savedPack)
+                }
+            }
+
+            statusMessage = directLicenseStore.lastMessage ?? premiumStore.lastMessage ?? "Premium ASMR packs unlocked."
+            return
+        }
+
+        if currentPack.isPremium {
+            currentPack = .plasticTapping
+            highlightedPackID = TechPack.plasticTapping.id
+            persistSelectedPack(.plasticTapping)
+            restoreBuiltInPack(packID: TechPack.plasticTapping.id)
+        }
+
+        statusMessage = monitoringSummary()
+    }
+
+    private func selectUnlockedPremiumPack(_ pack: TechPack) {
+        guard pack.isAvailable else { return }
+        currentPack = pack
+        highlightedPackID = pack.id
+        persistSelectedPack(pack)
+        restoreBuiltInPack(packID: pack.id)
     }
 
     private func monitoringSummary() -> String {
