@@ -1,6 +1,7 @@
 .DS_Store
 .derivedData/
 .archive-derived/
+.rebuild-build/
 DerivedData/
 build/
 .preview-build/
@@ -9,6 +10,12 @@ build/
 *.xcscmblueprint
 xcuserdata/
 *.app
+*.cer
+*.certSigningRequest
+*.dmg
+*.dmg.sha256
+*.key
+*.p12
 *.dSYM
 *.xcarchive
 .buildcheck/

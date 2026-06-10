@@ -4,21 +4,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tappy Privacy Policy</title>
+    <link rel="icon" href="./assets/tappy-icon.png">
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <main class="shell">
-      <nav class="nav">
-        <a href="./index.html">Tappy</a>
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="Tappy home">
+        <img src="./assets/tappy-icon.png" alt="" width="36" height="36">
+        <span>Tappy</span>
+      </a>
+      <nav class="nav-links" aria-label="Site pages">
         <strong>Privacy</strong>
         <a href="./support.html">Support</a>
+        <a class="nav-download" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">Download</a>
       </nav>
+    </header>
 
+    <main class="shell">
       <section class="panel">
         <h1>Privacy Policy</h1>
         <p class="lede">Last updated: May 21, 2026</p>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Summary</h2>
           <p>
             Tappy is a macOS utility that provides local auditory feedback in response to physical typing activity across your Mac.
@@ -26,11 +33,9 @@
           </p>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>What Tappy accesses</h2>
-          <p>
-            Tappy uses macOS Input Monitoring so it can trigger local auditory feedback while you type in other apps.
-          </p>
+          <p>Tappy uses macOS Input Monitoring so it can trigger local auditory feedback while you type in other apps.</p>
           <ul>
             <li>Tappy listens for physical key codes and modifier keys to choose which local feedback cue to play.</li>
             <li>Tappy does not read the characters or words you type.</li>
@@ -40,7 +45,7 @@
           </ul>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Data collection</h2>
           <p>Tappy does not require account creation and does not use a backend service for core functionality.</p>
           <ul>
@@ -50,12 +55,12 @@
           </ul>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Local data</h2>
           <p>Tappy stores basic local preferences on your Mac, such as the currently selected feedback pack and premium unlock state.</p>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Third-party services</h2>
           <p>
             If you purchase premium content, Apple may process purchase-related data under Apple’s own policies.
@@ -63,14 +68,16 @@
           </p>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Contact</h2>
-          <p>
-            For privacy questions, use the support page linked here:
-            <a href="./support.html">Support</a>.
-          </p>
+          <p>For privacy questions, use the support page linked here: <a href="./support.html">Support</a>.</p>
         </div>
       </section>
     </main>
+
+    <footer class="site-footer">
+      <span>Tappy for macOS</span>
+      <span>Source, releases, and downloads are on GitHub.</span>
+    </footer>
   </body>
 </html>

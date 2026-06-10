@@ -2,6 +2,14 @@
 
 `Tappy` is a sandboxed macOS Swift app that provides low-latency auditory typing feedback from bundled and user-provided audio cues.
 
+## Download Site
+
+This repo includes a Vercel-ready website in [docs](/Users/castao/Desktop/Tappy/docs). The site downloads the latest notarized macOS DMG from GitHub Releases:
+
+`https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg`
+
+See [docs/VERCEL_RELEASES_SETUP.md](/Users/castao/Desktop/Tappy/docs/VERCEL_RELEASES_SETUP.md) for the Vercel + local Developer ID notarization setup. Apple signing secrets stay on your Mac and are not stored in GitHub.
+
 ## Repo Scope
 
 This public repo is intentionally slimmed down to the shippable app:

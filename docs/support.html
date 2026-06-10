@@ -4,23 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tappy Support</title>
+    <link rel="icon" href="./assets/tappy-icon.png">
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <main class="shell">
-      <nav class="nav">
-        <a href="./index.html">Tappy</a>
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="Tappy home">
+        <img src="./assets/tappy-icon.png" alt="" width="36" height="36">
+        <span>Tappy</span>
+      </a>
+      <nav class="nav-links" aria-label="Site pages">
         <a href="./privacy.html">Privacy</a>
         <strong>Support</strong>
+        <a class="nav-download" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">Download</a>
       </nav>
+    </header>
 
+    <main class="shell">
       <section class="panel">
         <h1>Support</h1>
         <p class="lede">
           Tappy support covers keyboard setup, feedback pack behavior, premium unlock issues, and general troubleshooting.
         </p>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Common help topics</h2>
           <ul>
             <li>Enable Input Monitoring for Tappy in System Settings so Tappy can provide auditory feedback while you type in other apps.</li>
@@ -30,16 +37,16 @@
           </ul>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>Contact</h2>
           <p>
             For support, report an issue at
-            <a href="https://github.com/casstao1/tappy/issues">github.com/casstao1/tappy/issues</a>.
+            <a href="https://github.com/casstao1/Tappy/issues">github.com/casstao1/Tappy/issues</a>.
             Include the details below so the issue can be reproduced.
           </p>
         </div>
 
-        <div class="section">
+        <div class="section-block">
           <h2>What to include in a report</h2>
           <ul>
             <li>macOS version</li>
@@ -51,5 +58,10 @@
         </div>
       </section>
     </main>
+
+    <footer class="site-footer">
+      <span>Tappy for macOS</span>
+      <span>Source, releases, and downloads are on GitHub.</span>
+    </footer>
   </body>
 </html>
