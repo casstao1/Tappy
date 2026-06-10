@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Download Tappy for macOS, a menu bar app for local auditory typing feedback.">
+    <meta name="description" content="Download Tappy for macOS, a notarized menu bar app for local auditory typing feedback.">
+    <meta property="og:title" content="Tappy for macOS">
+    <meta property="og:description" content="Clean, local keyboard sound feedback from a polished macOS menu bar app.">
+    <meta property="og:image" content="./assets/tappy-sound-packs.png">
     <title>Tappy for macOS</title>
     <link rel="icon" href="./assets/tappy-icon.png">
     <link rel="apple-touch-icon" href="./assets/tappy-icon.png">
@@ -16,6 +19,7 @@
         <span>Tappy</span>
       </a>
       <nav class="nav-links" aria-label="Site pages">
+        <a href="#sounds">Sounds</a>
         <a href="./privacy.html">Privacy</a>
         <a href="./support.html">Support</a>
         <a class="nav-download" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">Download</a>
@@ -27,71 +31,112 @@
         <div class="hero-media" aria-hidden="true">
           <img src="./assets/tappy-hero-popover.png" alt="">
         </div>
-        <div class="hero-overlay"></div>
+        <div class="hero-shade"></div>
         <div class="hero-content">
           <p class="eyebrow">Notarized macOS menu bar app</p>
-          <h1>Tappy makes typing feel alive.</h1>
+          <h1>Tappy for macOS.</h1>
           <p class="hero-copy">
-            Add crisp, low-latency sound feedback to your keyboard, switch packs from the menu bar,
-            and keep everything local on your Mac.
+            Add beautifully responsive typing sounds to your Mac, switch feedback packs from the menu bar,
+            and keep every keystroke local.
           </p>
-          <div class="actions">
+          <div class="actions" aria-label="Download actions">
             <a class="button button-primary" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">
               Download for macOS
             </a>
-            <a class="button button-secondary" href="https://github.com/casstao1/Tappy">View on GitHub</a>
+            <a class="button button-secondary" href="https://github.com/casstao1/Tappy">View source</a>
           </div>
-          <p class="release-note">Hosted free with Vercel. The notarized DMG is served from GitHub Releases.</p>
+          <div class="hero-meta" aria-label="Release details">
+            <span>Apple notarized</span>
+            <span>Developer ID signed</span>
+            <span>macOS 14+</span>
+          </div>
         </div>
       </section>
 
-      <section class="section split">
+      <section class="intro-band" aria-label="Tappy highlights">
         <div>
-          <p class="eyebrow">Built for daily use</p>
-          <h2>Small enough to disappear. Polished enough to notice.</h2>
+          <span>01</span>
+          <strong>Instant local feedback</strong>
+          <p>Key categories trigger short cues with a fast, low-latency audio engine.</p>
         </div>
-        <div class="feature-grid">
+        <div>
+          <span>02</span>
+          <strong>Designed for the menu bar</strong>
+          <p>Choose packs, preview sounds, and adjust volume without opening a full app window.</p>
+        </div>
+        <div>
+          <span>03</span>
+          <strong>Private by design</strong>
+          <p>Tappy uses physical key events for sound feedback and does not upload typed text.</p>
+        </div>
+      </section>
+
+      <section class="section product-story">
+        <div class="section-heading">
+          <p class="eyebrow">Daily rhythm</p>
+          <h2>Make your keyboard feel precise, playful, or almost invisible.</h2>
+        </div>
+        <div class="story-grid">
           <article class="feature">
-            <h3>Instant feedback</h3>
-            <p>Short local cues respond to key categories like letters, space, return, delete, and modifiers.</p>
+            <span class="feature-kicker">Feel</span>
+            <h3>Crisp cues for common keys.</h3>
+            <p>Letters, space, return, delete, and modifiers can each use purpose-built feedback.</p>
           </article>
           <article class="feature">
-            <h3>Sound packs</h3>
-            <p>Move between clean plastic taps, organic cues, and playful premium-style packs from one menu.</p>
+            <span class="feature-kicker">Packs</span>
+            <h3>Switch the mood instantly.</h3>
+            <p>Move from clean plastic taps to organic textures, clockwork clicks, bubbles, and starlit cues.</p>
           </article>
           <article class="feature">
-            <h3>Local by design</h3>
-            <p>Tappy uses macOS Input Monitoring to trigger sounds without uploading typed text to a server.</p>
+            <span class="feature-kicker">Control</span>
+            <h3>Small controls, fast decisions.</h3>
+            <p>A compact popover keeps the important settings close without taking over your screen.</p>
           </article>
         </div>
       </section>
 
-      <section class="section showcase">
+      <section id="sounds" class="showcase-band">
         <div class="showcase-copy">
-          <p class="eyebrow">Quiet control</p>
-          <h2>A focused popover for choosing the feel of your keyboard.</h2>
+          <p class="eyebrow">Sound packs</p>
+          <h2>A polished picker for the feel of your keys.</h2>
           <p>
-            Tappy sits in the menu bar with a compact sound picker, preview controls, and volume settings
-            that are quick to scan without pulling you out of work.
+            Tappy turns sound selection into a calm, scannable menu. Preview a pack, set the volume,
+            and get back to typing.
           </p>
         </div>
-        <img src="./assets/tappy-sound-packs.png" alt="Tappy menu showing sound pack choices on macOS">
+        <figure class="showcase-frame">
+          <img src="./assets/tappy-sound-packs.png" alt="Tappy menu showing sound pack choices on macOS">
+        </figure>
       </section>
 
-      <section class="section download-panel">
-        <div>
-          <p class="eyebrow">Download path</p>
-          <h2>Free hosting, smoother first launch.</h2>
+      <section class="section release-section">
+        <div class="release-copy">
+          <p class="eyebrow">Release</p>
+          <h2>Free website. Notarized download. Simple install.</h2>
           <p>
-            The website deploys from GitHub to Vercel. Release DMGs are signed with Developer ID,
-            notarized by Apple, and attached to GitHub Releases.
+            The site is deployed from GitHub to Vercel. The DMG is attached to GitHub Releases,
+            signed with Developer ID, and accepted by Apple notarization.
           </p>
         </div>
-        <div class="download-details">
-          <p><strong>Requires:</strong> macOS 14 or later</p>
-          <p><strong>Latest DMG:</strong> GitHub Releases asset named <code>Tappy.dmg</code></p>
-          <p><strong>Distribution:</strong> Developer ID signed and Apple notarized</p>
-          <a class="button button-primary" href="https://github.com/casstao1/Tappy/releases">See all releases</a>
+        <div class="release-panel">
+          <dl>
+            <div>
+              <dt>Latest file</dt>
+              <dd><code>Tappy.dmg</code></dd>
+            </div>
+            <div>
+              <dt>Requirement</dt>
+              <dd>macOS 14 or later</dd>
+            </div>
+            <div>
+              <dt>Distribution</dt>
+              <dd>GitHub Releases</dd>
+            </div>
+          </dl>
+          <a class="button button-primary" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">
+            Download Tappy
+          </a>
+          <a class="release-link" href="https://github.com/casstao1/Tappy/releases">See all releases</a>
         </div>
       </section>
     </main>
