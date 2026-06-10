@@ -2,7 +2,6 @@ import AppKit
 import Combine
 import CoreGraphics
 import Foundation
-import StoreKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -25,43 +24,13 @@ enum SetupPhase: Equatable {
 
 @MainActor
 final class KeyboardSoundController: ObservableObject {
-    private enum StorePresentationMode {
-        case purchase
-        case restore
-
-        var title: String {
-            switch self {
-            case .purchase:
-                return "Unlocking Premium"
-            case .restore:
-                return "Restoring Purchase"
-            }
-        }
-
-        var message: String {
-            switch self {
-            case .purchase:
-                return "Complete the App Store confirmation to unlock all premium feedback packs."
-            case .restore:
-                return "Tappy is checking the App Store for a previous premium purchase."
-            }
-        }
-    }
-
     private enum DefaultsKey {
         static let selectedPackID = "Tappy.selectedPackID"
         static let clickVolume = "Tappy.clickVolume"
         static let trialedPackIDs = "Tappy.trialedPackIDs"
-        static let reviewFirstUseTimestamp = "Tappy.reviewFirstUseTimestamp"
-        static let reviewLastActiveDayTimestamp = "Tappy.reviewLastActiveDayTimestamp"
-        static let reviewActiveDayCount = "Tappy.reviewActiveDayCount"
-        static let reviewPromptedTimestamp = "Tappy.reviewPromptedTimestamp"
     }
 
     private static let livePreviewDurationSeconds = 90
-    private static let reviewPromptDelaySeconds: TimeInterval = 0.8
-    private static let reviewMinimumElapsedTime: TimeInterval = 60 * 60 * 24 * 2
-    private static let reviewMinimumActiveDays = 2
 
     @Published var isEnabled = true {
         didSet {
@@ -77,7 +46,6 @@ final class KeyboardSoundController: ObservableObject {
     @Published var directLicenseKeyEntry = ""
     @Published private(set) var trialedPackIDs: Set<String> = []
     @Published private(set) var setupPhase: SetupPhase
-    @Published private(set) var isPremiumFlowInFlight = false
     @Published var clickVolume: Double {
         didSet {
             let clampedVolume = min(max(clickVolume, 0), 1)
@@ -97,7 +65,6 @@ final class KeyboardSoundController: ObservableObject {
 
     let permissionManager = InputMonitoringPermissionManager()
     let soundLibrary = SoundLibrary()
-    let premiumStore: PremiumStore
     let directLicenseStore: DirectLicenseStore
 
     private let keyboardMonitor = KeyboardMonitor()
@@ -108,7 +75,6 @@ final class KeyboardSoundController: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        premiumStore = PremiumStore()
         directLicenseStore = DirectLicenseStore(userDefaults: userDefaults)
 
         premiumUnlocked = directLicenseStore.hasUnlockedPremium
@@ -135,21 +101,11 @@ final class KeyboardSoundController: ObservableObject {
             persistSelectedPack(TechPack.plasticTapping)
         }
 
-        premiumStore.objectWillChange
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
-            .store(in: &cancellables)
-
         directLicenseStore.objectWillChange
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
-
-        premiumStore.onUnlockStateChange = { [weak self] _ in
-            self?.reconcilePremiumUnlockState()
-        }
 
         directLicenseStore.onUnlockStateChange = { [weak self] _ in
             self?.reconcilePremiumUnlockState()
@@ -200,9 +156,6 @@ final class KeyboardSoundController: ObservableObject {
 
     private var menuStatusItem: NSStatusItem?
     private var menuPopover: NSPopover?
-    private var pendingReviewPromptWorkItem: DispatchWorkItem?
-    private var storePresentationWindowController: NSWindowController?
-    private var storePresentationPreviousActivationPolicy: NSApplication.ActivationPolicy?
 
     private func setupMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -233,7 +186,6 @@ final class KeyboardSoundController: ObservableObject {
         NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.cancelPendingReviewPrompt()
                 self?.menuPopover?.close()
             }
             .store(in: &cancellables)
@@ -245,14 +197,10 @@ final class KeyboardSoundController: ObservableObject {
         guard let popover = menuPopover else { return }
 
         if popover.isShown {
-            cancelPendingReviewPrompt()
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
-            if let controller = popover.contentViewController {
-                maybeRequestReview(in: controller)
-            }
         }
     }
 
@@ -356,7 +304,7 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     var premiumStoreMessage: String? {
-        directLicenseStore.lastMessage ?? premiumStore.lastMessage
+        directLicenseStore.lastMessage
     }
 
     var premiumStoreStatusText: String? {
@@ -368,31 +316,19 @@ final class KeyboardSoundController: ObservableObject {
             return "Checking Tappy license..."
         }
 
-        if premiumStore.isPurchasing {
-            return "Waiting for App Store confirmation..."
-        }
-
-        if premiumStore.isLoading {
-            return "Connecting to the App Store..."
-        }
-
-        if isPremiumFlowInFlight {
-            return "Preparing App Store purchase..."
-        }
-
-        return directLicenseStore.lastMessage ?? premiumStore.lastMessage
+        return directLicenseStore.lastMessage
     }
 
     var isPremiumStoreLoading: Bool {
-        premiumStore.isLoading || directLicenseStore.isValidating
+        directLicenseStore.isValidating
     }
 
     var isPremiumPurchaseInFlight: Bool {
-        premiumStore.isPurchasing
+        false
     }
 
     var isPremiumStoreBusy: Bool {
-        isPremiumFlowInFlight || premiumStore.isBusy || directLicenseStore.isBusy
+        directLicenseStore.isBusy
     }
 
     var shouldShowDirectLicenseBar: Bool {
@@ -572,78 +508,6 @@ final class KeyboardSoundController: ObservableObject {
         statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
     }
 
-    func refreshAppStoreUnlock() {
-        Task {
-            await premiumStore.refreshStore()
-            statusMessage = premiumStore.lastMessage ?? "Premium feedback packs are ready to unlock."
-        }
-    }
-
-    func purchasePremiumUnlock() async {
-        cancelPendingCTA()
-
-        guard !isPremiumFlowInFlight else {
-            statusMessage = "The App Store is already processing a request."
-            return
-        }
-        isPremiumFlowInFlight = true
-        defer { isPremiumFlowInFlight = false }
-
-        statusMessage = "Connecting to the App Store..."
-        let productIsReady = await premiumStore.prepareUnlockAllForPurchase()
-
-        guard !premiumUnlocked else {
-            statusMessage = "Premium packs are already unlocked."
-            return
-        }
-
-        guard productIsReady else {
-            statusMessage = premiumStore.lastMessage ?? "Premium unlock is not available yet."
-            return
-        }
-
-        guard let window = beginStorePresentation(.purchase) else {
-            statusMessage = "Unable to open the App Store purchase window."
-            return
-        }
-
-        defer { endStorePresentation() }
-
-        await premiumStore.purchaseUnlockAll(confirmIn: window)
-        if premiumUnlocked, highlightedPack.isPremium {
-            showUpgradeCTA = false
-            ctaPack = nil
-            highlightPack(highlightedPack)
-        }
-        statusMessage = premiumStore.lastMessage ?? monitoringSummary()
-    }
-
-    func restorePremiumPurchases() async {
-        cancelPendingCTA()
-
-        guard !isPremiumFlowInFlight else {
-            statusMessage = "The App Store is already processing a request."
-            return
-        }
-        isPremiumFlowInFlight = true
-        defer { isPremiumFlowInFlight = false }
-
-        let didOpenPresentation = beginStorePresentation(.restore) != nil
-        defer {
-            if didOpenPresentation {
-                endStorePresentation()
-            }
-        }
-
-        await premiumStore.restorePurchases()
-        if premiumUnlocked, highlightedPack.isPremium {
-            showUpgradeCTA = false
-            ctaPack = nil
-            highlightPack(highlightedPack)
-        }
-        statusMessage = premiumStore.lastMessage ?? monitoringSummary()
-    }
-
     func requestKeyboardPermission() {
         permissionManager.requestListenAccessPrompt()
         statusMessage = monitoringSummary()
@@ -820,7 +684,7 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     private func reconcilePremiumUnlockState() {
-        let unlocked = premiumStore.hasUnlockedPremium || directLicenseStore.hasUnlockedPremium
+        let unlocked = directLicenseStore.hasUnlockedPremium
         premiumUnlocked = unlocked
 
         if unlocked {
@@ -841,7 +705,7 @@ final class KeyboardSoundController: ObservableObject {
                 }
             }
 
-            statusMessage = directLicenseStore.lastMessage ?? premiumStore.lastMessage ?? "Premium ASMR packs unlocked."
+            statusMessage = directLicenseStore.lastMessage ?? "Premium ASMR packs unlocked."
             return
         }
 
@@ -906,115 +770,8 @@ final class KeyboardSoundController: ObservableObject {
         )
     }
 
-    private func beginStorePresentation(_ mode: StorePresentationMode) -> NSWindow? {
-        cancelPendingReviewPrompt()
-        menuPopover?.performClose(nil)
-
-        storePresentationPreviousActivationPolicy = NSApp.activationPolicy()
-        if storePresentationPreviousActivationPolicy != .regular {
-            _ = NSApp.setActivationPolicy(.regular)
-        }
-
-        NSApp.activate(ignoringOtherApps: true)
-
-        let controller = makeStorePresentationWindowController(mode: mode)
-        storePresentationWindowController = controller
-
-        guard let window = controller.window else { return nil }
-
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
-        return window
-    }
-
-    private func endStorePresentation() {
-        storePresentationWindowController?.close()
-        storePresentationWindowController = nil
-
-        if let previousPolicy = storePresentationPreviousActivationPolicy, previousPolicy != NSApp.activationPolicy() {
-            _ = NSApp.setActivationPolicy(previousPolicy)
-        }
-        storePresentationPreviousActivationPolicy = nil
-    }
-
-    private func makeStorePresentationWindowController(mode: StorePresentationMode) -> NSWindowController {
-        let hostingController = NSHostingController(
-            rootView: StorePresentationView(title: mode.title, message: mode.message)
-        )
-        let window = NSWindow(contentViewController: hostingController)
-        window.styleMask = [.titled, .closable]
-        window.title = mode.title
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-        window.isReleasedWhenClosed = false
-        window.collectionBehavior = [.moveToActiveSpace]
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
-        window.setContentSize(NSSize(width: 340, height: 140))
-        return NSWindowController(window: window)
-    }
-
     private func persistSelectedPack(_ pack: TechPack) {
         userDefaults.set(pack.id, forKey: DefaultsKey.selectedPackID)
-    }
-
-    private func maybeRequestReview(in controller: NSViewController, now: Date = Date()) {
-        guard setupPhase == .complete else { return }
-        guard userDefaults.object(forKey: DefaultsKey.reviewPromptedTimestamp) == nil else { return }
-
-        recordReviewUsage(for: now)
-
-        guard isEligibleForReviewRequest(at: now) else { return }
-        guard pendingReviewPromptWorkItem == nil else { return }
-
-        let workItem = DispatchWorkItem { [weak self, weak controller] in
-            guard let self else { return }
-            defer { self.pendingReviewPromptWorkItem = nil }
-
-            guard let controller else { return }
-            guard self.setupPhase == .complete else { return }
-            guard self.menuPopover?.isShown == true else { return }
-            guard NSApp.isActive else { return }
-
-            self.userDefaults.set(Date().timeIntervalSince1970, forKey: DefaultsKey.reviewPromptedTimestamp)
-            AppStore.requestReview(in: controller)
-        }
-
-        pendingReviewPromptWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.reviewPromptDelaySeconds, execute: workItem)
-    }
-
-    private func recordReviewUsage(for now: Date) {
-        if userDefaults.object(forKey: DefaultsKey.reviewFirstUseTimestamp) == nil {
-            userDefaults.set(now.timeIntervalSince1970, forKey: DefaultsKey.reviewFirstUseTimestamp)
-        }
-
-        let todayStart = Calendar.autoupdatingCurrent.startOfDay(for: now).timeIntervalSince1970
-        let lastRecordedDay = userDefaults.object(forKey: DefaultsKey.reviewLastActiveDayTimestamp) as? Double
-
-        guard lastRecordedDay != todayStart else { return }
-
-        let activeDayCount = userDefaults.integer(forKey: DefaultsKey.reviewActiveDayCount) + 1
-        userDefaults.set(todayStart, forKey: DefaultsKey.reviewLastActiveDayTimestamp)
-        userDefaults.set(activeDayCount, forKey: DefaultsKey.reviewActiveDayCount)
-    }
-
-    private func isEligibleForReviewRequest(at now: Date) -> Bool {
-        let activeDayCount = userDefaults.integer(forKey: DefaultsKey.reviewActiveDayCount)
-        guard activeDayCount >= Self.reviewMinimumActiveDays else { return false }
-
-        guard let firstUseTimestamp = userDefaults.object(forKey: DefaultsKey.reviewFirstUseTimestamp) as? Double else {
-            return false
-        }
-
-        let elapsedTime = now.timeIntervalSince1970 - firstUseTimestamp
-        return elapsedTime >= Self.reviewMinimumElapsedTime
-    }
-
-    private func cancelPendingReviewPrompt() {
-        pendingReviewPromptWorkItem?.cancel()
-        pendingReviewPromptWorkItem = nil
     }
 
     private func cancelPendingCTA() {
@@ -1075,28 +832,5 @@ final class KeyboardSoundController: ObservableObject {
         guard savedPack.isAvailable else { return TechPack.plasticTapping }
         guard !savedPack.isPremium || premiumUnlocked else { return TechPack.plasticTapping }
         return savedPack
-    }
-}
-
-private struct StorePresentationView: View {
-    let title: String
-    let message: String
-
-    var body: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-                .controlSize(.large)
-
-            Text(title)
-                .font(.headline)
-
-            Text(message)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(20)
-        .frame(width: 340, height: 140)
-        .background(Color(NSColor.windowBackgroundColor))
     }
 }

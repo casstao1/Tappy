@@ -156,15 +156,6 @@ struct MenuBarView: View {
                 .disabled(!controller.canActivateDirectLicense)
             }
 
-            Button {
-                Task { await controller.restorePremiumPurchases() }
-            } label: {
-                Label("Restore App Store purchase", systemImage: "arrow.clockwise")
-            }
-            .buttonStyle(.plain)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .disabled(controller.isPremiumStoreBusy)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -238,13 +229,6 @@ struct MenuBarView: View {
 
                 Spacer()
 
-                Button("Restore") {
-                    Task { await controller.restorePremiumPurchases() }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
-                .disabled(controller.isPremiumStoreBusy)
-
                 Button("Buy \(controller.premiumUnlockPrice)") {
                     controller.openDirectPurchasePage()
                 }
@@ -275,13 +259,6 @@ struct MenuBarView: View {
                     controller.openDirectPurchasePage()
                 }
                 .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .disabled(controller.isPremiumStoreBusy)
-
-                Button("Restore") {
-                    Task { await controller.restorePremiumPurchases() }
-                }
-                .buttonStyle(.bordered)
                 .controlSize(.small)
                 .disabled(controller.isPremiumStoreBusy)
 
@@ -475,10 +452,6 @@ private struct PackRow: View {
             Button("Buy All Packs — \(controller.premiumUnlockPrice)") {
                 controller.highlightPack(pack)
                 controller.openDirectPurchasePage()
-            }
-            Button("Restore Purchase") {
-                controller.highlightPack(pack)
-                Task { await controller.restorePremiumPurchases() }
             }
             Button("Not Now", role: .cancel) {}
         } message: {

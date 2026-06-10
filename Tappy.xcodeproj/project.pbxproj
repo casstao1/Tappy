@@ -19,7 +19,6 @@
 		A10000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* Assets.xcassets */; };
 		A1000000000000000000000B /* BundledSounds in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000034 /* BundledSounds */; };
 		A10000000000000000000035 /* TechPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000036 /* TechPack.swift */; };
-		A10000000000000000000037 /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000038 /* PremiumStore.swift */; };
 		A10000000000000000000041 /* DirectLicenseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000042 /* DirectLicenseStore.swift */; };
 /* End PBXBuildFile section */
 
@@ -39,7 +38,6 @@
 		A10000000000000000000021 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000034 /* BundledSounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledSounds; sourceTree = "<group>"; };
 		A10000000000000000000036 /* TechPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechPack.swift; sourceTree = "<group>"; };
-		A10000000000000000000038 /* PremiumStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStore.swift; sourceTree = "<group>"; };
 		A10000000000000000000042 /* DirectLicenseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectLicenseStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -101,7 +99,6 @@
 				A10000000000000000000015 /* InputMonitoringPermissionManager.swift */,
 				A10000000000000000000016 /* KeyboardMonitor.swift */,
 				A10000000000000000000017 /* LowLatencyAudioEngine.swift */,
-				A10000000000000000000038 /* PremiumStore.swift */,
 				A10000000000000000000018 /* SoundLibrary.swift */,
 			);
 			path = Services;
@@ -204,7 +201,6 @@
 				A10000000000000000000005 /* InputMonitoringPermissionManager.swift in Sources */,
 				A10000000000000000000006 /* KeyboardMonitor.swift in Sources */,
 				A10000000000000000000007 /* LowLatencyAudioEngine.swift in Sources */,
-				A10000000000000000000037 /* PremiumStore.swift in Sources */,
 				A10000000000000000000041 /* DirectLicenseStore.swift in Sources */,
 				A10000000000000000000008 /* SoundLibrary.swift in Sources */,
 			);
@@ -223,7 +219,7 @@
 				CODE_SIGN_ENTITLEMENTS = Tappy/Support/Tappy.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 39;
+				CURRENT_PROJECT_VERSION = 40;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = Z8V566C555;
@@ -231,7 +227,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Tappy/Support/AppInfo.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.castao.tappy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -250,7 +246,7 @@
 				CODE_SIGN_ENTITLEMENTS = Tappy/Support/Tappy.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 39;
+				CURRENT_PROJECT_VERSION = 40;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = Z8V566C555;
@@ -258,7 +254,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Tappy/Support/AppInfo.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.castao.tappy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
