@@ -1,6 +1,6 @@
 # Tappy
 
-`Tappy` is a sandboxed macOS Swift app that plays low-latency keyboard click sounds from bundled and user-provided audio files.
+`Tappy` is a sandboxed macOS Swift app that provides low-latency auditory typing feedback from bundled and user-provided audio cues.
 
 ## Repo Scope
 
@@ -25,13 +25,13 @@ Planned App Store name:
 
 Planned App Store subtitle:
 
-- `AMR & Meme Keyboard Sounds`
+- `Auditory typing feedback`
 
 The subtitle is set in App Store Connect, not in the Xcode project.
 
-## Where To Put Your Sounds
+## Where To Put Your Feedback Cues
 
-Run the app once, then click `Reveal Sounds Folder`.
+Run the app once, then open the feedback cue folder from the app.
 
 The app stores sound files in:
 

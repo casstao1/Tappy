@@ -165,8 +165,8 @@ final class KeyboardMonitor {
                 return Unmanaged.passUnretained(event)
             }
 
-            // Extract event data on the tap thread, then dispatch stateful key
-            // reconciliation to main so local and background events share one model.
+            // Extract only key-code level data on the tap thread. Tappy never
+            // reads characters or text from the event stream.
             switch type {
             case .keyDown:
                 let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
@@ -422,5 +422,4 @@ final class KeyboardMonitor {
             }
         }
     }
-
 }

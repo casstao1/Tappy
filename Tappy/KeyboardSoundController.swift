@@ -8,7 +8,8 @@ import UniformTypeIdentifiers
 
 // MARK: - Setup Phase
 
-/// Describes where the user is in the Input Monitoring setup flow.
+/// Describes where the user is in the Input Monitoring setup flow for
+/// system-wide auditory typing feedback.
 /// Evaluated synchronously at launch so the correct screen is shown immediately
 /// with no flash or delay.
 enum SetupPhase: Equatable {
@@ -40,7 +41,7 @@ final class KeyboardSoundController: ObservableObject {
         var message: String {
             switch self {
             case .purchase:
-                return "Complete the App Store confirmation to unlock all premium sound packs."
+                return "Complete the App Store confirmation to unlock all premium feedback packs."
             case .restore:
                 return "Tappy is checking the App Store for a previous premium purchase."
             }
@@ -277,7 +278,7 @@ final class KeyboardSoundController: ObservableObject {
     var setupHeadline: String {
         switch setupPhase {
         case .needsPermission:
-            return "Enable Input Monitoring"
+            return "Enable Auditory Feedback"
         case .needsRestart:
             return "Restart to activate"
         case .complete:
@@ -288,9 +289,9 @@ final class KeyboardSoundController: ObservableObject {
     var setupDetail: String {
         switch setupPhase {
         case .needsPermission:
-            return "Tappy needs Input Monitoring permission to detect key presses and play sounds while you type in other apps."
+            return "Tappy needs Input Monitoring to detect physical key categories for local auditory feedback while you type in other apps. Tappy does not read, store, or transmit typed text."
         case .needsRestart:
-            return "Permission is granted. Restart Tappy once so macOS applies Input Monitoring to this running app."
+            return "Permission is granted. Restart Tappy once so macOS applies auditory feedback to this running app."
         case .complete:
             return ""
         }
@@ -299,7 +300,7 @@ final class KeyboardSoundController: ObservableObject {
     var setupPrimaryButtonTitle: String {
         switch setupPhase {
         case .needsPermission:
-            return "Open Input Monitoring"
+            return "Open Privacy Settings"
         case .needsRestart:
             return "Restart Tappy"
         case .complete:
@@ -326,7 +327,7 @@ final class KeyboardSoundController: ObservableObject {
 
     var compactStatus: String {
         if !isEnabled { return "Paused" }
-        if setupPhase == .complete { return "Live" }
+        if setupPhase == .complete { return "Active" }
         return "Setup"
     }
 
@@ -398,7 +399,7 @@ final class KeyboardSoundController: ObservableObject {
             statusMessage = soundLibrary.totalSoundCount > 0 ? monitoringSummary() : soundLibrary.lastLoadMessage
         } catch {
             errorMessage = error.localizedDescription
-            statusMessage = "The sound library failed to load."
+            statusMessage = "The feedback library failed to load."
         }
     }
 
@@ -420,8 +421,8 @@ final class KeyboardSoundController: ObservableObject {
 
     func importSounds(into category: SoundCategory = .standard) {
         let panel = NSOpenPanel()
-        panel.title = "Import Keyboard Sounds"
-        panel.message = "Choose audio files to copy into the app's \(category.displayName) sound folder."
+        panel.title = "Import Feedback Cues"
+        panel.message = "Choose audio files to copy into the app's \(category.displayName) feedback folder."
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [
@@ -444,8 +445,8 @@ final class KeyboardSoundController: ObservableObject {
 
     func importPackFolder() {
         let panel = NSOpenPanel()
-        panel.title = "Import Sound Pack Folder"
-        panel.message = "Choose a folder that contains default, space, return, delete, and modifier subfolders."
+        panel.title = "Import Feedback Pack Folder"
+        panel.message = "Choose a folder that contains default, space, return, delete, and modifier cue subfolders."
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
@@ -528,7 +529,7 @@ final class KeyboardSoundController: ObservableObject {
     func beginUnlockPremiumFlow() {
         Task {
             await premiumStore.refreshStore()
-            statusMessage = premiumStore.lastMessage ?? "Premium packs are ready to unlock."
+            statusMessage = premiumStore.lastMessage ?? "Premium feedback packs are ready to unlock."
         }
     }
 
@@ -763,7 +764,7 @@ final class KeyboardSoundController: ObservableObject {
             statusMessage = monitoringSummary()
         } else {
             keyboardMonitor.stop()
-            statusMessage = "Keyboard sounds are paused."
+            statusMessage = "Auditory feedback is paused."
         }
     }
 
@@ -773,19 +774,19 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     private func monitoringSummary() -> String {
-        guard isEnabled else { return "Keyboard sounds are paused." }
+        guard isEnabled else { return "Auditory typing feedback is paused." }
         guard soundLibrary.totalSoundCount > 0 else { return soundLibrary.lastLoadMessage }
 
         switch setupPhase {
         case .needsPermission:
-            return "Waiting for Input Monitoring permission."
+            return "Waiting for permission. Tappy only uses physical key codes for local auditory feedback."
         case .needsRestart:
-            return "Permission granted. Restart Tappy to activate system-wide sounds."
+            return "Permission granted. Restart Tappy to activate system-wide auditory feedback."
         case .complete:
             if backgroundCaptureState == .unavailable {
                 return "Input Monitoring appears available, but the listen-only event tap failed to start."
             }
-            return "Keyboard sounds are active system-wide."
+            return "Auditory typing feedback is active system-wide."
         }
     }
 

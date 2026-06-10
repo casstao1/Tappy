@@ -42,8 +42,13 @@ struct MenuBarView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text("Tappy")
-                .font(.headline)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Tappy")
+                    .font(.headline)
+                Text("Auditory typing feedback")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
             Spacer()
             HStack(spacing: 5) {
                 Circle()
@@ -132,7 +137,7 @@ struct MenuBarView: View {
     private var setupMenuDetail: String {
         switch controller.setupPhase {
         case .needsPermission:
-            return "Enable Input Monitoring so Tappy can play while you type in other apps."
+            return "Enable Input Monitoring so Tappy can provide auditory typing feedback in other apps. Tappy uses physical key codes only and never records typed text."
         case .needsRestart:
             return "Restart once so macOS applies the new permission."
         case .complete:
@@ -197,7 +202,7 @@ struct MenuBarView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Keep \(pack.name)?")
                     .font(.subheadline.weight(.semibold))
-                Text("Unlock all premium packs permanently.")
+                Text("Unlock all premium feedback packs permanently.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -247,7 +252,7 @@ struct MenuBarView: View {
     private var volumeControl: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Click Volume", systemImage: "speaker.wave.2.fill")
+                Label("Feedback Volume", systemImage: "speaker.wave.2.fill")
                     .font(.caption.weight(.semibold))
 
                 Spacer()
@@ -279,7 +284,7 @@ struct MenuBarView: View {
     private var footer: some View {
         HStack(spacing: 0) {
             Toggle(isOn: $controller.isEnabled) {
-                Label("Sounds", systemImage: "keyboard")
+                Label("Feedback", systemImage: "keyboard")
                     .font(.subheadline)
             }
             .toggleStyle(.switch)
@@ -321,9 +326,7 @@ private struct PackRow: View {
         case TechPack.farming.id:         return Color(red: 0.38, green: 0.82, blue: 0.46)
         case TechPack.bubble.id:          return Color(red: 0.38, green: 0.88, blue: 0.88)
         case TechPack.stars.id:           return Color(red: 1.00, green: 0.82, blue: 0.30)
-        case TechPack.swordBattle.id:     return Color(red: 1.00, green: 0.45, blue: 0.32)
         case TechPack.woodBrush.id:       return Color(red: 0.85, green: 0.62, blue: 0.38)
-        case TechPack.fart.id:            return Color(red: 0.72, green: 0.88, blue: 0.30)
         case TechPack.analogStopwatch.id: return Color(red: 0.72, green: 0.78, blue: 0.90)
         default:                          return .accentColor
         }
@@ -416,9 +419,9 @@ private struct PackRow: View {
             Button("Not Now", role: .cancel) {}
         } message: {
             if controller.hasTrialedPack(pack) {
-                Text("You've already used the free trial for \(pack.name). Unlock all premium packs to keep it.")
+                Text("You've already used the free trial for \(pack.name). Unlock all premium feedback packs to keep it.")
             } else {
-                Text("Listen to \(pack.name) sounds for \(controller.livePreviewDurationText). Your previous pack restores automatically when the trial ends.")
+                Text("Try \(pack.name) feedback for \(controller.livePreviewDurationText). Your previous pack restores automatically when the trial ends.")
             }
         }
     }

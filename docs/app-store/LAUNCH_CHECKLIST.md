@@ -21,12 +21,12 @@
 
 ## Review readiness
 - [ ] Review [APP_REVIEW_NOTES.md](/Users/castao/Desktop/KeyboardSoundApp/docs/app-store/APP_REVIEW_NOTES.md)
-- [ ] Verify keyboard-event copy matches Input Monitoring and system-wide behavior
-- [ ] Confirm App Review notes explain listen-only `CGEventTap` usage and no Accessibility API usage
+- [ ] Verify auditory-feedback copy matches Input Monitoring setup and system-wide behavior
+- [ ] Confirm App Review notes explain listen-only `CGEventTap`, no typed-text collection, assistive feedback purpose, and no Accessibility API usage
 - [ ] Verify the premium unlock flow with App Store Connect or local StoreKit testing
 
 ## Content and legal
-- [ ] Confirm final shipped sound packs
+- [ ] Confirm final shipped feedback packs
 - [ ] Keep source/license records for every shipped pack
 - [ ] Recheck any sound that could look franchise-adjacent
 

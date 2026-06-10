@@ -59,7 +59,7 @@ final class SoundLibrary: ObservableObject {
         totalSoundCount = newCounts.values.reduce(0, +) + loadedKeySounds.values.reduce(0) { $0 + $1.count }
 
         if totalSoundCount == 0 {
-            lastLoadMessage = "No sounds found. Add files and click Reload Sounds."
+            lastLoadMessage = "No feedback cues found. Add files and reload."
         } else {
             lastLoadMessage = "Loaded \(totalSoundCount) sound file(s) into memory for immediate playback."
         }
@@ -307,9 +307,9 @@ final class SoundLibrary: ObservableObject {
         guard !fileManager.fileExists(atPath: instructionsURL.path) else { return }
 
         let contents = """
-        Keyboard Sound App
+        Tappy Feedback Cues
 
-        Put your sound files into these folders:
+        Put your audio cue files into these folders:
         - default: used for most keys
         - space: used for the space bar
         - return: used for return and enter

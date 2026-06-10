@@ -6,9 +6,10 @@
 	<true/>
 	<!--
 	    Tappy is distributed as a sandboxed macOS app.
-	    Keyboard event monitoring is performed through Input Monitoring,
-	    using a listen-only event tap. The app observes key events to play
-	    local audio feedback and does not store or transmit keystrokes.
+	    System-wide auditory typing feedback is performed through Input
+	    Monitoring, using a listen-only event tap. The app observes physical
+	    key-code categories for local cues and does not store or transmit
+	    typed text.
 	-->
 </dict>
 </plist>
