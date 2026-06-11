@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Download Tappy, a notarized macOS menu bar app for crisp ASMR keyboard sounds, plastic taps, bubble pops, and analog ticks.">
-    <meta property="og:title" content="Tappy ASMR Keyboard Sounds for macOS">
-    <meta property="og:description" content="Crisp, calming ASMR typing sounds from a polished macOS menu bar app.">
-    <meta property="og:image" content="./assets/tappy-sound-packs.png">
-    <title>Tappy ASMR Keyboard Sounds for macOS</title>
+    <meta name="description" content="Tappy is a notarized macOS menu bar app that plays satisfying ASMR sounds while you type — crisp plastic taps, soft bubble pops, and precise mechanical ticks.">
+    <meta property="og:title" content="Tappy — ASMR Keyboard Sounds for Mac">
+    <meta property="og:description" content="Turn every keypress into a soft, satisfying sound. Free Mac app, premium ASMR packs for $4.99.">
+    <meta property="og:image" content="./assets/asmr/plastic-tapping.png">
+    <title>Tappy — ASMR Keyboard Sounds for Mac</title>
     <link rel="icon" href="./assets/tappy-icon.png">
     <link rel="apple-touch-icon" href="./assets/tappy-icon.png">
     <link rel="stylesheet" href="./styles.css">
@@ -15,146 +15,134 @@
   <body>
     <header class="site-header">
       <a class="brand" href="./index.html" aria-label="Tappy home">
-        <img src="./assets/tappy-icon.png" alt="" width="36" height="36">
+        <img src="./assets/tappy-icon.png" alt="" width="32" height="32">
         <span>Tappy</span>
       </a>
       <nav class="nav-links" aria-label="Site pages">
         <a href="#sounds">Sounds</a>
         <a href="#buy">Pricing</a>
-        <a href="./privacy.html">Privacy</a>
+        <a href="./support.html">Support</a>
         <a class="nav-download" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">Download</a>
       </nav>
     </header>
 
     <main>
       <section class="hero">
-        <div class="hero-media" aria-hidden="true">
-          <img src="./assets/tappy-hero-popover.png" alt="">
-        </div>
-        <div class="hero-shade"></div>
         <div class="hero-content">
-          <p class="eyebrow">ASMR keyboard sounds for macOS</p>
-          <h1>Tappy</h1>
+          <p class="eyebrow">Tappy for macOS</p>
+          <h1>ASMR keyboard sounds for your Mac.</h1>
           <p class="hero-copy">
-            ASMR keyboard sounds for Mac. Crisp plastic taps, soft bubble pops, and analog ticks
-            turn everyday typing into satisfying feedback from a quiet menu bar app.
+            Tappy is a tiny menu bar app that gives every keypress a soft, satisfying
+            sound — crisp plastic taps, gentle bubble pops, precise mechanical ticks.
           </p>
           <div class="actions" aria-label="Download actions">
             <a class="button button-primary" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">
-              Download for macOS
+              Download free for Mac
             </a>
-            <a class="button button-secondary" href="#buy">Unlock Premium Packs</a>
           </div>
-          <div class="hero-meta" aria-label="Release details">
-            <span>Local key events only</span>
-            <span>Apple notarized</span>
-            <span>macOS 14+</span>
+          <div class="hero-meta" aria-label="Trust details">
+            <span class="keycap">Apple notarized</span>
+            <span class="keycap">macOS 14+</span>
+            <span class="keycap">Local key events only</span>
           </div>
         </div>
-      </section>
-
-      <section id="sounds" class="asmr-gallery" aria-labelledby="asmr-gallery-title">
-        <div class="asmr-gallery-heading">
-          <p class="eyebrow">Sound textures</p>
-          <h2 id="asmr-gallery-title">Pick the feel of every key.</h2>
-          <p>
-            Tappy is built around one promise: responsive ASMR feedback that makes typing feel
-            more tactile without getting in your way.
-          </p>
-        </div>
-        <div class="pack-gallery-grid">
-          <article class="pack-card pack-card-featured">
-            <img src="./assets/asmr/plastic-tapping.png" alt="Plastic Tapping ASMR keyboard sound pack preview" loading="lazy">
-            <div class="pack-card-copy">
-              <span>Plastic Tapping</span>
-              <h3>Bright plastic taps.</h3>
-              <p>Clean, glossy clicks for everyday typing.</p>
-            </div>
-          </article>
-          <article class="pack-card">
-            <img src="./assets/asmr/bubble-soft-pop.png" alt="Soft Pop Bubble ASMR sound pack card" loading="lazy">
-            <div class="pack-card-copy">
-              <span>Bubble</span>
-              <h3>Soft bubble pops.</h3>
-              <p>Light pops that make each keypress feel airy.</p>
-            </div>
-          </article>
-          <article class="pack-card">
-            <img src="./assets/asmr/analog-mechanical-ticks.png" alt="Analog Stopwatch mechanical ticks ASMR sound pack card" loading="lazy">
-            <div class="pack-card-copy">
-              <span>Analog Stopwatch</span>
-              <h3>Precise mechanical ticks.</h3>
-              <p>Focused tick sounds for a steady, tactile rhythm.</p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="app-preview" aria-labelledby="app-preview-title">
-        <figure class="app-preview-frame">
-          <img src="./assets/tappy-sound-packs.png" alt="Tappy menu showing ASMR sound pack choices on macOS">
+        <figure class="hero-figure">
+          <img src="./assets/asmr/plastic-tapping.png" alt="A fingertip pressing a glossy translucent keycap among soft blue and white plastic keys" fetchpriority="high">
+          <figcaption>Plastic Tapping</figcaption>
         </figure>
-        <div class="app-preview-copy">
-          <p class="eyebrow">Menu bar control</p>
-          <h2 id="app-preview-title">Switch packs without breaking focus.</h2>
-          <p>
-            Preview a texture, set the volume, and keep typing. Tappy listens for physical
-            key events locally, so the sounds stay responsive and your words stay yours.
-          </p>
-          <ul class="app-preview-list">
-            <li>
-              <strong>Preview packs</strong>
-              <span>Hear the ASMR texture before choosing it.</span>
-            </li>
-            <li>
-              <strong>Adjust volume</strong>
-              <span>Dial the feedback up or down.</span>
-            </li>
-            <li>
-              <strong>Private by design</strong>
-              <span>No typed text is uploaded.</span>
-            </li>
-          </ul>
+      </section>
+
+      <section id="sounds" class="section" aria-labelledby="sounds-title">
+        <div class="section-heading">
+          <p class="eyebrow">Sound textures</p>
+          <h2 id="sounds-title">Pick the feel of every key.</h2>
+          <p>Each pack is a different texture of calm. Preview them in the app and switch any time.</p>
+        </div>
+        <div class="pack-grid">
+          <article class="pack-card">
+            <img src="./assets/asmr/plastic-tapping.png" alt="Translucent plastic keycaps in soft blue light" loading="lazy">
+            <div class="pack-card-copy">
+              <span class="pack-tag pack-tag-free">Free</span>
+              <h3>Plastic Tapping</h3>
+              <p>Crisp, glossy plastic taps for everyday typing.</p>
+            </div>
+          </article>
+          <article class="pack-card">
+            <img src="./assets/asmr/bubble-soft-pop.png" alt="Iridescent bubble wrap with floating soap bubbles" loading="lazy">
+            <div class="pack-card-copy">
+              <span class="pack-tag">Premium</span>
+              <h3>Bubble</h3>
+              <p>Soft bubble pops that make each keypress feel airy.</p>
+            </div>
+          </article>
+          <article class="pack-card">
+            <img src="./assets/asmr/analog-mechanical-ticks.jpg" alt="Golden clockwork gears and jeweled bearings inside a watch movement" loading="lazy">
+            <div class="pack-card-copy">
+              <span class="pack-tag">Premium</span>
+              <h3>Analog Stopwatch</h3>
+              <p>Precise mechanical ticks for a steady, focused rhythm.</p>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section id="buy" class="purchase-section" aria-labelledby="buy-title">
-        <div class="purchase-copy">
-          <p class="eyebrow">Download and unlock</p>
-          <h2 id="buy-title">Download free. Unlock every premium ASMR pack for $4.99.</h2>
-          <p>
-            Try the Mac app first. Buy once with Stripe, get a Tappy license key instantly,
-            and paste it into the app.
-          </p>
-          <p class="release-note">Developer ID signed, Apple notarized, and hosted on GitHub Releases.</p>
-        </div>
-
-        <div class="purchase-panel">
-          <div class="price-lockup">
-            <span>Premium packs</span>
-            <strong>$4.99</strong>
-            <p>One-time purchase. Secure checkout by Stripe with instant license delivery.</p>
+      <section class="section" aria-labelledby="app-title">
+        <div class="app-panel">
+          <div class="app-panel-copy">
+            <p class="eyebrow">In your menu bar</p>
+            <h2 id="app-title">Quiet app. Private by design.</h2>
+            <p>
+              Switch packs, preview textures, and set the volume without leaving your
+              keyboard flow. Tappy listens only for physical key events, locally.
+            </p>
+            <ul class="privacy-list">
+              <li>
+                Never reads your words
+                <span>Tappy responds to key events, not the text you type.</span>
+              </li>
+              <li>
+                Nothing leaves your Mac
+                <span>No typed text is uploaded. No account needed.</span>
+              </li>
+              <li>
+                Signed and notarized
+                <span>Developer ID signed, Apple notarized, hosted on GitHub Releases.</span>
+              </li>
+            </ul>
           </div>
-
-          <a class="button button-primary purchase-button" href="/api/create-checkout">
-            Buy ASMR Pack Unlock
-          </a>
-          <a class="release-link" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">
-            Download the free Mac app first
-          </a>
-
-          <ol class="purchase-steps" aria-label="Unlock steps">
-            <li><span>1</span>Download Tappy for macOS.</li>
-            <li><span>2</span>Buy securely with Stripe.</li>
-            <li><span>3</span>Paste the license key into Tappy.</li>
-          </ol>
+          <figure class="app-panel-figure">
+            <img src="./assets/tappy-hero-popover.png" alt="The Tappy menu bar popover showing sound packs and a volume slider" loading="lazy">
+          </figure>
         </div>
+      </section>
+
+      <section id="buy" class="section" aria-labelledby="buy-title">
+        <div class="cta-panel">
+          <p class="eyebrow">Get Tappy</p>
+          <h2 id="buy-title">Free to download. Unlock more in the app.</h2>
+          <p class="cta-copy">
+            Tappy is free, with free sound packs included. When you want more textures,
+            unlock every premium ASMR pack right inside the app — $4.99, one time.
+          </p>
+          <div class="actions" aria-label="Download actions">
+            <a class="button button-primary" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">
+              Download free for Mac
+            </a>
+          </div>
+          <p class="price-note">macOS 14+ · Direct download from GitHub Releases · Secure in-app checkout by Stripe</p>
+        </div>
+        <ol class="purchase-steps steps-row" aria-label="Unlock steps">
+          <li><span>1</span>Download Tappy and start typing.</li>
+          <li><span>2</span>Try the free packs from your menu bar.</li>
+          <li><span>3</span>Unlock the premium packs in the app whenever you like.</li>
+        </ol>
       </section>
     </main>
 
     <footer class="site-footer">
       <span>Tappy for macOS</span>
       <span>
+        <a href="./privacy.html">Privacy</a>
         <a href="./support.html">Support</a>
         <a href="https://github.com/casstao1/Tappy/releases">GitHub Releases</a>
       </span>
