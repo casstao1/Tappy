@@ -27,25 +27,26 @@
     <main class="checkout-shell">
       <section class="checkout-panel" aria-labelledby="checkout-title">
         <p class="eyebrow">Stripe checkout complete</p>
-        <h1 id="checkout-title">Your Tappy license key is ready.</h1>
+        <h1 id="checkout-title">Open Tappy to unlock your packs.</h1>
         <p class="lede">
-          Paste this key into Tappy from the menu bar to unlock every premium ASMR sound pack.
+          Your payment is verified. Use the button below to return to Tappy and unlock every premium ASMR sound pack automatically.
         </p>
 
         <div class="license-card" data-state="loading">
-          <label for="license-key">License key</label>
+          <label for="license-key">Fallback license key</label>
           <textarea id="license-key" readonly spellcheck="false">Generating license...</textarea>
           <div class="license-actions">
-            <button class="button button-primary" id="copy-license" type="button" disabled>Copy license key</button>
+            <button class="button button-primary" id="open-tappy" type="button" disabled>Open Tappy and unlock</button>
+            <button class="button button-secondary-light" id="copy-license" type="button" disabled>Copy license key</button>
             <a class="button button-secondary-light" href="https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg">Download Tappy</a>
           </div>
           <p id="license-status" role="status">Checking your Stripe payment...</p>
         </div>
 
         <ol class="purchase-steps checkout-steps" aria-label="Activation steps">
-          <li><span>1</span>Open Tappy from your Mac menu bar.</li>
-          <li><span>2</span>Paste the license key into Unlock ASMR Packs.</li>
-          <li><span>3</span>Press the key button to activate.</li>
+          <li><span>1</span>Click Open Tappy and unlock.</li>
+          <li><span>2</span>Allow your browser to open Tappy if prompted.</li>
+          <li><span>3</span>Tappy activates the premium packs from the menu bar.</li>
         </ol>
       </section>
     </main>
@@ -53,8 +54,10 @@
     <script>
       const statusEl = document.querySelector("#license-status");
       const licenseEl = document.querySelector("#license-key");
+      const openTappyButton = document.querySelector("#open-tappy");
       const copyButton = document.querySelector("#copy-license");
       const sessionID = new URLSearchParams(window.location.search).get("session_id");
+      let tappyActivationURL = "";
 
       async function loadLicense() {
         if (!sessionID) {
@@ -75,9 +78,20 @@
         }
 
         licenseEl.value = payload.license_key;
+        tappyActivationURL = `tappy://checkout-complete?session_id=${encodeURIComponent(sessionID)}`;
+        openTappyButton.disabled = false;
         copyButton.disabled = false;
-        statusEl.textContent = "License generated. Keep it somewhere safe.";
+        statusEl.textContent = "Ready. Open Tappy to finish the unlock.";
       }
+
+      openTappyButton.addEventListener("click", () => {
+        if (!tappyActivationURL) {
+          return;
+        }
+
+        window.location.href = tappyActivationURL;
+        statusEl.textContent = "Opening Tappy. If nothing happens, make sure Tappy is installed, then copy the fallback license key.";
+      });
 
       copyButton.addEventListener("click", async () => {
         await navigator.clipboard.writeText(licenseEl.value);

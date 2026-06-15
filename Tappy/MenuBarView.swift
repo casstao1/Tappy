@@ -124,7 +124,7 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Buy once with Stripe, then paste your Tappy license key here.")
+            Text("Buy once with Stripe, then return to Tappy from the checkout page to unlock automatically.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -140,7 +140,7 @@ struct MenuBarView: View {
             .disabled(controller.isPremiumStoreBusy)
 
             HStack(spacing: 7) {
-                TextField("License key", text: $controller.directLicenseKeyEntry)
+                TextField("Fallback license key", text: $controller.directLicenseKeyEntry)
                     .textFieldStyle(.roundedBorder)
                     .controlSize(.small)
 

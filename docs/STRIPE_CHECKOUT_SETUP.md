@@ -8,7 +8,8 @@ Tappy uses Stripe Checkout for the one-time premium ASMR pack unlock. Stripe sec
 2. The Vercel API creates a Stripe Checkout Session for the configured price.
 3. Stripe redirects back to `/success.html?session_id={CHECKOUT_SESSION_ID}`.
 4. `/api/checkout-license` verifies the paid Stripe session and generates a signed Tappy license key.
-5. Tappy sends that license key to `/api/verify-license` to unlock premium ASMR packs.
+5. The success page enables `Open Tappy and unlock`, which opens `tappy://checkout-complete?session_id=...`.
+6. Tappy reads the paid Checkout Session ID, fetches the signed license key, verifies it through `/api/verify-license`, and unlocks premium ASMR packs.
 
 This is intentionally database-free. The license key is a signed token tied to the paid Stripe Checkout Session.
 
@@ -51,7 +52,7 @@ Do not commit these values.
 After setting Vercel variables and deploying:
 
 ```sh
-curl -I https://tappy-plum.vercel.app/api/create-checkout
+curl -i https://tappy-plum.vercel.app/api/create-checkout
 ```
 
 The response should redirect to a Stripe Checkout URL. Complete a test checkout in Stripe test mode first if you are using test keys.
@@ -65,3 +66,19 @@ https://tappy-plum.vercel.app/api/verify-license
 ```
 
 If the network is unavailable after a license was already activated, Tappy keeps the premium packs available offline on that Mac.
+
+## macOS Callback
+
+The direct-download app registers the custom URL scheme:
+
+```text
+tappy://
+```
+
+The checkout success page uses this callback after payment:
+
+```text
+tappy://checkout-complete?session_id={CHECKOUT_SESSION_ID}
+```
+
+Users can still copy the fallback license key from `success.html` and paste it into Tappy manually if the browser cannot open the app.

@@ -28,6 +28,7 @@ final class KeyboardSoundController: ObservableObject {
         static let selectedPackID = "Tappy.selectedPackID"
         static let clickVolume = "Tappy.clickVolume"
         static let trialedPackIDs = "Tappy.trialedPackIDs"
+        static let hasSeenWelcome = "Tappy.hasSeenWelcome"
     }
 
     private static let livePreviewDurationSeconds = 90
@@ -72,6 +73,7 @@ final class KeyboardSoundController: ObservableObject {
     private let userDefaults: UserDefaults
     private let fileManager = FileManager.default
     private var cancellables = Set<AnyCancellable>()
+    private var appURLHandler: TappyAppURLHandler?
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -143,10 +145,13 @@ final class KeyboardSoundController: ObservableObject {
         updateMonitoringState()
         reconcileSetupPhase(allowTapProbe: true)
         setupMenuBarItem()
+        appURLHandler = TappyAppURLHandler(controller: self)
+        presentWelcomeIfNeeded()
     }
 
     deinit {
         keyboardMonitor.stop()
+        appURLHandler?.invalidate()
         if let item = menuStatusItem {
             NSStatusBar.system.removeStatusItem(item)
         }
@@ -156,6 +161,8 @@ final class KeyboardSoundController: ObservableObject {
 
     private var menuStatusItem: NSStatusItem?
     private var menuPopover: NSPopover?
+    private var welcomeWindow: NSWindow?
+    private var welcomeWindowDelegate: TappyWelcomeWindowDelegate?
 
     private func setupMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -193,15 +200,20 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     @objc private func handleStatusItemClick(_ sender: AnyObject) {
+        if menuPopover?.isShown == true {
+            menuPopover?.performClose(nil)
+        } else {
+            showMenuPopover()
+        }
+    }
+
+    private func showMenuPopover() {
         guard let button = menuStatusItem?.button else { return }
         guard let popover = menuPopover else { return }
 
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-        }
+        NSApp.activate(ignoringOtherApps: true)
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
     }
 
     private func updateMenuBarIcon() {
@@ -484,28 +496,106 @@ final class KeyboardSoundController: ObservableObject {
     func openDirectPurchasePage() {
         cancelPendingCTA()
         NSWorkspace.shared.open(DirectPurchaseConfig.purchaseURL)
-        statusMessage = "Opening Stripe checkout. Paste the Tappy license key here after purchase."
+        statusMessage = "Opening secure Stripe checkout. Return here after payment to finish unlocking."
     }
 
     func activateDirectLicense() async {
         cancelPendingCTA()
         await directLicenseStore.activate(licenseKey: directLicenseKeyEntry)
-        reconcilePremiumUnlockState()
-
-        if directLicenseStore.hasUnlockedPremium {
-            directLicenseKeyEntry = ""
-            if highlightedPack.isPremium {
-                highlightPack(highlightedPack)
-            }
-        }
-
-        statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
+        finishDirectLicenseActivation()
     }
 
     func validateDirectLicense() async {
         await directLicenseStore.validateSavedLicense()
         reconcilePremiumUnlockState()
         statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
+    }
+
+    func handleIncomingURL(_ url: URL) {
+        guard url.scheme?.lowercased() == "tappy" else { return }
+
+        let action = (url.host ?? url.pathComponents.dropFirst().first ?? "").lowercased()
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let queryItems = components?.queryItems ?? []
+
+        func queryValue(_ names: String...) -> String? {
+            for name in names {
+                if let value = queryItems.first(where: { $0.name == name })?.value,
+                   !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    return value
+                }
+            }
+            return nil
+        }
+
+        switch action {
+        case "checkout-complete", "activate-license", "unlock":
+            cancelPendingCTA()
+            showMenuPopover()
+
+            if let sessionID = queryValue("session_id", "checkout_session_id", "session") {
+                statusMessage = "Finishing Stripe checkout and unlocking Tappy..."
+                Task {
+                    await directLicenseStore.activate(checkoutSessionID: sessionID)
+                    finishDirectLicenseActivation()
+                    showMenuPopover()
+                }
+            } else if let licenseKey = queryValue("license_key", "license") {
+                directLicenseKeyEntry = licenseKey
+                statusMessage = "Activating Tappy license..."
+                Task {
+                    await activateDirectLicense()
+                    showMenuPopover()
+                }
+            } else {
+                statusMessage = "Tappy could not read the checkout activation link."
+            }
+        case "open", "menu":
+            showMenuPopover()
+        default:
+            statusMessage = "Tappy did not recognize that link."
+            showMenuPopover()
+        }
+    }
+
+    func showWelcomeWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+
+        if let welcomeWindow {
+            welcomeWindow.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let hostingController = NSHostingController(
+            rootView: WelcomeView().environmentObject(self)
+        )
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 520),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        let delegate = TappyWelcomeWindowDelegate(controller: self)
+        window.title = "Welcome to Tappy"
+        window.contentViewController = hostingController
+        window.delegate = delegate
+        window.isReleasedWhenClosed = false
+        window.collectionBehavior = [.moveToActiveSpace]
+        window.center()
+
+        welcomeWindow = window
+        welcomeWindowDelegate = delegate
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    func finishWelcome() {
+        markWelcomeSeen()
+        welcomeWindow?.close()
+        showMenuPopover()
+    }
+
+    func markWelcomeSeen() {
+        userDefaults.set(true, forKey: DefaultsKey.hasSeenWelcome)
     }
 
     func requestKeyboardPermission() {
@@ -727,6 +817,27 @@ final class KeyboardSoundController: ObservableObject {
         restoreBuiltInPack(packID: pack.id)
     }
 
+    private func finishDirectLicenseActivation() {
+        reconcilePremiumUnlockState()
+
+        if directLicenseStore.hasUnlockedPremium {
+            directLicenseKeyEntry = ""
+            if highlightedPack.isPremium {
+                highlightPack(highlightedPack)
+            }
+        }
+
+        statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
+    }
+
+    private func presentWelcomeIfNeeded() {
+        guard !userDefaults.bool(forKey: DefaultsKey.hasSeenWelcome) else { return }
+
+        DispatchQueue.main.async { [weak self] in
+            self?.showWelcomeWindow()
+        }
+    }
+
     private func monitoringSummary() -> String {
         guard isEnabled else { return "Auditory typing feedback is paused." }
         guard soundLibrary.totalSoundCount > 0 else { return soundLibrary.lastLoadMessage }
@@ -832,5 +943,171 @@ final class KeyboardSoundController: ObservableObject {
         guard savedPack.isAvailable else { return TechPack.plasticTapping }
         guard !savedPack.isPremium || premiumUnlocked else { return TechPack.plasticTapping }
         return savedPack
+    }
+}
+
+private struct WelcomeView: View {
+    @EnvironmentObject private var controller: KeyboardSoundController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            HStack(alignment: .top, spacing: 16) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.accentColor.opacity(0.14))
+                        .frame(width: 58, height: 58)
+                    Image(systemName: "keyboard.fill")
+                        .font(.system(size: 25, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Welcome to Tappy")
+                        .font(.system(size: 30, weight: .bold))
+                    Text("Tappy added a keyboard icon to your Mac menu bar. Click it any time to choose sounds, set volume, pause feedback, or unlock premium packs.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            VStack(spacing: 0) {
+                WelcomeStepRow(
+                    symbolName: "keyboard",
+                    title: "Type normally",
+                    detail: "Tappy plays low-latency feedback for physical key presses while you use your Mac."
+                )
+                Divider()
+                WelcomeStepRow(
+                    symbolName: "slider.horizontal.3",
+                    title: "Tune it from the menu bar",
+                    detail: "Pick a free pack, preview premium textures, and adjust feedback volume from the keyboard icon."
+                )
+                Divider()
+                WelcomeStepRow(
+                    symbolName: "gearshape.fill",
+                    title: "Allow Input Monitoring",
+                    detail: "macOS may ask for permission so Tappy can hear key events in other apps. Tappy never reads typed words."
+                )
+                Divider()
+                WelcomeStepRow(
+                    symbolName: "lock.open.fill",
+                    title: "Unlock after checkout",
+                    detail: "Buy once with Stripe, then return to Tappy from the checkout page to activate the premium ASMR packs."
+                )
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.primary.opacity(0.09))
+            )
+
+            HStack(spacing: 10) {
+                if controller.setupPhase != .complete {
+                    Button {
+                        controller.openInputMonitoringSettings()
+                    } label: {
+                        Label("Privacy Settings", systemImage: "gearshape")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Spacer()
+
+                Button {
+                    controller.finishWelcome()
+                } label: {
+                    Label("Open Tappy Menu", systemImage: "checkmark.circle.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(28)
+        .frame(width: 540)
+        .background(Color(NSColor.windowBackgroundColor))
+    }
+}
+
+private struct WelcomeStepRow: View {
+    let symbolName: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbolName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 24, height: 24)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 13)
+    }
+}
+
+private final class TappyWelcomeWindowDelegate: NSObject, NSWindowDelegate {
+    private weak var controller: KeyboardSoundController?
+
+    init(controller: KeyboardSoundController) {
+        self.controller = controller
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        Task { @MainActor [weak controller] in
+            controller?.markWelcomeSeen()
+        }
+    }
+}
+
+private final class TappyAppURLHandler: NSObject {
+    private weak var controller: KeyboardSoundController?
+    private var isInstalled = false
+
+    init(controller: KeyboardSoundController) {
+        self.controller = controller
+        super.init()
+        install()
+    }
+
+    func invalidate() {
+        guard isInstalled else { return }
+        NSAppleEventManager.shared().removeEventHandler(
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
+        )
+        isInstalled = false
+    }
+
+    private func install() {
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleURLEvent(_:withReplyEvent:)),
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
+        )
+        isInstalled = true
+    }
+
+    @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
+        guard let rawURL = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              let url = URL(string: rawURL)
+        else {
+            return
+        }
+
+        Task { @MainActor [weak controller] in
+            controller?.handleIncomingURL(url)
+        }
     }
 }
