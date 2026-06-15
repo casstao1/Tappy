@@ -570,7 +570,7 @@ final class KeyboardSoundController: ObservableObject {
             rootView: WelcomeView().environmentObject(self)
         )
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 520),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 230),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -950,109 +950,34 @@ private struct WelcomeView: View {
     @EnvironmentObject private var controller: KeyboardSoundController
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            HStack(alignment: .top, spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.accentColor.opacity(0.14))
-                        .frame(width: 58, height: 58)
-                    Image(systemName: "keyboard.fill")
-                        .font(.system(size: 25, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Welcome to Tappy")
-                        .font(.system(size: 30, weight: .bold))
-                    Text("Tappy added a keyboard icon to your Mac menu bar. Click it any time to choose sounds, set volume, pause feedback, or unlock premium packs.")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            VStack(spacing: 0) {
-                WelcomeStepRow(
-                    symbolName: "keyboard",
-                    title: "Type normally",
-                    detail: "Tappy plays low-latency feedback for physical key presses while you use your Mac."
-                )
-                Divider()
-                WelcomeStepRow(
-                    symbolName: "slider.horizontal.3",
-                    title: "Tune it from the menu bar",
-                    detail: "Pick a free pack, preview premium textures, and adjust feedback volume from the keyboard icon."
-                )
-                Divider()
-                WelcomeStepRow(
-                    symbolName: "gearshape.fill",
-                    title: "Allow Input Monitoring",
-                    detail: "macOS may ask for permission so Tappy can hear key events in other apps. Tappy never reads typed words."
-                )
-                Divider()
-                WelcomeStepRow(
-                    symbolName: "lock.open.fill",
-                    title: "Unlock after checkout",
-                    detail: "Buy once with Stripe, then return to Tappy from the checkout page to activate the premium ASMR packs."
-                )
-            }
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.primary.opacity(0.09))
-            )
-
-            HStack(spacing: 10) {
-                if controller.setupPhase != .complete {
-                    Button {
-                        controller.openInputMonitoringSettings()
-                    } label: {
-                        Label("Privacy Settings", systemImage: "gearshape")
-                    }
-                    .buttonStyle(.bordered)
-                }
-
-                Spacer()
-
-                Button {
-                    controller.finishWelcome()
-                } label: {
-                    Label("Open Tappy Menu", systemImage: "checkmark.circle.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(28)
-        .frame(width: 540)
-        .background(Color(NSColor.windowBackgroundColor))
-    }
-}
-
-private struct WelcomeStepRow: View {
-    let symbolName: String
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbolName)
-                .font(.system(size: 15, weight: .semibold))
+        VStack(spacing: 20) {
+            Image(systemName: "keyboard.fill")
+                .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(Color.accentColor)
-                .frame(width: 24, height: 24)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                Text(detail)
-                    .font(.caption)
+            VStack(spacing: 8) {
+                Text("Welcome to Tappy")
+                    .font(.system(size: 28, weight: .bold))
+
+                Text("Tappy will add a keyboard icon to the toolbar at the top of your Mac in a moment.")
+                    .font(.body)
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Spacer(minLength: 0)
+            Button {
+                controller.finishWelcome()
+            } label: {
+                Text("Continue")
+                    .frame(minWidth: 120)
+            }
+            .buttonStyle(.borderedProminent)
+            .keyboardShortcut(.defaultAction)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 13)
+        .padding(28)
+        .frame(width: 420)
+        .background(Color(NSColor.windowBackgroundColor))
     }
 }
 
