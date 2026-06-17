@@ -29,9 +29,11 @@ final class KeyboardSoundController: ObservableObject {
         static let clickVolume = "Tappy.clickVolume"
         static let trialedPackIDs = "Tappy.trialedPackIDs"
         static let hasSeenWelcome = "Tappy.hasSeenWelcome"
+        static let welcomeVersionSeen = "Tappy.welcomeVersionSeen"
     }
 
     private static let livePreviewDurationSeconds = 90
+    private static let currentWelcomeVersion = 1
 
     @Published var isEnabled = true {
         didSet {
@@ -163,6 +165,7 @@ final class KeyboardSoundController: ObservableObject {
     private var menuPopover: NSPopover?
     private var welcomeWindow: NSWindow?
     private var welcomeWindowDelegate: TappyWelcomeWindowDelegate?
+    private var isWelcomePresentationScheduled = false
 
     private func setupMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -586,6 +589,7 @@ final class KeyboardSoundController: ObservableObject {
         welcomeWindow = window
         welcomeWindowDelegate = delegate
         window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
     }
 
     func finishWelcome() {
@@ -596,6 +600,7 @@ final class KeyboardSoundController: ObservableObject {
 
     func markWelcomeSeen() {
         userDefaults.set(true, forKey: DefaultsKey.hasSeenWelcome)
+        userDefaults.set(Self.currentWelcomeVersion, forKey: DefaultsKey.welcomeVersionSeen)
     }
 
     func requestKeyboardPermission() {
@@ -632,6 +637,7 @@ final class KeyboardSoundController: ObservableObject {
         permissionManager.scheduleRefreshBurst()
         attemptListenerAttachIfNeeded()
         reconcileSetupPhase(allowTapProbe: true)
+        presentWelcomeIfNeeded(delay: 0.1)
     }
 
     func handleAppDidResignActive() {
@@ -830,11 +836,21 @@ final class KeyboardSoundController: ObservableObject {
         statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
     }
 
-    private func presentWelcomeIfNeeded() {
-        guard !userDefaults.bool(forKey: DefaultsKey.hasSeenWelcome) else { return }
+    private var hasSeenCurrentWelcome: Bool {
+        let welcomeVersionSeen = userDefaults.integer(forKey: DefaultsKey.welcomeVersionSeen)
+        return welcomeVersionSeen >= Self.currentWelcomeVersion
+    }
 
-        DispatchQueue.main.async { [weak self] in
-            self?.showWelcomeWindow()
+    private func presentWelcomeIfNeeded(delay: TimeInterval = 0.6) {
+        guard !hasSeenCurrentWelcome else { return }
+        guard !isWelcomePresentationScheduled else { return }
+        isWelcomePresentationScheduled = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self else { return }
+            self.isWelcomePresentationScheduled = false
+            guard !self.hasSeenCurrentWelcome else { return }
+            self.showWelcomeWindow()
         }
     }
 
