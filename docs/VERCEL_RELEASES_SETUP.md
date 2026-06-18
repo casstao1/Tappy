@@ -9,7 +9,7 @@ This repo is set up so GitHub never needs Apple signing secrets:
 The website download button points to:
 
 ```text
-https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg
+https://github.com/casstao1/Tappy-Direct/releases/latest/download/Tappy.dmg
 ```
 
 That URL works when the latest GitHub Release includes an asset named `Tappy.dmg`.
@@ -65,7 +65,7 @@ build/Tappy.dmg.sha256
 Create a GitHub Release manually at:
 
 ```text
-https://github.com/casstao1/Tappy/releases/new
+https://github.com/casstao1/Tappy-Direct/releases/new
 ```
 
 Use a tag such as:
