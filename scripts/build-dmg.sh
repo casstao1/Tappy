@@ -194,11 +194,15 @@ else
   )
 fi
 
+# The direct-download DMG build uses the Stripe purchase backend (DirectLicenseStore).
+# TAPPY_DIRECT selects it at compile time; the paid App Store build (default, no flag)
+# includes every bundled sound and contains no purchase backend.
 xcodebuild \
   -project "$ROOT_DIR/Tappy.xcodeproj" \
   -scheme "$APP_NAME" \
   -configuration "$CONFIGURATION" \
   -derivedDataPath "$DERIVED_DATA_DIR" \
+  SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) TAPPY_DIRECT' \
   "${signing_args[@]}" \
   build
 

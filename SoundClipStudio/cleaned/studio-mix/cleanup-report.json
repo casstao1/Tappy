@@ -1,0 +1,200 @@
+[
+  {
+    "file": "jackson-ave-02_t0005.780_score4719.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 38.8,
+    "originalEdgeRmsDb": -53.5,
+    "cleanedEdgeRmsDb": -47.0,
+    "keptRangeMs": [
+      15.3,
+      54.1
+    ]
+  },
+  {
+    "file": "jackson-ave-05_t0016.890_score4303.wav",
+    "originalDurationMs": 101.0,
+    "cleanedDurationMs": 23.4,
+    "originalEdgeRmsDb": -39.6,
+    "cleanedEdgeRmsDb": -41.2,
+    "keptRangeMs": [
+      77.6,
+      101.0
+    ]
+  },
+  {
+    "file": "jackson-ave-06_t0024.210_score4311.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 41.1,
+    "originalEdgeRmsDb": -41.8,
+    "cleanedEdgeRmsDb": -45.3,
+    "keptRangeMs": [
+      14.3,
+      55.4
+    ]
+  },
+  {
+    "file": "jackson-ave-07_t0028.915_score7332.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 25.0,
+    "originalEdgeRmsDb": -48.4,
+    "cleanedEdgeRmsDb": -39.2,
+    "keptRangeMs": [
+      18.3,
+      43.2
+    ]
+  },
+  {
+    "file": "jackson-ave-09_t0046.815_score5134.wav",
+    "originalDurationMs": 76.0,
+    "cleanedDurationMs": 23.2,
+    "originalEdgeRmsDb": -41.8,
+    "cleanedEdgeRmsDb": -44.0,
+    "keptRangeMs": [
+      52.8,
+      76.0
+    ]
+  },
+  {
+    "file": "jackson-ave-11_t0055.160_score5964.wav",
+    "originalDurationMs": 91.0,
+    "cleanedDurationMs": 32.8,
+    "originalEdgeRmsDb": -41.9,
+    "cleanedEdgeRmsDb": -37.3,
+    "keptRangeMs": [
+      57.5,
+      90.3
+    ]
+  },
+  {
+    "file": "jackson-ave-13_t0059.185_score6210.wav",
+    "originalDurationMs": 116.0,
+    "cleanedDurationMs": 19.7,
+    "originalEdgeRmsDb": -47.8,
+    "cleanedEdgeRmsDb": -42.1,
+    "keptRangeMs": [
+      79.3,
+      99.0
+    ]
+  },
+  {
+    "file": "jackson-ave-15_t0064.545_score7308.wav",
+    "originalDurationMs": 240.0,
+    "cleanedDurationMs": 19.0,
+    "originalEdgeRmsDb": -44.8,
+    "cleanedEdgeRmsDb": -37.3,
+    "keptRangeMs": [
+      221.0,
+      240.0
+    ]
+  },
+  {
+    "file": "new-recording-08_t0033.715_score5606.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 32.2,
+    "originalEdgeRmsDb": -32.2,
+    "cleanedEdgeRmsDb": -41.9,
+    "keptRangeMs": [
+      11.3,
+      43.5
+    ]
+  },
+  {
+    "file": "new-recording-09_t0035.925_score8423.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 22.2,
+    "originalEdgeRmsDb": -44.0,
+    "cleanedEdgeRmsDb": -37.5,
+    "keptRangeMs": [
+      17.2,
+      39.5
+    ]
+  },
+  {
+    "file": "new-recording-10_t0039.660_score5508.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 41.5,
+    "originalEdgeRmsDb": -28.7,
+    "cleanedEdgeRmsDb": -43.6,
+    "keptRangeMs": [
+      13.5,
+      55.0
+    ]
+  },
+  {
+    "file": "new-recording-13_t0054.885_score5514.wav",
+    "originalDurationMs": 96.0,
+    "cleanedDurationMs": 18.7,
+    "originalEdgeRmsDb": -39.6,
+    "cleanedEdgeRmsDb": -40.1,
+    "keptRangeMs": [
+      75.8,
+      94.4
+    ]
+  },
+  {
+    "file": "new-recording-15_t0060.790_score3853.wav",
+    "originalDurationMs": 101.0,
+    "cleanedDurationMs": 18.8,
+    "originalEdgeRmsDb": -35.6,
+    "cleanedEdgeRmsDb": -44.6,
+    "keptRangeMs": [
+      81.9,
+      100.7
+    ]
+  },
+  {
+    "file": "new-recording-16_t0062.015_score4634.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 18.2,
+    "originalEdgeRmsDb": -50.6,
+    "cleanedEdgeRmsDb": -42.5,
+    "keptRangeMs": [
+      24.0,
+      42.2
+    ]
+  },
+  {
+    "file": "new-recording-20_t0066.350_score5479.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 59.0,
+    "originalEdgeRmsDb": -40.6,
+    "cleanedEdgeRmsDb": -40.6,
+    "keptRangeMs": [
+      16.0,
+      75.0
+    ]
+  },
+  {
+    "file": "new-recording-21_t0066.810_score5106.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 29.9,
+    "originalEdgeRmsDb": -34.4,
+    "cleanedEdgeRmsDb": -45.5,
+    "keptRangeMs": [
+      17.0,
+      46.9
+    ]
+  },
+  {
+    "file": "new-recording-33_t0080.135_score5678.wav",
+    "originalDurationMs": 86.0,
+    "cleanedDurationMs": 21.6,
+    "originalEdgeRmsDb": -40.0,
+    "cleanedEdgeRmsDb": -41.5,
+    "keptRangeMs": [
+      64.2,
+      85.9
+    ]
+  },
+  {
+    "file": "new-recording-36_t0091.410_score4611.wav",
+    "originalDurationMs": 75.0,
+    "cleanedDurationMs": 44.0,
+    "originalEdgeRmsDb": -44.5,
+    "cleanedEdgeRmsDb": -44.4,
+    "keptRangeMs": [
+      17.8,
+      61.8
+    ]
+  }
+]

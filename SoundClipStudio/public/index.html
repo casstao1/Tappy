@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Tappy Clip Lab</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><i data-lucide="audio-waveform"></i></div>
+      <div>
+        <h1>Tappy Clip Lab</h1>
+        <p id="summary">Loading candidates</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <input id="fileInput" type="file" accept="audio/*,.wav,.m4a,.mp3,.aiff,.aif,.caf" multiple hidden>
+      <button id="addButton" class="button secondary" type="button">
+        <i data-lucide="plus"></i>
+        <span>Add sounds</span>
+      </button>
+      <button id="exportButton" class="button primary" type="button">
+        <i data-lucide="package-check"></i>
+        <span>Export picks</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="Clip filters">
+      <div class="segmented" id="viewFilter">
+        <button class="segment active" type="button" data-filter="all">All <span id="allCount">0</span></button>
+        <button class="segment" type="button" data-filter="picks">Picks <span id="pickCount">0</span></button>
+        <button class="segment" type="button" data-filter="unrated">Unrated <span id="unratedCount">0</span></button>
+        <button class="segment" type="button" data-filter="trash">Trash <span id="trashCount">0</span></button>
+      </div>
+
+      <div class="toolbar-fields">
+        <label class="search-field">
+          <i data-lucide="search"></i>
+          <input id="searchInput" type="search" placeholder="Search clips" aria-label="Search clips">
+        </label>
+        <label class="select-field">
+          <span>Source</span>
+          <select id="sourceFilter" aria-label="Filter by source">
+            <option value="all">All sources</option>
+          </select>
+        </label>
+        <label class="select-field">
+          <span>Sort</span>
+          <select id="sortSelect" aria-label="Sort clips">
+            <option value="source">Source order</option>
+            <option value="rating">Best first</option>
+            <option value="name">Name</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section id="clipGrid" class="clip-grid" aria-live="polite"></section>
+    <section id="emptyState" class="empty-state" hidden>
+      <i data-lucide="audio-lines"></i>
+      <h2>No clips in this view</h2>
+    </section>
+  </main>
+
+  <div id="dropOverlay" class="drop-overlay" hidden>
+    <div>
+      <i data-lucide="file-up"></i>
+      <strong>Import audio</strong>
+    </div>
+  </div>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+
+  <script src="/vendor/lucide.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

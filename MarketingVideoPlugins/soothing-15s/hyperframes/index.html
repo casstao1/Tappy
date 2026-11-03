@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tappy Soothing ASMR</title>
+    <style>
+      :root {
+        --charcoal: #151416;
+        --charcoal-soft: #242126;
+        --ivory: #f7f6f3;
+        --pink: #ffb6c1;
+        --pink-soft: #f7d6dc;
+        --lavender: #c9b9ff;
+        --muted: #666168;
+        --green: #4ed77b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--charcoal);
+        font-family: Inter, sans-serif;
+        letter-spacing: 0;
+      }
+
+      #tappy-soothing-15 {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        color: var(--ivory);
+        background: var(--charcoal);
+      }
+
+      .clip {
+        visibility: hidden;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .scene-content {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 168px 84px 220px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1,
+      h2 {
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .eyebrow {
+        color: var(--pink);
+        font-size: 23px;
+        font-weight: 800;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .hairline {
+        width: 90px;
+        height: 3px;
+        border-radius: 2px;
+        background-color: var(--pink);
+      }
+
+      /* Scene 1 */
+      #scene-intro {
+        background: var(--charcoal);
+      }
+
+      #scene-intro .scene-content {
+        align-items: center;
+        justify-content: center;
+        gap: 34px;
+        text-align: center;
+      }
+
+      #intro-icon-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 310px;
+        height: 310px;
+      }
+
+      .intro-ring {
+        position: absolute;
+        border: 2px solid rgba(255, 182, 193, 0.18);
+        border-radius: 72px;
+      }
+
+      .intro-ring.outer {
+        width: 292px;
+        height: 292px;
+      }
+
+      .intro-ring.inner {
+        width: 242px;
+        height: 242px;
+      }
+
+      #intro-icon {
+        position: relative;
+        z-index: 2;
+        width: 178px;
+        height: 178px;
+        border-radius: 44px;
+        filter: drop-shadow(0 28px 38px rgba(0, 0, 0, 0.46));
+      }
+
+      #intro-title {
+        max-width: 900px;
+        font-size: 94px;
+        line-height: 1;
+      }
+
+      #intro-subtitle {
+        max-width: 760px;
+        color: rgba(247, 246, 243, 0.62);
+        font-size: 34px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+
+      #intro-keyboard {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        width: 760px;
+        margin-top: 56px;
+        padding: 32px;
+        border: 2px solid rgba(247, 246, 243, 0.18);
+        border-radius: 34px;
+        background-color: rgba(247, 246, 243, 0.035);
+      }
+
+      .intro-key-row {
+        display: flex;
+        gap: 11px;
+      }
+
+      .intro-key {
+        flex: 1;
+        height: 54px;
+        border: 2px solid rgba(247, 246, 243, 0.14);
+        border-radius: 11px;
+        background-color: rgba(247, 246, 243, 0.05);
+        box-shadow: 0 5px 0 rgba(247, 246, 243, 0.08);
+      }
+
+      .intro-key.space {
+        flex: 4.5;
+      }
+
+      /* Scene 2 */
+      #scene-system {
+        color: var(--charcoal);
+        background: var(--ivory);
+      }
+
+      #scene-system .scene-content {
+        align-items: center;
+        padding: 150px 72px 200px;
+        text-align: center;
+      }
+
+      #system-eyebrow {
+        color: #9b5360;
+      }
+
+      #system-title {
+        max-width: 900px;
+        margin-top: 22px;
+        font-size: 88px;
+        line-height: 1;
+      }
+
+      #system-subtitle {
+        max-width: 770px;
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 31px;
+        font-weight: 600;
+        line-height: 1.24;
+      }
+
+      #menu-cap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 850px;
+        min-height: 76px;
+        margin-top: 78px;
+        padding: 0 28px;
+        border: 2px solid rgba(21, 20, 22, 0.12);
+        border-radius: 22px 22px 10px 10px;
+        background-color: #ffffff;
+        box-shadow: 0 18px 55px rgba(21, 20, 22, 0.1);
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .menu-cap-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .menu-cap-right img {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+      }
+
+      #system-popover {
+        position: relative;
+        width: 850px;
+        min-height: 660px;
+        padding: 42px;
+        border: 2px solid rgba(21, 20, 22, 0.12);
+        border-radius: 0 0 40px 40px;
+        background-color: #ffffff;
+        box-shadow: 0 34px 88px rgba(21, 20, 22, 0.14);
+        text-align: left;
+      }
+
+      .system-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+
+      .system-brand {
+        font-size: 42px;
+        font-weight: 900;
+      }
+
+      .system-caption {
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .active-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .active-status::before {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background-color: var(--green);
+        content: "";
+      }
+
+      #selected-pack {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        min-height: 210px;
+        margin-top: 42px;
+        padding: 30px;
+        border: 2px solid rgba(255, 182, 193, 0.62);
+        border-radius: 28px;
+        overflow: hidden;
+        background-color: #fff9fa;
+      }
+
+      .selected-icon {
+        display: flex;
+        flex: 0 0 104px;
+        align-items: center;
+        justify-content: center;
+        width: 104px;
+        height: 104px;
+        border-radius: 28px;
+        color: #4a3038;
+        background-color: var(--pink-soft);
+        font-size: 44px;
+        font-weight: 900;
+      }
+
+      .selected-name {
+        font-size: 38px;
+        font-weight: 900;
+      }
+
+      .selected-copy {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      #tap-ring {
+        position: absolute;
+        right: 34px;
+        width: 122px;
+        height: 122px;
+        border: 3px solid rgba(255, 182, 193, 0.4);
+        border-radius: 44px;
+      }
+
+      .feedback-label {
+        margin-top: 42px;
+        color: var(--muted);
+        font-size: 20px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      #demo-keys {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 22px;
+      }
+
+      .demo-key {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 76px;
+        height: 70px;
+        border: 2px solid rgba(21, 20, 22, 0.14);
+        border-radius: 14px;
+        background-color: var(--ivory);
+        box-shadow: 0 7px 0 #d8d5d2;
+        font-size: 20px;
+        font-weight: 900;
+      }
+
+      /* Scene 3 */
+      #scene-packs {
+        background: var(--charcoal);
+      }
+
+      #scene-packs .scene-content {
+        align-items: center;
+        padding: 148px 72px 200px;
+        text-align: center;
+      }
+
+      #packs-title {
+        max-width: 900px;
+        margin-top: 20px;
+        font-size: 86px;
+        line-height: 1;
+      }
+
+      #packs-subtitle {
+        max-width: 760px;
+        margin-top: 22px;
+        color: rgba(247, 246, 243, 0.58);
+        font-size: 31px;
+        font-weight: 600;
+      }
+
+      #pack-window {
+        position: relative;
+        width: 860px;
+        height: 900px;
+        margin-top: 70px;
+        border: 2px solid rgba(247, 246, 243, 0.11);
+        border-radius: 42px;
+        overflow: hidden;
+        background-color: #1c1a1e;
+      }
+
+      #soothing-track {
+        position: absolute;
+        top: 28px;
+        left: 0;
+        display: flex;
+        gap: 60px;
+        width: max-content;
+        will-change: transform;
+      }
+
+      .sound-card {
+        position: relative;
+        display: flex;
+        flex: 0 0 800px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        height: 840px;
+        padding: 54px 44px 46px;
+        border: 2px solid rgba(247, 246, 243, 0.1);
+        border-radius: 34px;
+        overflow: hidden;
+        background-color: var(--charcoal-soft);
+      }
+
+      .pack-meta {
+        color: rgba(247, 246, 243, 0.42);
+        font-size: 21px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .wet-art,
+      .wax-art {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 520px;
+        height: 520px;
+      }
+
+      .wet-shape {
+        position: absolute;
+        border: 3px solid rgba(255, 182, 193, 0.38);
+        border-radius: 42%;
+      }
+
+      .wet-shape.one {
+        width: 400px;
+        height: 400px;
+      }
+
+      .wet-shape.two {
+        width: 300px;
+        height: 300px;
+      }
+
+      .wet-shape.three {
+        width: 200px;
+        height: 200px;
+        border-color: rgba(255, 182, 193, 0.76);
+        background-color: rgba(255, 182, 193, 0.07);
+      }
+
+      .wet-center {
+        position: relative;
+        z-index: 2;
+        width: 74px;
+        height: 74px;
+        border-radius: 26px;
+        background-color: var(--pink);
+        box-shadow: 0 0 44px rgba(255, 182, 193, 0.35);
+      }
+
+      .wax-art {
+        border: 2px solid rgba(201, 185, 255, 0.22);
+        border-radius: 48px;
+        background-color: rgba(201, 185, 255, 0.035);
+      }
+
+      .crack-line {
+        position: absolute;
+        width: 5px;
+        height: 230px;
+        border-radius: 3px;
+        background-color: rgba(201, 185, 255, 0.72);
+        transform-origin: bottom;
+      }
+
+      .crack-line:nth-child(1) {
+        transform: translate(-60px, -40px) rotate(-32deg);
+      }
+
+      .crack-line:nth-child(2) {
+        height: 180px;
+        transform: translate(38px, -80px) rotate(24deg);
+      }
+
+      .crack-line:nth-child(3) {
+        height: 138px;
+        transform: translate(-120px, 70px) rotate(62deg);
+      }
+
+      .crack-line:nth-child(4) {
+        height: 152px;
+        transform: translate(112px, 58px) rotate(-58deg);
+      }
+
+      .crack-line:nth-child(5) {
+        height: 112px;
+        transform: translate(0, 116px) rotate(8deg);
+      }
+
+      .wax-center {
+        position: relative;
+        z-index: 2;
+        width: 82px;
+        height: 82px;
+        border: 3px solid var(--lavender);
+        border-radius: 22px;
+        background-color: rgba(201, 185, 255, 0.08);
+        box-shadow: 0 0 42px rgba(201, 185, 255, 0.2);
+      }
+
+      .pack-name {
+        color: var(--ivory);
+        font-size: 52px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .pack-description {
+        max-width: 620px;
+        margin-top: 14px;
+        color: rgba(247, 246, 243, 0.52);
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      #pack-dots {
+        display: flex;
+        gap: 14px;
+        margin-top: 30px;
+      }
+
+      #pack-dots span {
+        width: 74px;
+        height: 8px;
+        border-radius: 8px;
+        background-color: rgba(247, 246, 243, 0.12);
+      }
+
+      #pack-dots span:first-child {
+        background-color: var(--pink);
+      }
+
+      /* Scene 4 */
+      #scene-close {
+        background: var(--charcoal);
+      }
+
+      .desk-background {
+        position: absolute;
+        inset: -60px;
+        width: calc(100% + 120px);
+        height: calc(100% + 120px);
+        object-fit: cover;
+        filter: blur(20px) saturate(0.62) brightness(0.3);
+        transform: scale(1.14);
+      }
+
+      .desk-shade {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(21, 20, 22, 0.34);
+      }
+
+      #scene-close .scene-content {
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        padding: 190px 76px 240px;
+        text-align: center;
+      }
+
+      #close-icon {
+        width: 172px;
+        height: 172px;
+        border-radius: 42px;
+        filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.5));
+      }
+
+      #close-title {
+        max-width: 880px;
+        font-size: 84px;
+        line-height: 1;
+      }
+
+      #close-subtitle {
+        max-width: 760px;
+        color: rgba(247, 246, 243, 0.66);
+        font-size: 31px;
+        font-weight: 600;
+        line-height: 1.22;
+      }
+
+      #store-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        width: 820px;
+        min-height: 146px;
+        margin-top: 26px;
+        border: 2px solid rgba(247, 246, 243, 0.28);
+        border-radius: 32px;
+        color: var(--charcoal);
+        background-color: var(--ivory);
+        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
+      }
+
+      .apple-mark {
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 70px;
+        line-height: 1;
+      }
+
+      .store-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .store-small {
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .store-large {
+        margin-top: 8px;
+        font-size: 40px;
+        font-weight: 900;
+      }
+
+      #close-note {
+        color: var(--pink-soft);
+        font-size: 23px;
+        font-weight: 800;
+      }
+
+      #final-black {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        opacity: 0;
+        background-color: #000000;
+      }
+
+      /* Transitions */
+      .transition {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .transition-veil {
+        position: absolute;
+        inset: 0;
+        border-top: 10px solid var(--pink);
+        background-color: var(--ivory);
+        transform-origin: bottom;
+      }
+
+      .transition.dark .transition-veil {
+        border-top-color: rgba(255, 182, 193, 0.42);
+        background-color: var(--charcoal);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="tappy-soothing-15"
+      data-composition-id="tappy-soothing-15"
+      data-start="0"
+      data-duration="15"
+      data-track-index="0"
+      data-width="1080"
+      data-height="1920"
+    >
+      <section id="scene-intro" class="scene clip" data-start="0" data-duration="3" data-track-index="1">
+        <div class="scene-content">
+          <div id="intro-icon-wrap">
+            <span class="intro-ring outer"></span>
+            <span class="intro-ring inner"></span>
+            <img id="intro-icon" src="assets/tappy-icon.png" alt="Tappy app icon" />
+          </div>
+          <div id="intro-hairline" class="hairline"></div>
+          <h1 id="intro-title">Typing can feel softer.</h1>
+          <p id="intro-subtitle">Tappy adds gentle ASMR feedback to every key on your Mac.</p>
+          <div id="intro-keyboard"></div>
+        </div>
+      </section>
+
+      <section id="scene-system" class="scene clip" data-start="3" data-duration="4" data-track-index="1">
+        <div class="scene-content">
+          <p id="system-eyebrow" class="eyebrow">SYSTEM-WIDE ASMR FEEDBACK</p>
+          <h2 id="system-title">A tiny sound for every tap.</h2>
+          <p id="system-subtitle">Choose a texture, set the volume, and keep typing in any Mac app.</p>
+          <div id="menu-cap">
+            <span>Finder&nbsp;&nbsp;&nbsp; File&nbsp;&nbsp;&nbsp; Edit&nbsp;&nbsp;&nbsp; View</span>
+            <span class="menu-cap-right">
+              <img src="assets/tappy-icon.png" alt="" />
+              <span>Tappy</span>
+              <span>9:41</span>
+            </span>
+          </div>
+          <div id="system-popover">
+            <div class="system-head">
+              <div>
+                <div class="system-brand">Tappy</div>
+                <div class="system-caption">Auditory typing feedback</div>
+              </div>
+              <div class="active-status">Active</div>
+            </div>
+            <div id="selected-pack">
+              <div class="selected-icon">W</div>
+              <div>
+                <div class="selected-name">Wet Squishy Pop</div>
+                <div class="selected-copy">Soft, tactile pops with a gentle finish.</div>
+              </div>
+              <span id="tap-ring"></span>
+            </div>
+            <div class="feedback-label">TYPE TO HEAR THE TEXTURE</div>
+            <div id="demo-keys">
+              <span class="demo-key">T</span>
+              <span class="demo-key">A</span>
+              <span class="demo-key">P</span>
+              <span class="demo-key">P</span>
+              <span class="demo-key">Y</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-packs" class="scene clip" data-start="7" data-duration="5" data-track-index="1">
+        <div class="scene-content">
+          <p id="packs-eyebrow" class="eyebrow">REAL TAPPY SOUND PACKS</p>
+          <h2 id="packs-title">Choose the texture that settles you in.</h2>
+          <p id="packs-subtitle">Soft and squishy, then crisp and delicate.</p>
+          <div id="pack-window">
+            <div id="soothing-track" data-layout-allow-overflow>
+              <article class="sound-card">
+                <span class="pack-meta">SOFT TEXTURE</span>
+                <div class="wet-art">
+                  <span class="wet-shape one"></span>
+                  <span class="wet-shape two"></span>
+                  <span class="wet-shape three"></span>
+                  <span class="wet-center"></span>
+                </div>
+                <div>
+                  <div class="pack-name">Wet Squishy Pop</div>
+                  <div class="pack-description">Rounded, tactile pops for a slower typing rhythm.</div>
+                </div>
+              </article>
+              <article class="sound-card">
+                <span class="pack-meta">CRISP TEXTURE</span>
+                <div class="wax-art">
+                  <span class="crack-line"></span>
+                  <span class="crack-line"></span>
+                  <span class="crack-line"></span>
+                  <span class="crack-line"></span>
+                  <span class="crack-line"></span>
+                  <span class="wax-center"></span>
+                </div>
+                <div>
+                  <div class="pack-name">Wax Cracking</div>
+                  <div class="pack-description">Clean little cracks with a delicate ASMR snap.</div>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div id="pack-dots"><span></span><span></span></div>
+        </div>
+      </section>
+
+      <section id="scene-close" class="scene clip" data-start="12" data-duration="3" data-track-index="1">
+        <img class="desk-background" src="assets/cozy-desk.png" alt="Cozy Mac desk setup" data-layout-allow-overflow />
+        <div class="desk-shade"></div>
+        <div class="scene-content">
+          <img id="close-icon" src="assets/tappy-icon.png" alt="Tappy app icon" />
+          <p id="close-eyebrow" class="eyebrow">ASMR KEYBOARD SOUNDS FOR MAC</p>
+          <h2 id="close-title">Find your typing rhythm.</h2>
+          <p id="close-subtitle">Wet Squishy Pop, Wax Cracking, and more, wherever you type.</p>
+          <div id="store-button">
+            <span class="apple-mark">&#63743;</span>
+            <span class="store-copy">
+              <span class="store-small">Download on the</span>
+              <span class="store-large">Mac App Store</span>
+            </span>
+          </div>
+          <span id="close-note">TAPPY: ASMR KEYBOARD SOUNDS</span>
+        </div>
+        <div id="final-black"></div>
+      </section>
+
+      <div id="transition-one" class="transition clip" data-start="2.7" data-duration="0.65" data-track-index="10">
+        <div class="transition-veil"></div>
+      </div>
+      <div id="transition-two" class="transition dark clip" data-start="6.7" data-duration="0.65" data-track-index="11">
+        <div class="transition-veil"></div>
+      </div>
+      <div id="transition-three" class="transition dark clip" data-start="11.7" data-duration="0.65" data-track-index="12">
+        <div class="transition-veil"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      const introRows = [10, 9, 8, 6];
+      const introKeyboard = document.getElementById("intro-keyboard");
+      introRows.forEach((count, rowIndex) => {
+        const row = document.createElement("div");
+        row.className = "intro-key-row";
+        for (let index = 0; index < count; index += 1) {
+          const key = document.createElement("span");
+          key.className = `intro-key${rowIndex === 3 && index === 2 ? " space" : ""}`;
+          row.appendChild(key);
+        }
+        introKeyboard.appendChild(row);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({paused: true});
+
+      tl.from("#intro-icon-wrap", {scale: 0.82, opacity: 0, y: 26, duration: 0.78, ease: "power3.out"}, 0.12);
+      tl.from("#intro-hairline", {scaleX: 0, opacity: 0, duration: 0.56, ease: "sine.out"}, 0.34);
+      tl.from("#intro-title", {y: 28, opacity: 0, duration: 0.72, ease: "power2.out"}, 0.38);
+      tl.from("#intro-subtitle", {y: 18, opacity: 0, duration: 0.68, ease: "sine.out"}, 0.58);
+      tl.from("#intro-keyboard", {y: 30, opacity: 0, duration: 0.76, ease: "power3.out"}, 0.72);
+      tl.to("#intro-icon-wrap", {scale: 1.025, duration: 1.05, repeat: 1, yoyo: true, ease: "sine.inOut"}, 0.92);
+      [0.9, 1.7, 2.45].forEach((time, index) => {
+        const selector = `.intro-key-row:nth-child(${(index % 3) + 1}) .intro-key:nth-child(${index + 3})`;
+        tl.from(selector, {y: 5, boxShadow: "0 2px 0 rgba(247,246,243,0.05)", duration: 0.2, ease: "sine.out", immediateRender: false}, time);
+      });
+
+      tl.from("#transition-one .transition-veil", {scaleY: 0, duration: 0.65, ease: "sine.inOut"}, 2.7);
+
+      tl.from("#system-eyebrow", {y: 18, opacity: 0, duration: 0.58, ease: "power2.out"}, 3.08);
+      tl.from("#system-title", {y: 30, opacity: 0, duration: 0.74, ease: "power3.out"}, 3.16);
+      tl.from("#system-subtitle", {y: 18, opacity: 0, duration: 0.68, ease: "sine.out"}, 3.38);
+      tl.from("#menu-cap", {y: 22, opacity: 0, duration: 0.7, ease: "power2.out"}, 3.44);
+      tl.from("#system-popover", {y: 42, scale: 0.96, opacity: 0, duration: 0.78, ease: "power3.out"}, 3.52);
+      tl.from("#selected-pack", {y: 20, opacity: 0, duration: 0.62, ease: "sine.out"}, 3.7);
+      tl.from("#demo-keys", {y: 18, opacity: 0, duration: 0.6, ease: "power2.out"}, 3.84);
+
+      const wetSystemHits = [3.8, 4.55, 5.35, 6.15];
+      wetSystemHits.forEach((time, index) => {
+        const key = `.demo-key:nth-child(${(index % 5) + 1})`;
+        tl.from(key, {y: 7, boxShadow: "0 2px 0 #d8d5d2", duration: 0.24, ease: "sine.out", immediateRender: false}, time);
+        tl.from("#tap-ring", {scale: 0.72, opacity: 0, duration: 0.5, ease: "sine.out", immediateRender: false}, time);
+      });
+
+      tl.from("#transition-two .transition-veil", {scaleY: 0, duration: 0.65, ease: "sine.inOut"}, 6.7);
+
+      tl.from("#packs-eyebrow", {y: 18, opacity: 0, duration: 0.56, ease: "power2.out"}, 7.08);
+      tl.from("#packs-title", {y: 28, opacity: 0, duration: 0.74, ease: "power3.out"}, 7.14);
+      tl.from("#packs-subtitle", {y: 16, opacity: 0, duration: 0.64, ease: "sine.out"}, 7.34);
+      tl.from("#pack-window", {y: 32, scale: 0.97, opacity: 0, duration: 0.78, ease: "power3.out"}, 7.42);
+      tl.set("#soothing-track", {x: 30}, 7.0);
+      tl.from("#pack-dots", {opacity: 0, duration: 0.5, ease: "sine.out"}, 7.62);
+      [7.45, 8.15, 8.85].forEach((time) => {
+        tl.from(".wet-shape", {scale: 0.94, opacity: 0.5, duration: 0.52, stagger: 0.04, ease: "sine.out", immediateRender: false}, time);
+        tl.from(".wet-center", {scale: 0.82, duration: 0.36, ease: "sine.out", immediateRender: false}, time);
+      });
+      tl.to("#soothing-track", {x: -830, duration: 0.72, ease: "power2.inOut"}, 9.42);
+      tl.to("#pack-dots span:first-child", {backgroundColor: "rgba(247,246,243,0.12)", duration: 0.34}, 9.42);
+      tl.to("#pack-dots span:nth-child(2)", {backgroundColor: "#c9b9ff", duration: 0.34}, 9.42);
+      [9.75, 10.4, 11.05, 11.7].forEach((time) => {
+        tl.from(".crack-line", {scaleY: 0.55, opacity: 0.32, duration: 0.42, stagger: 0.025, ease: "power2.out", immediateRender: false}, time);
+        tl.from(".wax-center", {scale: 0.86, duration: 0.34, ease: "sine.out", immediateRender: false}, time);
+      });
+
+      tl.from("#transition-three .transition-veil", {scaleY: 0, duration: 0.65, ease: "sine.inOut"}, 11.7);
+
+      tl.from("#close-icon", {scale: 0.82, opacity: 0, y: 20, duration: 0.72, ease: "power3.out"}, 12.08);
+      tl.from("#close-eyebrow", {y: 16, opacity: 0, duration: 0.56, ease: "power2.out"}, 12.22);
+      tl.from("#close-title", {y: 28, opacity: 0, duration: 0.72, ease: "power3.out"}, 12.3);
+      tl.from("#close-subtitle", {y: 16, opacity: 0, duration: 0.64, ease: "sine.out"}, 12.48);
+      tl.from("#store-button", {y: 28, scale: 0.94, opacity: 0, duration: 0.72, ease: "power3.out"}, 12.6);
+      tl.from("#close-note", {opacity: 0, duration: 0.54, ease: "sine.out"}, 12.84);
+      tl.from("#store-button", {scale: 0.985, duration: 0.32, ease: "sine.out", immediateRender: false}, 14.38);
+      tl.to("#final-black", {opacity: 1, duration: 0.2, ease: "power2.in"}, 14.56);
+
+      window.__timelines["tappy-soothing-15"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "tappy-clip-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local sound candidate review workspace for Tappy.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "lucide": "1.24.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

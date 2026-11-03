@@ -1,10 +1,10 @@
 import AppKit
-import CoreGraphics
 import Foundation
+import IOKit.hid
 
 @MainActor
 final class InputMonitoringPermissionManager: ObservableObject {
-    @Published private(set) var isTrusted = CGPreflightListenEventAccess()
+    @Published private(set) var isTrusted = InputMonitoringPermissionManager.listenEventAccessGranted()
 
     var onStatusChange: ((Bool) -> Void)?
 
@@ -22,7 +22,7 @@ final class InputMonitoringPermissionManager: ObservableObject {
     }
 
     func refreshStatus(forceNotify: Bool = false) {
-        let trusted = CGPreflightListenEventAccess()
+        let trusted = Self.listenEventAccessGranted()
 
         let didChange = trusted != isTrusted
         if didChange {
@@ -38,8 +38,8 @@ final class InputMonitoringPermissionManager: ObservableObject {
         // Let macOS present the Input Monitoring prompt naturally; activating
         // Tappy first can place the system prompt behind the popover.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-            let granted = CGRequestListenEventAccess()
-            self.isTrusted = granted
+            let granted = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+            self.isTrusted = granted || Self.listenEventAccessGranted()
             self.onStatusChange?(self.isTrusted)
             self.scheduleRefreshBurst()
         }
@@ -122,5 +122,9 @@ final class InputMonitoringPermissionManager: ObservableObject {
             burstRefreshWorkItems.append(workItem)
             DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
         }
+    }
+
+    static func listenEventAccessGranted() -> Bool {
+        IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
     }
 }

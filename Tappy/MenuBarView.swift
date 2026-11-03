@@ -1,66 +1,76 @@
 import SwiftUI
 
 struct MenuBarView: View {
+    static let popoverWidth: CGFloat = 288
+
     @EnvironmentObject private var controller: KeyboardSoundController
 
     var body: some View {
         VStack(spacing: 0) {
-            // Shown while a premium trial is active
+            #if TAPPY_DIRECT
+            // Shown while a premium preview is active
             if let preview = controller.previewPack {
                 previewBar(pack: preview)
                 Divider()
             }
 
-            // Shown after a trial expires
+            // Shown after a preview ends
             if controller.showUpgradeCTA, let cta = controller.ctaPack {
                 ctaBar(pack: cta)
                 Divider()
             }
+            #endif
 
             header
             Divider()
+            #if TAPPY_DIRECT
+            // The direct-download build alone shows Stripe/license status here. The paid
+            // App Store edition includes every sound and never enters this code path.
             if let storeStatus = controller.premiumStoreStatusText {
                 storeStatusBar(storeStatus)
                 Divider()
             }
-            if controller.shouldShowDirectLicenseBar {
-                directLicenseBar
+            if controller.shouldShowPremiumPurchaseUI {
+                premiumPurchaseBar
                 Divider()
             }
+            #endif
             if controller.setupPhase != .complete {
                 setupBar
                 Divider()
             }
-            statusBar
-            Divider()
+            if let issue = controller.inputMonitoringIssue {
+                statusBar(issue)
+                Divider()
+            }
             packList
             Divider()
             volumeControl
             Divider()
             footer
         }
-        .frame(width: 320)
+        .frame(width: Self.popoverWidth)
     }
 
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("Tappy")
                     .font(.headline)
-                Text("Auditory typing feedback")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            HStack(spacing: 5) {
+                    .lineLimit(1)
+
+                Spacer(minLength: 8)
+
                 Circle()
                     .fill(statusDotColor)
                     .frame(width: 7, height: 7)
                 Text(statusLabel)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
         }
         .padding(.horizontal, 14)
@@ -82,6 +92,7 @@ struct MenuBarView: View {
         }
     }
 
+    #if TAPPY_DIRECT
     private func storeStatusBar(_ message: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             ProgressView()
@@ -91,6 +102,7 @@ struct MenuBarView: View {
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
@@ -99,19 +111,30 @@ struct MenuBarView: View {
         .padding(.vertical, 8)
         .background(Color.accentColor.opacity(0.04))
     }
+    #endif
 
-    private var statusBar: some View {
-        Text(controller.statusMessage)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(Color.primary.opacity(0.025))
+    /// Error bar shown only when system-wide input monitoring isn't working.
+    private func statusBar(_ message: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.orange.opacity(0.06))
     }
 
-    private var directLicenseBar: some View {
+    #if TAPPY_DIRECT
+    // Direct-download (Stripe) build only.
+    private var premiumPurchaseBar: some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Label("Unlock ASMR Packs", systemImage: "sparkles")
@@ -127,13 +150,16 @@ struct MenuBarView: View {
             Text("Buy once with Stripe, then return to Tappy from the checkout page to unlock automatically.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
 
             Button {
-                controller.openDirectPurchasePage()
+                controller.buyPremium()
             } label: {
                 Label("Buy \(controller.premiumUnlockPrice)", systemImage: "cart.fill")
                     .frame(maxWidth: .infinity)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
@@ -143,6 +169,7 @@ struct MenuBarView: View {
                 TextField("Fallback license key", text: $controller.directLicenseKeyEntry)
                     .textFieldStyle(.roundedBorder)
                     .controlSize(.small)
+                    .frame(minWidth: 0)
 
                 Button {
                     Task { await controller.activateDirectLicense() }
@@ -155,12 +182,12 @@ struct MenuBarView: View {
                 .controlSize(.small)
                 .disabled(!controller.canActivateDirectLicense)
             }
-
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(Color.accentColor.opacity(0.04))
     }
+    #endif
 
     // MARK: - Setup bar
 
@@ -169,10 +196,13 @@ struct MenuBarView: View {
             Label(controller.setupHeadline, systemImage: "exclamationmark.triangle.fill")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.orange)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(setupMenuDetail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
 
             Button(controller.setupPrimaryButtonTitle) {
@@ -180,6 +210,8 @@ struct MenuBarView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+            .lineLimit(1)
+            .minimumScaleFactor(0.9)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -200,8 +232,9 @@ struct MenuBarView: View {
         }
     }
 
-    // MARK: - Live trial bar
+    // MARK: - Live preview bar
 
+    #if TAPPY_DIRECT
     @ViewBuilder
     private func previewBar(pack: TechPack) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -209,57 +242,67 @@ struct MenuBarView: View {
                 Circle()
                     .fill(Color.accentColor)
                     .frame(width: 6, height: 6)
-                Text("Trying \(pack.name)")
+                Text("Previewing \(pack.name)")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.primary)
-                Spacer()
-                Text(controller.previewCountdownText)
-                    .font(.caption.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(controller.previewSecondsRemaining < 30 ? .orange : .secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
             }
 
-            ProgressView(value: controller.previewProgress)
-                .progressViewStyle(.linear)
-
             HStack(spacing: 8) {
-                Text("Ends automatically.")
+                Text("Switches back to the free sound at the limit.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
 
-                Spacer()
+                Spacer(minLength: 0)
 
-                Button("Buy \(controller.premiumUnlockPrice)") {
-                    controller.openDirectPurchasePage()
+                if controller.shouldShowPremiumPurchaseUI {
+                    Button("Buy \(controller.premiumUnlockPrice)") {
+                        controller.buyPremium()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.mini)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .disabled(controller.isPremiumStoreBusy)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.mini)
-                .disabled(controller.isPremiumStoreBusy)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(Color.accentColor.opacity(0.05))
     }
+    #endif
 
-    // MARK: - Post-trial CTA bar
+    // MARK: - Post-preview CTA bar
 
+    #if TAPPY_DIRECT
     @ViewBuilder
     private func ctaBar(pack: TechPack) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Keep \(pack.name)?")
+                Text("Enjoying these switches?")
                     .font(.subheadline.weight(.semibold))
-                Text("Unlock all premium feedback packs permanently.")
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Unlock the full pack for unlimited typing.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 8) {
                 Button("Buy \(controller.premiumUnlockPrice)") {
-                    controller.openDirectPurchasePage()
+                    controller.buyPremium()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
                 .disabled(controller.isPremiumStoreBusy)
 
                 Button("Not Now") {
@@ -275,6 +318,7 @@ struct MenuBarView: View {
         .padding(.vertical, 10)
         .background(Color.accentColor.opacity(0.05))
     }
+    #endif
 
     // MARK: - Pack list
 
@@ -295,6 +339,8 @@ struct MenuBarView: View {
             HStack {
                 Label("Feedback Volume", systemImage: "speaker.wave.2.fill")
                     .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
 
                 Spacer()
 
@@ -327,6 +373,8 @@ struct MenuBarView: View {
             Toggle(isOn: $controller.isEnabled) {
                 Label("Feedback", systemImage: "keyboard")
                     .font(.subheadline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
             }
             .toggleStyle(.switch)
             .controlSize(.small)
@@ -354,12 +402,18 @@ private struct PackRow: View {
     let pack: TechPack
     @EnvironmentObject private var controller: KeyboardSoundController
     @State private var isHovered = false
-    @State private var showTrialConfirm = false
+    @State private var showLockedPackOptions = false
 
     private var isActive: Bool { pack.id == controller.currentPack.id }
     private var isLocked: Bool { controller.isPackLocked(pack) }
     private var isTrying: Bool { controller.previewPack?.id == pack.id }
     private var isHighlighted: Bool { pack.id == controller.highlightedPackID }
+
+    #if TAPPY_DIRECT
+    private var lockedPackAlertTitle: String {
+        return controller.hasTrialedPack(pack) ? "\(pack.name) — Preview Used" : "Preview \(pack.name)?"
+    }
+    #endif
 
     private var iconColor: Color {
         switch pack.id {
@@ -369,11 +423,21 @@ private struct PackRow: View {
         case TechPack.stars.id:           return Color(red: 1.00, green: 0.82, blue: 0.30)
         case TechPack.woodBrush.id:       return Color(red: 0.85, green: 0.62, blue: 0.38)
         case TechPack.analogStopwatch.id: return Color(red: 0.72, green: 0.78, blue: 0.90)
+        case TechPack.squishyPop.id:       return Color(red: 0.70, green: 0.52, blue: 1.00)
+        case TechPack.waxCracking.id:      return Color(red: 0.96, green: 0.42, blue: 0.58)
         default:                          return .accentColor
         }
     }
 
     var body: some View {
+        #if TAPPY_DIRECT
+        directPackRow
+        #else
+        packRowContent
+        #endif
+    }
+
+    private var packRowContent: some View {
         HStack(spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 7)
@@ -409,59 +473,68 @@ private struct PackRow: View {
             Text(pack.name)
                 .font(.subheadline)
                 .fontWeight(isActive || isTrying ? .semibold : .regular)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
 
             Spacer()
 
-            if isTrying {
-                HStack(spacing: 3) {
-                    Image(systemName: "timer")
-                        .font(.system(size: 9, weight: .semibold))
-                    Text(controller.previewCountdownText)
-                        .font(.caption2.monospacedDigit().weight(.semibold))
-                }
-                .foregroundStyle(controller.previewSecondsRemaining < 30 ? .orange : .secondary)
-            } else if isActive {
+            if isActive && !isTrying {
                 Image(systemName: "checkmark")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.blue)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
+        .frame(minHeight: 42)
         .background(rowBackgroundColor)
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
         .onTapGesture {
             if isLocked && !isTrying {
                 controller.highlightPack(pack)
-                showTrialConfirm = true
+                showLockedPackOptions = true
             } else {
                 controller.highlightPack(pack)
             }
         }
+    }
+
+    #if TAPPY_DIRECT
+    private var directPackRow: some View {
+        packRowContent
         .alert(
-            controller.hasTrialedPack(pack) ? "\(pack.name) — Trial Used" : "Try \(pack.name) free?",
-            isPresented: $showTrialConfirm
+            lockedPackAlertTitle,
+            isPresented: $showLockedPackOptions
         ) {
             if !controller.hasTrialedPack(pack) {
-                Button("Start \(controller.livePreviewDurationText) Trial") {
+                Button("Start \(controller.livePreviewLimitText) Preview") {
                     controller.highlightPack(pack)
                     controller.startLivePreview(pack)
                 }
             }
-            Button("Buy All Packs — \(controller.premiumUnlockPrice)") {
-                controller.highlightPack(pack)
-                controller.openDirectPurchasePage()
+            if controller.shouldShowPremiumPurchaseUI {
+                Button("Buy All Packs — \(controller.premiumUnlockPrice)") {
+                    controller.highlightPack(pack)
+                    controller.buyPremium()
+                }
             }
-            Button("Not Now", role: .cancel) {}
+            Button("Go Back", role: .cancel) {}
         } message: {
             if controller.hasTrialedPack(pack) {
-                Text("You've already used the free trial for \(pack.name). Unlock all premium feedback packs to keep it.")
+                if controller.shouldShowPremiumPurchaseUI {
+                    Text("You've already previewed \(pack.name). Unlock all premium feedback packs to keep it.")
+                } else {
+                    Text("You've already previewed \(pack.name).")
+                }
             } else {
-                Text("Try \(pack.name) feedback for \(controller.livePreviewDurationText). Your previous pack restores automatically when the trial ends.")
+                Text("Hear \(pack.name) for your next \(controller.livePreviewLimitText) burst of typing. Your previous pack restores automatically once the preview ends.")
             }
         }
     }
+    #endif
 
     private var rowBackgroundColor: Color {
         if isTrying {

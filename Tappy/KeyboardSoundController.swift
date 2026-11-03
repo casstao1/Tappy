@@ -32,8 +32,18 @@ final class KeyboardSoundController: ObservableObject {
         static let welcomeVersionSeen = "Tappy.welcomeVersionSeen"
     }
 
-    private static let livePreviewDurationSeconds = 90
+    /// Number of premium keystrokes a locked pack can be previewed for before the
+    /// sound reverts to the free default and the unlock prompt appears.
+    private static let livePreviewKeystrokeLimit = 100
     private static let currentWelcomeVersion = 1
+
+    private static var debugSelectedPackID: String? {
+        #if DEBUG && !TAPPY_DIRECT
+        ProcessInfo.processInfo.environment["TAPPY_DEBUG_PACK_ID"]
+        #else
+        nil
+        #endif
+    }
 
     @Published var isEnabled = true {
         didSet {
@@ -46,7 +56,9 @@ final class KeyboardSoundController: ObservableObject {
     @Published var highlightedPackID = TechPack.plasticTapping.id
     @Published private(set) var backgroundCaptureState: KeyboardMonitor.CaptureState = .stopped
     @Published private(set) var premiumUnlocked = false
+    #if TAPPY_DIRECT
     @Published var directLicenseKeyEntry = ""
+    #endif
     @Published private(set) var trialedPackIDs: Set<String> = []
     @Published private(set) var setupPhase: SetupPhase
     @Published var clickVolume: Double {
@@ -68,7 +80,9 @@ final class KeyboardSoundController: ObservableObject {
 
     let permissionManager = InputMonitoringPermissionManager()
     let soundLibrary = SoundLibrary()
+    #if TAPPY_DIRECT
     let directLicenseStore: DirectLicenseStore
+    #endif
 
     private let keyboardMonitor = KeyboardMonitor()
     private let audioEngine = LowLatencyAudioEngine()
@@ -79,9 +93,13 @@ final class KeyboardSoundController: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+        #if TAPPY_DIRECT
         directLicenseStore = DirectLicenseStore(userDefaults: userDefaults)
-
         premiumUnlocked = directLicenseStore.hasUnlockedPremium
+        #else
+        // The Mac App Store edition is paid up front, so every bundled sound is included.
+        premiumUnlocked = true
+        #endif
         trialedPackIDs = Set(userDefaults.stringArray(forKey: DefaultsKey.trialedPackIDs) ?? [])
         if userDefaults.object(forKey: DefaultsKey.clickVolume) == nil {
             clickVolume = 1.0
@@ -89,22 +107,22 @@ final class KeyboardSoundController: ObservableObject {
             clickVolume = min(max(userDefaults.double(forKey: DefaultsKey.clickVolume), 0), 1)
         }
 
-        let trusted = CGPreflightListenEventAccess()
+        let trusted = InputMonitoringPermissionManager.listenEventAccessGranted()
         setupPhase = Self.setupPhase(
             trusted: trusted,
-            captureState: .stopped,
-            allowTapProbe: true
+            captureState: .stopped
         )
 
-        let savedPackID = userDefaults.string(forKey: DefaultsKey.selectedPackID)
+        let savedPackID = Self.debugSelectedPackID ?? userDefaults.string(forKey: DefaultsKey.selectedPackID)
 
-        if let savedPack = Self.startupPack(from: savedPackID, premiumUnlocked: premiumUnlocked) {
+        if let savedPack = Self.startupPack(from: savedPackID, premiumUnlocked: hasPremiumAccess) {
             currentPack = savedPack
             highlightedPackID = savedPack.id
         } else {
             persistSelectedPack(TechPack.plasticTapping)
         }
 
+        #if TAPPY_DIRECT
         directLicenseStore.objectWillChange
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
@@ -121,13 +139,14 @@ final class KeyboardSoundController: ObservableObject {
                 reconcilePremiumUnlockState()
             }
         }
+        #endif
 
         permissionManager.onStatusChange = { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
 
                 self.attemptListenerAttachIfNeeded()
-                self.reconcileSetupPhase(allowTapProbe: true)
+                self.reconcileSetupPhase()
                 self.statusMessage = self.monitoringSummary()
             }
         }
@@ -136,7 +155,7 @@ final class KeyboardSoundController: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 self.backgroundCaptureState = state
-                self.reconcileSetupPhase(allowTapProbe: false)
+                self.reconcileSetupPhase()
                 self.statusMessage = self.monitoringSummary()
             }
         }
@@ -145,7 +164,7 @@ final class KeyboardSoundController: ObservableObject {
         audioEngine.setVolume(clickVolume)
         reloadSounds()
         updateMonitoringState()
-        reconcileSetupPhase(allowTapProbe: true)
+        reconcileSetupPhase()
         setupMenuBarItem()
         appURLHandler = TappyAppURLHandler(controller: self)
         presentWelcomeIfNeeded()
@@ -164,8 +183,8 @@ final class KeyboardSoundController: ObservableObject {
     private var menuStatusItem: NSStatusItem?
     private var menuPopover: NSPopover?
     private var welcomeWindow: NSWindow?
-    private var welcomeWindowDelegate: TappyWelcomeWindowDelegate?
     private var isWelcomePresentationScheduled = false
+    private var didRequestStartupInputMonitoringPrompt = false
 
     private func setupMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -180,6 +199,7 @@ final class KeyboardSoundController: ObservableObject {
         let hosting = NSHostingController(
             rootView: MenuBarView().environmentObject(self)
         )
+        hosting.sizingOptions = [.preferredContentSize]
         let popover = NSPopover()
         popover.behavior = .transient
         popover.contentViewController = hosting
@@ -292,6 +312,24 @@ final class KeyboardSoundController: ObservableObject {
         return "Setup"
     }
 
+    /// A single error to surface in the panel only when system-wide input
+    /// monitoring isn't working. nil whenever feedback is active (or
+    /// intentionally paused), and nil while the setup bar is already prompting
+    /// for permission — so the panel stays quiet unless there's a problem the
+    /// user wouldn't otherwise see.
+    var inputMonitoringIssue: String? {
+        guard isEnabled else { return nil }
+        switch setupPhase {
+        case .needsPermission, .needsRestart:
+            return nil
+        case .complete:
+            if backgroundCaptureState == .unavailable {
+                return "Tappy can't detect your keyboard. Open Input Monitoring in System Settings and make sure Tappy is enabled."
+            }
+            return nil
+        }
+    }
+
     // MARK: - Pack access
 
     var highlightedPack: TechPack {
@@ -314,6 +352,11 @@ final class KeyboardSoundController: ObservableObject {
         availablePacks.filter(\.isPremium)
     }
 
+    var hasPremiumAccess: Bool {
+        premiumUnlocked
+    }
+
+    #if TAPPY_DIRECT
     var premiumUnlockPrice: String {
         DirectPurchaseConfig.displayPrice
     }
@@ -346,7 +389,7 @@ final class KeyboardSoundController: ObservableObject {
         directLicenseStore.isBusy
     }
 
-    var shouldShowDirectLicenseBar: Bool {
+    var shouldShowPremiumPurchaseUI: Bool {
         !premiumUnlocked
     }
 
@@ -354,6 +397,7 @@ final class KeyboardSoundController: ObservableObject {
         !directLicenseKeyEntry.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !isPremiumStoreBusy
     }
+    #endif
 
     // MARK: - Public actions
 
@@ -451,7 +495,7 @@ final class KeyboardSoundController: ObservableObject {
         }
 
         if isPackLocked(pack) {
-            // Just highlight — user starts a trial explicitly via the Try Free button
+            // Just highlight — the preview/purchase prompt is started explicitly from the pack row.
             return
         }
 
@@ -492,11 +536,8 @@ final class KeyboardSoundController: ObservableObject {
         }
     }
 
-    func beginUnlockPremiumFlow() {
-        openDirectPurchasePage()
-    }
-
-    func openDirectPurchasePage() {
+    #if TAPPY_DIRECT
+    func buyPremium() {
         cancelPendingCTA()
         NSWorkspace.shared.open(DirectPurchaseConfig.purchaseURL)
         statusMessage = "Opening secure Stripe checkout. Return here after payment to finish unlocking."
@@ -513,11 +554,30 @@ final class KeyboardSoundController: ObservableObject {
         reconcilePremiumUnlockState()
         statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
     }
+    #endif
 
     func handleIncomingURL(_ url: URL) {
         guard url.scheme?.lowercased() == "tappy" else { return }
 
         let action = (url.host ?? url.pathComponents.dropFirst().first ?? "").lowercased()
+
+        switch action {
+        #if TAPPY_DIRECT
+        case "checkout-complete", "activate-license", "unlock":
+            handleDirectCheckoutURL(url)
+        #endif
+        case "open", "menu":
+            showMenuPopover()
+        default:
+            statusMessage = "Tappy did not recognize that link."
+            showMenuPopover()
+        }
+    }
+
+    #if TAPPY_DIRECT
+    /// Handles the `tappy://` callback opened after a Stripe checkout completes
+    /// (direct-download build only).
+    private func handleDirectCheckoutURL(_ url: URL) {
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems ?? []
 
@@ -531,35 +591,28 @@ final class KeyboardSoundController: ObservableObject {
             return nil
         }
 
-        switch action {
-        case "checkout-complete", "activate-license", "unlock":
-            cancelPendingCTA()
-            showMenuPopover()
+        cancelPendingCTA()
+        showMenuPopover()
 
-            if let sessionID = queryValue("session_id", "checkout_session_id", "session") {
-                statusMessage = "Finishing Stripe checkout and unlocking Tappy..."
-                Task {
-                    await directLicenseStore.activate(checkoutSessionID: sessionID)
-                    finishDirectLicenseActivation()
-                    showMenuPopover()
-                }
-            } else if let licenseKey = queryValue("license_key", "license") {
-                directLicenseKeyEntry = licenseKey
-                statusMessage = "Activating Tappy license..."
-                Task {
-                    await activateDirectLicense()
-                    showMenuPopover()
-                }
-            } else {
-                statusMessage = "Tappy could not read the checkout activation link."
+        if let sessionID = queryValue("session_id", "checkout_session_id", "session") {
+            statusMessage = "Finishing Stripe checkout and unlocking Tappy..."
+            Task {
+                await directLicenseStore.activate(checkoutSessionID: sessionID)
+                finishDirectLicenseActivation()
+                showMenuPopover()
             }
-        case "open", "menu":
-            showMenuPopover()
-        default:
-            statusMessage = "Tappy did not recognize that link."
-            showMenuPopover()
+        } else if let licenseKey = queryValue("license_key", "license") {
+            directLicenseKeyEntry = licenseKey
+            statusMessage = "Activating Tappy license..."
+            Task {
+                await activateDirectLicense()
+                showMenuPopover()
+            }
+        } else {
+            statusMessage = "Tappy could not read the checkout activation link."
         }
     }
+    #endif
 
     func showWelcomeWindow() {
         NSApp.activate(ignoringOtherApps: true)
@@ -573,21 +626,24 @@ final class KeyboardSoundController: ObservableObject {
             rootView: WelcomeView().environmentObject(self)
         )
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 230),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: WelcomeView.width, height: WelcomeView.height),
+            styleMask: [.titled, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        let delegate = TappyWelcomeWindowDelegate(controller: self)
-        window.title = "Welcome to Tappy"
+        window.title = "Tappy Input Monitoring Setup"
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.hasShadow = true
         window.contentViewController = hostingController
-        window.delegate = delegate
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
         window.center()
 
         welcomeWindow = window
-        welcomeWindowDelegate = delegate
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
     }
@@ -595,7 +651,14 @@ final class KeyboardSoundController: ObservableObject {
     func finishWelcome() {
         markWelcomeSeen()
         welcomeWindow?.close()
-        showMenuPopover()
+        menuPopover?.performClose(nil)
+
+        if setupPhase == .needsPermission {
+            requestStartupInputMonitoringPromptIfNeeded()
+        } else {
+            updateMonitoringState()
+            reconcileSetupPhase()
+        }
     }
 
     func markWelcomeSeen() {
@@ -603,16 +666,11 @@ final class KeyboardSoundController: ObservableObject {
         userDefaults.set(Self.currentWelcomeVersion, forKey: DefaultsKey.welcomeVersionSeen)
     }
 
-    func requestKeyboardPermission() {
-        permissionManager.requestListenAccessPrompt()
-        statusMessage = monitoringSummary()
-    }
-
     func refreshInputMonitoringStatus() {
         permissionManager.refreshStatus(forceNotify: true)
         permissionManager.scheduleRefreshBurst()
         attemptListenerAttachIfNeeded()
-        reconcileSetupPhase(allowTapProbe: true)
+        reconcileSetupPhase()
         statusMessage = monitoringSummary()
     }
 
@@ -627,16 +685,38 @@ final class KeyboardSoundController: ObservableObject {
     /// Called when the setup bar appears. Triggers the macOS Input Monitoring
     /// prompt so users do not have to guess which privacy section to open.
     func requestStartupInputMonitoringPromptIfNeeded() {
-        guard setupPhase == .needsPermission else { return }
+        guard Self.shouldRequestStartupInputMonitoringPrompt(
+            setupPhase: setupPhase,
+            hasSeenWelcome: hasSeenCurrentWelcome,
+            didRequestThisLaunch: didRequestStartupInputMonitoringPrompt
+        ) else { return }
+
+        didRequestStartupInputMonitoringPrompt = true
         permissionManager.requestListenAccessPrompt()
         statusMessage = monitoringSummary()
+    }
+
+    nonisolated static func shouldRequestStartupInputMonitoringPrompt(
+        setupPhase: SetupPhase,
+        hasSeenWelcome: Bool,
+        didRequestThisLaunch: Bool
+    ) -> Bool {
+        setupPhase == .needsPermission && hasSeenWelcome && !didRequestThisLaunch
+    }
+
+    nonisolated static func shouldAttemptInputMonitoring(
+        isEnabled: Bool,
+        hasSeenWelcome: Bool,
+        isTrusted: Bool
+    ) -> Bool {
+        isEnabled && hasSeenWelcome && isTrusted
     }
 
     func handleAppDidBecomeActive() {
         permissionManager.refreshStatus(forceNotify: true)
         permissionManager.scheduleRefreshBurst()
         attemptListenerAttachIfNeeded()
-        reconcileSetupPhase(allowTapProbe: true)
+        reconcileSetupPhase()
         presentWelcomeIfNeeded(delay: 0.1)
     }
 
@@ -649,37 +729,35 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func isPackLocked(_ pack: TechPack) -> Bool {
-        pack.isPremium && !premiumUnlocked
+        Self.isPackLocked(pack, hasPremiumAccess: hasPremiumAccess)
+    }
+
+    nonisolated static func isPackLocked(_ pack: TechPack, hasPremiumAccess: Bool) -> Bool {
+        #if TAPPY_DIRECT
+        pack.isPremium && !hasPremiumAccess
+        #else
+        false
+        #endif
     }
 
     func hasTrialedPack(_ pack: TechPack) -> Bool {
         trialedPackIDs.contains(pack.id)
     }
 
-    // MARK: - Live Preview (90-second trial)
+    // MARK: - Live Preview (keystroke-limited demo)
 
     @Published private(set) var previewPack: TechPack? = nil
-    @Published private(set) var previewSecondsRemaining: Int = 0
     @Published private(set) var showUpgradeCTA: Bool = false
     @Published private(set) var ctaPack: TechPack? = nil
 
+    // Internal counter only — no UI observes it, so it isn't @Published (avoids a
+    // spurious view update on every previewed keystroke).
+    private var previewKeystrokesRemaining = 0
     private var lastFreePack: TechPack = .plasticTapping
-    private var previewTimerCancellable: AnyCancellable?
     private var pendingCTAWorkItem: DispatchWorkItem?
 
-    var previewProgress: Double {
-        guard previewPack != nil else { return 0 }
-        return Double(previewSecondsRemaining) / Double(Self.livePreviewDurationSeconds)
-    }
-
-    var previewCountdownText: String {
-        let minutes = previewSecondsRemaining / 60
-        let seconds = previewSecondsRemaining % 60
-        return String(format: "%d:%02d left", minutes, seconds)
-    }
-
-    var livePreviewDurationText: String {
-        "\(Self.livePreviewDurationSeconds)-second"
+    var livePreviewLimitText: String {
+        "\(Self.livePreviewKeystrokeLimit)-keystroke"
     }
 
     func startLivePreview(_ pack: TechPack) {
@@ -688,7 +766,7 @@ final class KeyboardSoundController: ObservableObject {
         cancelPendingCTA()
         stopRunningPreview()
 
-        // Record this trial permanently so it can't be repeated
+        // Record this preview permanently so it can't be repeated
         trialedPackIDs.insert(pack.id)
         userDefaults.set(Array(trialedPackIDs), forKey: DefaultsKey.trialedPackIDs)
 
@@ -696,30 +774,30 @@ final class KeyboardSoundController: ObservableObject {
         if !currentPack.isPremium { lastFreePack = currentPack }
 
         previewPack = pack
-        previewSecondsRemaining = Self.livePreviewDurationSeconds
+        previewKeystrokesRemaining = Self.livePreviewKeystrokeLimit
         showUpgradeCTA = false
         ctaPack = nil
 
         // Switch sounds immediately — full quality, no degradation
         currentPack = pack
         restoreBuiltInPack(packID: pack.id)
-        statusMessage = "Trying \(pack.name) for \(livePreviewDurationText)."
+        statusMessage = "Previewing \(pack.name) for your next \(Self.livePreviewKeystrokeLimit) keystrokes."
+    }
 
-        // Countdown — fires on main thread, safe to mutate @MainActor state
-        previewTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self else { return }
-                self.previewSecondsRemaining -= 1
-                if self.previewSecondsRemaining <= 0 { self.endLivePreview() }
-            }
+    /// Counts one premium keystroke against the preview budget. Called for each
+    /// sound-producing key event while a preview is active; reverts to the free
+    /// sound once the budget is exhausted.
+    private func consumePreviewKeystroke() {
+        guard previewPack != nil else { return }
+        previewKeystrokesRemaining -= 1
+        if previewKeystrokesRemaining <= 0 {
+            endLivePreview()
+        }
     }
 
     private func stopRunningPreview() {
-        previewTimerCancellable?.cancel()
-        previewTimerCancellable = nil
         previewPack = nil
-        previewSecondsRemaining = 0
+        previewKeystrokesRemaining = 0
     }
 
     private func endLivePreview() {
@@ -731,13 +809,14 @@ final class KeyboardSoundController: ObservableObject {
         currentPack = lastFreePack
         restoreBuiltInPack(packID: lastFreePack.id)
         if let previewed {
-            statusMessage = "\(previewed.name) trial ended."
+            statusMessage = "\(previewed.name) preview ended."
         }
 
         // Brief pause so the reversion is felt before the CTA appears
         cancelPendingCTA()
+        guard !hasPremiumAccess else { return }
         let workItem = DispatchWorkItem { [weak self] in
-            guard let self, self.ctaPack != nil, self.previewPack == nil, !self.premiumUnlocked else { return }
+            guard let self, self.ctaPack != nil, self.previewPack == nil, !self.hasPremiumAccess else { return }
             self.showUpgradeCTA = true
         }
         pendingCTAWorkItem = workItem
@@ -777,13 +856,15 @@ final class KeyboardSoundController: ObservableObject {
     private func handle(trigger: KeyboardTrigger) {
         guard isEnabled else { return }
         audioEngine.play(category: trigger.category, keyCode: trigger.keyCode)
+        // Each premium keystroke counts against the preview budget.
+        consumePreviewKeystroke()
     }
 
+    #if TAPPY_DIRECT
     private func reconcilePremiumUnlockState() {
-        let unlocked = directLicenseStore.hasUnlockedPremium
-        premiumUnlocked = unlocked
+        premiumUnlocked = directLicenseStore.hasUnlockedPremium
 
-        if unlocked {
+        if hasPremiumAccess {
             cancelPendingCTA()
             showUpgradeCTA = false
             ctaPack = nil
@@ -835,6 +916,7 @@ final class KeyboardSoundController: ObservableObject {
 
         statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
     }
+    #endif
 
     private var hasSeenCurrentWelcome: Bool {
         let welcomeVersionSeen = userDefaults.integer(forKey: DefaultsKey.welcomeVersionSeen)
@@ -872,12 +954,21 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     private func attemptListenerAttachIfNeeded() {
-        guard isEnabled else { return }
+        guard Self.shouldAttemptInputMonitoring(
+            isEnabled: isEnabled,
+            hasSeenWelcome: hasSeenCurrentWelcome,
+            isTrusted: permissionManager.isTrusted
+        ) else {
+            if keyboardMonitor.isMonitoring {
+                keyboardMonitor.stop()
+            }
+            return
+        }
 
         if keyboardMonitor.captureState == .ready {
             if backgroundCaptureState != .ready {
                 backgroundCaptureState = .ready
-                reconcileSetupPhase(allowTapProbe: false)
+                reconcileSetupPhase()
             }
             return
         }
@@ -889,11 +980,10 @@ final class KeyboardSoundController: ObservableObject {
         }
     }
 
-    private func reconcileSetupPhase(allowTapProbe: Bool) {
+    private func reconcileSetupPhase() {
         setupPhase = Self.setupPhase(
             trusted: permissionManager.isTrusted,
-            captureState: backgroundCaptureState,
-            allowTapProbe: allowTapProbe
+            captureState: backgroundCaptureState
         )
     }
 
@@ -906,44 +996,15 @@ final class KeyboardSoundController: ObservableObject {
         pendingCTAWorkItem = nil
     }
 
-    /// Synchronously probes whether this process can create and enable a
-    /// listen-only CGEvent tap. This is more reliable than TCC preflight alone
-    /// because macOS can require a relaunch after newly granted permission.
-    private static func canCreateEventTap() -> Bool {
-        let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
-
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .listenOnly,
-            eventsOfInterest: mask,
-            callback: { _, _, event, _ in Unmanaged.passUnretained(event) },
-            userInfo: nil
-        ) else {
-            return false
-        }
-
-        CGEvent.tapEnable(tap: tap, enable: true)
-        let isEnabled = CGEvent.tapIsEnabled(tap: tap)
-        CGEvent.tapEnable(tap: tap, enable: false)
-        CFMachPortInvalidate(tap)
-        return isEnabled
-    }
-
-    private static func setupPhase(
+    nonisolated static func setupPhase(
         trusted: Bool,
-        captureState: KeyboardMonitor.CaptureState,
-        allowTapProbe: Bool
+        captureState: KeyboardMonitor.CaptureState
     ) -> SetupPhase {
+        guard trusted else { return .needsPermission }
+
         if captureState == .ready {
             return .complete
         }
-
-        if allowTapProbe && Self.canCreateEventTap() {
-            return .complete
-        }
-
-        guard trusted else { return .needsPermission }
 
         return .needsRestart
     }
@@ -963,50 +1024,78 @@ final class KeyboardSoundController: ObservableObject {
 }
 
 private struct WelcomeView: View {
+    static let width: CGFloat = 288
+    static let height: CGFloat = 360
+
     @EnvironmentObject private var controller: KeyboardSoundController
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "keyboard.fill")
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+        VStack(alignment: .leading, spacing: 0) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 48, height: 48)
+                .accessibilityHidden(true)
+                .padding(.bottom, 10)
 
-            VStack(spacing: 8) {
-                Text("Welcome to Tappy")
-                    .font(.system(size: 28, weight: .bold))
+            Text("Tappy uses Input Monitoring")
+                .font(.system(size: 15, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
 
-                Text("Tappy will add a keyboard icon to the toolbar at the top of your Mac in a moment.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+            Text("Tappy needs permission to play typing feedback in other apps.")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
+
+            VStack(alignment: .leading, spacing: 10) {
+                instruction(number: 1, text: "Choose Open System Settings in the macOS prompt.")
+                instruction(number: 2, text: "Enable Tappy under Privacy & Security > Input Monitoring.")
+                instruction(number: 3, text: "Return to Tappy and restart if requested.")
             }
+            .padding(.top, 14)
+
+            Text("Tappy uses key codes only and never reads or stores what you type.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
+
+            Spacer(minLength: 8)
 
             Button {
                 controller.finishWelcome()
             } label: {
-                Text("Continue")
-                    .frame(minWidth: 120)
+                Text("OK")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 22)
+                    .lineLimit(1)
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
             .keyboardShortcut(.defaultAction)
+            .padding(.top, 10)
         }
-        .padding(28)
-        .frame(width: 420)
-        .background(Color(NSColor.windowBackgroundColor))
-    }
-}
-
-private final class TappyWelcomeWindowDelegate: NSObject, NSWindowDelegate {
-    private weak var controller: KeyboardSoundController?
-
-    init(controller: KeyboardSoundController) {
-        self.controller = controller
+        .padding(20)
+        .frame(width: Self.width, height: Self.height, alignment: .topLeading)
+        .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.primary.opacity(0.16), lineWidth: 1)
+        }
     }
 
-    func windowWillClose(_ notification: Notification) {
-        Task { @MainActor [weak controller] in
-            controller?.markWelcomeSeen()
+    private func instruction(number: Int, text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("\(number).")
+                .font(.system(size: 12, weight: .bold))
+                .frame(width: 16, alignment: .trailing)
+
+            Text(text)
+                .font(.system(size: 12, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

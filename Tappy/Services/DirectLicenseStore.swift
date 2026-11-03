@@ -1,3 +1,7 @@
+// Stripe-based external purchase backend for the direct-download (DMG, non-sandboxed)
+// build only. The paid App Store edition includes every sound and excludes this code.
+// The `TAPPY_DIRECT` condition is defined by scripts/build-dmg.sh.
+#if TAPPY_DIRECT
 import Foundation
 
 enum DirectPurchaseConfig {
@@ -287,3 +291,4 @@ private enum LicenseError: LocalizedError {
         }
     }
 }
+#endif

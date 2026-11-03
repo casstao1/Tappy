@@ -1,29 +1,30 @@
 # Tappy Launch Checklist
 
 ## Product
-- [ ] Finalize the App Store submission build behavior
-- [ ] Confirm the premium model stays as one-time unlock-all
-- [ ] Confirm free packs remain Plastic Tapping and Farming
+- [x] Include all eight sound packs in the paid Mac App Store edition
+- [x] Remove App Store trials, premium locks, purchases, and restore controls
+- [x] Keep the direct-download license behavior behind `TAPPY_DIRECT`
 
 ## App Store Connect
-- [ ] Create the app record for bundle ID `com.castao.tappy`
-- [ ] Create the non-consumable IAP `com.castao.tappy.unlockall`
-- [ ] Set the unlock price to `$4.99`
-- [ ] Upload `docs/app-store/in-app-purchase/unlock-all-packs-image.png` as the IAP image so the TestFlight/App Store purchase sheet does not show placeholder artwork
+- [x] Upload and submit version 1.1.0 (build 54) with manual release (`44d7c164-c6fd-4a54-bc6b-af36c74fec11`)
+- [x] Keep `com.castao.tappy.unlockall` on sale while the free/locked binary remains live
+- [ ] After approval, remove the IAP from sale without deleting its purchase history
+- [ ] Set the app price to `$0.99`, then manually release the all-unlocked binary
+- [ ] Verify the public product page charges `$0.99`, advertises no IAP, and downloads the all-unlocked build
 - [ ] Add the privacy policy URL
 - [ ] Add the support URL
 - [ ] Add subtitle, keywords, and category data
 
 ## Signing and build
-- [ ] Confirm valid Apple Development certificate on the machine
-- [ ] Confirm distribution signing for archive submission
-- [ ] Archive a release build successfully in Xcode
+- [x] Confirm valid Apple Development certificate on the machine
+- [x] Confirm distribution signing during App Store export
+- [x] Archive and upload a release build successfully
 
 ## Review readiness
-- [ ] Review [APP_REVIEW_NOTES.md](/Users/castao/Desktop/KeyboardSoundApp/docs/app-store/APP_REVIEW_NOTES.md)
+- [x] Review [APP_REVIEW_NOTES.md](/Users/castao/Desktop/Tappy/docs/app-store/APP_REVIEW_NOTES.md)
 - [ ] Verify auditory-feedback copy matches Input Monitoring setup and system-wide behavior
 - [ ] Confirm App Review notes explain listen-only `CGEventTap`, no typed-text collection, assistive feedback purpose, and no Accessibility API usage
-- [ ] Verify the premium unlock flow with App Store Connect or local StoreKit testing
+- [x] Verify every sound pack selects directly with no purchase prompt
 
 ## Content and legal
 - [ ] Confirm final shipped feedback packs

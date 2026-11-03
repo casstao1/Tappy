@@ -1,0 +1,30 @@
+◆  Checking hyperframes
+
+Lint
+  ℹ pointer_events_none: `.grain` sets `pointer-events: none`. Elements matching this selector are harder to select in the Studio preview.
+    /Users/castao/Desktop/Tappy/MarketingVideoPlugins/viral-15s/hyperframes/index.html .grain t=0s
+    Fix: If these elements should be selectable in the Studio, remove `pointer-events: none` or move it to a wrapper that doesn't contain editable content.
+  ℹ pointer_events_none: `.transition` sets `pointer-events: none`. Elements matching this selector are harder to select in the Studio preview.
+    /Users/castao/Desktop/Tappy/MarketingVideoPlugins/viral-15s/hyperframes/index.html .transition t=0s
+    Fix: If these elements should be selectable in the Studio, remove `pointer-events: none` or move it to a wrapper that doesn't contain editable content.
+  ⚠ timeline_track_too_dense: Track 1 has 4 timed elements in this HTML file. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.
+    /Users/castao/Desktop/Tappy/MarketingVideoPlugins/viral-15s/hyperframes/index.html [data-composition-id] t=0s
+    Fix: Move coherent scene groups into separate .html files under compositions/ and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate.
+  0 error(s), 1 warning(s), 2 info(s)
+
+Runtime
+  ◇ 0 errors, 0 warnings
+
+Layout
+  ◇ 0 issues across 9 sample(s)
+
+Motion
+  ◇ 0 errors, 0 warnings
+
+Contrast
+  ◇ 105/105 text checks pass WCAG AA
+
+Snapshots
+  ◇ disabled
+
+◇  Check passed

@@ -11,6 +11,7 @@ final class SoundLibrary: ObservableObject {
     private let fileManager: FileManager
     private let supportedExtensions = Set(["wav", "aiff", "aif", "caf", "mp3", "m4a"])
     private let keyFolderName = "keys"
+    private var lastDemoURLByPackID: [String: URL] = [:]
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -181,11 +182,18 @@ final class SoundLibrary: ObservableObject {
     func previewBundledDemo(packID: String, using audioEngine: LowLatencyAudioEngine) throws {
         guard let bundledPackURL = bundledPackURL(for: packID) else { return }
 
-        let demoURL = bundledPackURL
-            .appendingPathComponent("demo", isDirectory: true)
-            .appendingPathComponent("demo.wav", isDirectory: false)
+        let demoFolderURL = bundledPackURL.appendingPathComponent("demo", isDirectory: true)
+        let fallbackDemoURL = demoFolderURL.appendingPathComponent("demo.wav", isDirectory: false)
+        let demoURLs = (try? soundURLs(in: demoFolderURL)) ?? []
 
-        guard fileManager.fileExists(atPath: demoURL.path) else { return }
+        guard !demoURLs.isEmpty else {
+            throw AudioEngineError.unreadableFile(fallbackDemoURL)
+        }
+
+        let previousURL = lastDemoURLByPackID[packID]
+        let candidates = demoURLs.count > 1 ? demoURLs.filter { $0 != previousURL } : demoURLs
+        let demoURL = candidates.randomElement() ?? demoURLs[0]
+        lastDemoURLByPackID[packID] = demoURL
 
         let buffer = try audioEngine.makeBuffer(from: demoURL)
         audioEngine.play(buffer: buffer)

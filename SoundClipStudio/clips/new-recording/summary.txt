@@ -1,0 +1,14 @@
+Source: SoundClipStudio/source-wav/02-new-recording-mono.wav
+Exported clips: 36
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=77.290s score=11151.39 peak=32768 duration=111.0ms
+- t=76.110s score=9740.93 peak=26565 duration=151.0ms
+- t=31.585s score=9034.61 peak=20103 duration=75.0ms
+- t=35.925s score=8422.55 peak=18779 duration=75.0ms
+- t=2.250s score=7995.44 peak=22911 duration=240.0ms
+- t=79.455s score=7532.72 peak=20270 duration=121.0ms
+- t=64.730s score=6571.25 peak=13954 duration=75.0ms
+- t=2.005s score=6228.48 peak=9016 duration=240.0ms

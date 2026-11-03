@@ -1,0 +1,14 @@
+Source: /Users/castao/Desktop/Tappy/SoundClipStudio/source-wav/uploads/wax-cracking-desserts-mono.wav
+Exported clips: 36
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=4.950s score=25483.11 peak=32768 duration=240.0ms
+- t=4.650s score=25347.04 peak=32768 duration=166.0ms
+- t=24.940s score=19676.62 peak=32768 duration=111.0ms
+- t=18.755s score=17908.88 peak=32768 duration=196.0ms
+- t=21.955s score=17317.13 peak=32768 duration=151.0ms
+- t=40.555s score=17257.93 peak=32768 duration=240.0ms
+- t=33.050s score=16940.13 peak=32768 duration=121.0ms
+- t=32.895s score=16464.18 peak=32768 duration=101.0ms

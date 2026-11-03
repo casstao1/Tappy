@@ -1,0 +1,696 @@
+{
+  "clips": {
+    "jackson-ave/01_t0003.350_score6061.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.714Z",
+      "deleted": true,
+      "trashName": "1783967996185--jackson-ave--01_t0003.350_score6061.wav"
+    },
+    "jackson-ave/02_t0005.780_score4719.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.715Z"
+    },
+    "jackson-ave/03_t0011.470_score9317.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.715Z",
+      "deleted": true,
+      "trashName": "1783967999691--jackson-ave--03_t0011.470_score9317.wav"
+    },
+    "jackson-ave/04_t0015.970_score4446.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.715Z",
+      "deleted": true,
+      "trashName": "1783968001608--jackson-ave--04_t0015.970_score4446.wav"
+    },
+    "jackson-ave/05_t0016.890_score4303.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z"
+    },
+    "jackson-ave/06_t0024.210_score4311.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z"
+    },
+    "jackson-ave/07_t0028.915_score7332.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z"
+    },
+    "jackson-ave/08_t0031.100_score12116.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z",
+      "deleted": true,
+      "trashName": "1783968080980--jackson-ave--08_t0031.100_score12116.wav"
+    },
+    "jackson-ave/09_t0046.815_score5134.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z"
+    },
+    "jackson-ave/10_t0049.200_score4334.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z",
+      "deleted": true,
+      "trashName": "1783968018461--jackson-ave--10_t0049.200_score4334.wav"
+    },
+    "jackson-ave/11_t0055.160_score5964.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z"
+    },
+    "jackson-ave/12_t0056.525_score4773.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.716Z",
+      "deleted": true,
+      "trashName": "1783968022010--jackson-ave--12_t0056.525_score4773.wav"
+    },
+    "jackson-ave/13_t0059.185_score6210.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z"
+    },
+    "jackson-ave/14_t0061.685_score12369.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z",
+      "deleted": true,
+      "trashName": "1783968030431--jackson-ave--14_t0061.685_score12369.wav"
+    },
+    "jackson-ave/15_t0064.545_score7308.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z"
+    },
+    "jackson-ave/16_t0067.590_score6656.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z"
+    },
+    "jackson-ave/17_t0069.720_score5939.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z"
+    },
+    "jackson-ave/18_t0071.930_score5577.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z",
+      "deleted": true,
+      "trashName": "1783968035922--jackson-ave--18_t0071.930_score5577.wav"
+    },
+    "jackson-ave/19_t0075.365_score5523.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.717Z"
+    },
+    "jackson-ave/20_t0075.735_score4812.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z",
+      "deleted": true,
+      "trashName": "1783968040588--jackson-ave--20_t0075.735_score4812.wav"
+    },
+    "jackson-ave/21_t0080.800_score6677.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z",
+      "deleted": true,
+      "trashName": "1783968044564--jackson-ave--21_t0080.800_score6677.wav"
+    },
+    "jackson-ave/22_t0082.610_score8213.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/23_t0082.855_score5573.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/24_t0086.595_score9193.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/25_t0086.795_score5665.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/26_t0088.400_score4898.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/27_t0089.995_score9949.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/28_t0090.145_score5124.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/29_t0091.975_score7149.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.718Z"
+    },
+    "jackson-ave/30_t0093.735_score8130.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "jackson-ave/31_t0093.870_score6086.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "jackson-ave/32_t0095.035_score6594.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "jackson-ave/33_t0096.325_score5005.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "jackson-ave/34_t0097.175_score5442.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "jackson-ave/35_t0100.885_score8441.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "jackson-ave/36_t0102.565_score4938.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:10:53.719Z"
+    },
+    "new-recording/01_t0002.005_score6228.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.207Z"
+    },
+    "new-recording/02_t0002.250_score7995.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.207Z"
+    },
+    "new-recording/03_t0002.855_score4092.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.207Z"
+    },
+    "new-recording/04_t0003.155_score6082.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/05_t0022.240_score4324.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/06_t0023.735_score5823.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/07_t0031.585_score9035.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/08_t0033.715_score5606.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/09_t0035.925_score8423.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/10_t0039.660_score5508.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/11_t0048.835_score4839.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.208Z"
+    },
+    "new-recording/12_t0050.010_score4226.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/13_t0054.885_score5514.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/14_t0057.845_score4568.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/15_t0060.790_score3853.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/16_t0062.015_score4634.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/17_t0062.760_score4000.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/18_t0064.280_score3821.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/19_t0064.730_score6571.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/20_t0066.350_score5479.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.209Z"
+    },
+    "new-recording/21_t0066.810_score5106.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/22_t0067.360_score5798.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/23_t0068.280_score5055.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/24_t0069.065_score3913.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/25_t0069.855_score3961.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/26_t0071.585_score4753.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/27_t0073.835_score4748.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/28_t0075.095_score6059.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/29_t0076.110_score9741.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.210Z"
+    },
+    "new-recording/30_t0077.290_score11151.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "new-recording/31_t0078.175_score5257.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "new-recording/32_t0079.455_score7533.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "new-recording/33_t0080.135_score5678.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "new-recording/34_t0081.640_score5496.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "new-recording/35_t0084.115_score4148.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "new-recording/36_t0091.410_score4611.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T18:11:04.211Z"
+    },
+    "wax-cracking-desserts/01_t0004.650_score25347.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.850Z",
+      "deleted": true,
+      "trashName": "1783984347792--wax-cracking-desserts--01_t0004.650_score25347.wav"
+    },
+    "wax-cracking-desserts/02_t0004.950_score25483.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.850Z",
+      "deleted": true,
+      "trashName": "1783984951891--wax-cracking-desserts--02_t0004.950_score25483.wav"
+    },
+    "wax-cracking-desserts/03_t0005.300_score13959.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.850Z",
+      "deleted": true,
+      "trashName": "1783984964395--wax-cracking-desserts--03_t0005.300_score13959.wav"
+    },
+    "wax-cracking-desserts/04_t0007.725_score11081.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "Reduced 3.3 dB for pack balance.",
+      "createdAt": "2026-07-13T22:30:01.850Z"
+    },
+    "wax-cracking-desserts/05_t0007.895_score10512.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.850Z",
+      "deleted": true,
+      "trashName": "1783982959058--wax-cracking-desserts--05_t0007.895_score10512.wav"
+    },
+    "wax-cracking-desserts/06_t0008.240_score13404.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.850Z",
+      "deleted": true,
+      "trashName": "1783982991572--wax-cracking-desserts--06_t0008.240_score13404.wav"
+    },
+    "wax-cracking-desserts/07_t0008.365_score13246.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z",
+      "deleted": true,
+      "trashName": "1783982996173--wax-cracking-desserts--07_t0008.365_score13246.wav"
+    },
+    "wax-cracking-desserts/08_t0008.600_score11730.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z"
+    },
+    "wax-cracking-desserts/09_t0009.650_score10397.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z",
+      "deleted": true,
+      "trashName": "1783982965895--wax-cracking-desserts--09_t0009.650_score10397.wav"
+    },
+    "wax-cracking-desserts/10_t0018.755_score17909.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z",
+      "deleted": true,
+      "trashName": "1783982968311--wax-cracking-desserts--10_t0018.755_score17909.wav"
+    },
+    "wax-cracking-desserts/11_t0021.955_score17317.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "Reduced 7.4 dB for pack balance.",
+      "createdAt": "2026-07-13T22:30:01.851Z"
+    },
+    "wax-cracking-desserts/12_t0022.200_score10878.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z"
+    },
+    "wax-cracking-desserts/13_t0024.940_score19677.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z",
+      "deleted": true,
+      "trashName": "1783982975974--wax-cracking-desserts--13_t0024.940_score19677.wav"
+    },
+    "wax-cracking-desserts/14_t0025.495_score10672.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z"
+    },
+    "wax-cracking-desserts/15_t0025.620_score13459.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.851Z"
+    },
+    "wax-cracking-desserts/16_t0025.820_score12872.wav": {
+      "rating": 2,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/17_t0026.160_score12753.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/18_t0029.230_score10848.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/19_t0032.895_score16464.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/20_t0033.050_score16940.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/21_t0034.930_score13648.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/22_t0035.315_score14952.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/23_t0036.880_score11534.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/24_t0037.345_score10528.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/25_t0040.285_score11188.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.852Z"
+    },
+    "wax-cracking-desserts/26_t0040.555_score17258.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z",
+      "deleted": true,
+      "trashName": "1783987692890--wax-cracking-desserts--26_t0040.555_score17258.wav"
+    },
+    "wax-cracking-desserts/27_t0043.030_score11265.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z"
+    },
+    "wax-cracking-desserts/28_t0046.450_score11448.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z"
+    },
+    "wax-cracking-desserts/29_t0050.695_score16350.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z",
+      "deleted": true,
+      "trashName": "1783986314007--wax-cracking-desserts--29_t0050.695_score16350.wav"
+    },
+    "wax-cracking-desserts/30_t0051.120_score15412.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z",
+      "deleted": true,
+      "trashName": "1783983060531--wax-cracking-desserts--30_t0051.120_score15412.wav"
+    },
+    "wax-cracking-desserts/31_t0051.245_score10845.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z"
+    },
+    "wax-cracking-desserts/32_t0051.475_score13676.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z"
+    },
+    "wax-cracking-desserts/33_t0054.110_score13269.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z"
+    },
+    "wax-cracking-desserts/34_t0055.780_score11118.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.853Z"
+    },
+    "wax-cracking-desserts/35_t0055.965_score10466.wav": {
+      "rating": 3,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.854Z"
+    },
+    "wax-cracking-desserts/36_t0057.365_score11271.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-07-13T22:30:01.854Z"
+    }
+  }
+}

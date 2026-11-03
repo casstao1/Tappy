@@ -1,0 +1,14 @@
+Source: SoundClipStudio/source-wav/01-jackson-ave-mono.wav
+Exported clips: 36
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=61.685s score=12369.40 peak=29959 duration=75.0ms
+- t=31.100s score=12116.12 peak=27077 duration=221.0ms
+- t=89.995s score=9949.20 peak=20879 duration=76.0ms
+- t=11.470s score=9317.13 peak=20515 duration=240.0ms
+- t=86.595s score=9193.36 peak=17303 duration=76.0ms
+- t=100.885s score=8440.68 peak=17895 duration=86.0ms
+- t=82.610s score=8213.36 peak=21412 duration=146.0ms
+- t=93.735s score=8129.70 peak=17027 duration=75.0ms

@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tappy Viral 15</title>
+    <style>
+      :root {
+        --silver: #ffffff;
+        --silver-soft: #e7e7ec;
+        --charcoal: #1a1a1a;
+        --charcoal-soft: #29272b;
+        --pink: #ffb6c1;
+        --pink-bright: #ffd5dc;
+        --violet: #5a3fd6;
+        --green: #4fe37b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--charcoal);
+        font-family: Inter, sans-serif;
+        letter-spacing: 0;
+      }
+
+      #tappy-viral-15 {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        color: var(--silver);
+        background: var(--charcoal);
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .clip {
+        visibility: hidden;
+      }
+
+      .scene-content {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 164px 84px 224px;
+        box-sizing: border-box;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--pink);
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1,
+      h2 {
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .soft-grid {
+        position: absolute;
+        inset: 0;
+        opacity: 0.08;
+        background-image:
+          linear-gradient(rgba(26, 26, 26, 0.2) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 26, 26, 0.2) 1px, transparent 1px);
+        background-size: 72px 72px;
+      }
+
+      .grain {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0.055;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+      }
+
+      /* Scene 1: silent keyboard */
+      #scene-hook {
+        color: var(--charcoal);
+        background: var(--silver);
+      }
+
+      #scene-hook .scene-content {
+        justify-content: flex-start;
+        gap: 34px;
+      }
+
+      #hook-kicker {
+        display: inline-flex;
+        align-items: center;
+        align-self: flex-start;
+        gap: 12px;
+        min-height: 50px;
+        padding: 0 22px;
+        border: 2px solid rgba(26, 26, 26, 0.12);
+        border-radius: 25px;
+        color: #68686c;
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      #hook-kicker::before {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #aaa8ad;
+        content: "";
+      }
+
+      #hook-title {
+        max-width: 890px;
+        font-size: 112px;
+        line-height: 0.98;
+      }
+
+      #hook-subtitle {
+        max-width: 790px;
+        color: rgba(26, 26, 26, 0.55);
+        font-size: 34px;
+        font-weight: 600;
+        line-height: 1.24;
+      }
+
+      .keyboard-stage {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 42px;
+        width: 100%;
+        min-height: 770px;
+      }
+
+      .keyboard-shell {
+        width: 100%;
+        padding: 38px 34px 48px;
+        border: 3px solid rgba(26, 26, 26, 0.28);
+        border-radius: 42px;
+        background: #f4f4f6;
+        box-shadow: 0 30px 0 #d9d9de, 0 44px 72px rgba(26, 26, 26, 0.14);
+      }
+
+      .keyboard-row {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .key {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        height: 72px;
+        border: 2px solid rgba(26, 26, 26, 0.22);
+        border-radius: 11px;
+        color: #68686c;
+        background-color: var(--silver);
+        box-shadow: 0 5px 0 #cbcad0;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .key.wide {
+        flex: 1.7;
+      }
+
+      .key.space {
+        flex: 5.4;
+      }
+
+      .dead-meter {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0 6px;
+        color: rgba(26, 26, 26, 0.5);
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .dead-line {
+        width: 570px;
+        height: 2px;
+        background: rgba(26, 26, 26, 0.18);
+      }
+
+      /* Scene 2: activation */
+      #scene-activation {
+        background: var(--charcoal);
+      }
+
+      #scene-activation .scene-content {
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 176px;
+        text-align: center;
+      }
+
+      .charcoal-lines {
+        position: absolute;
+        inset: 0;
+        opacity: 0.12;
+        background-image: linear-gradient(rgba(255, 182, 193, 0.34) 1px, transparent 1px);
+        background-size: 100% 96px;
+      }
+
+      #activation-title {
+        max-width: 900px;
+        margin-top: 18px;
+        font-size: 96px;
+        line-height: 0.98;
+      }
+
+      #activation-title span {
+        color: var(--pink);
+      }
+
+      .activation-stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 620px;
+        height: 620px;
+        perspective: 1100px;
+      }
+
+      .square-ring {
+        position: absolute;
+        border: 3px solid rgba(255, 182, 193, 0.22);
+        border-radius: 96px;
+        box-shadow: 0 0 54px rgba(255, 182, 193, 0.18);
+      }
+
+      .square-ring.one {
+        width: 520px;
+        height: 520px;
+      }
+
+      .square-ring.two {
+        width: 430px;
+        height: 430px;
+      }
+
+      .square-ring.three {
+        width: 340px;
+        height: 340px;
+      }
+
+      #floating-icon {
+        position: relative;
+        z-index: 4;
+        width: 292px;
+        height: 292px;
+        border-radius: 72px;
+        transform: rotateX(-9deg) rotateY(12deg);
+        transform-style: preserve-3d;
+        filter: drop-shadow(0 54px 55px rgba(0, 0, 0, 0.52));
+      }
+
+      #floating-icon img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+      }
+
+      .toggle-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 22px;
+        width: 100%;
+      }
+
+      .toggle-label {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 23px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      #activation-toggle {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 430px;
+        height: 142px;
+        padding: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        border-radius: 74px;
+        background: var(--pink);
+        box-shadow: 0 0 72px rgba(255, 182, 193, 0.36);
+      }
+
+      #toggle-knob {
+        width: 112px;
+        height: 112px;
+        border-radius: 50%;
+        background: var(--silver);
+        box-shadow: 0 10px 30px rgba(26, 26, 26, 0.28);
+      }
+
+      #toggle-on {
+        position: absolute;
+        left: 46px;
+        color: var(--charcoal);
+        font-size: 34px;
+        font-weight: 900;
+      }
+
+      .typing-bars {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        height: 92px;
+      }
+
+      .typing-bar {
+        width: 14px;
+        height: 58px;
+        border-radius: 8px;
+        background: var(--pink);
+        box-shadow: 0 0 18px rgba(255, 182, 193, 0.44);
+        transform-origin: center;
+      }
+
+      /* Scene 3: carousel */
+      #scene-carousel {
+        background: #151416;
+      }
+
+      #scene-carousel .scene-content {
+        align-items: center;
+        padding: 144px 70px 210px;
+        text-align: center;
+      }
+
+      #carousel-title {
+        max-width: 900px;
+        margin-top: 18px;
+        font-size: 94px;
+        line-height: 0.98;
+      }
+
+      #carousel-title span {
+        color: var(--pink);
+      }
+
+      #carousel-subtitle {
+        margin-top: 20px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      #menu-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 850px;
+        min-height: 76px;
+        margin-top: 56px;
+        padding: 0 26px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 20px 20px 10px 10px;
+        color: var(--charcoal);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 55px rgba(0, 0, 0, 0.28);
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .menu-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .mini-app-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+      }
+
+      #popover {
+        position: relative;
+        width: 900px;
+        height: 900px;
+        padding: 38px 40px 42px;
+        border: 2px solid rgba(255, 255, 255, 0.16);
+        border-radius: 0 0 44px 44px;
+        overflow: hidden;
+        background: rgba(29, 28, 31, 0.98);
+        box-shadow: 0 46px 100px rgba(0, 0, 0, 0.48);
+        text-align: left;
+      }
+
+      .popover-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        height: 98px;
+      }
+
+      .popover-brand {
+        color: var(--silver);
+        font-size: 44px;
+        font-weight: 900;
+      }
+
+      .popover-caption {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .active-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 21px;
+        font-weight: 800;
+      }
+
+      .active-dot {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 18px rgba(79, 227, 123, 0.55);
+      }
+
+      #carousel-frame {
+        position: relative;
+        width: 100%;
+        height: 455px;
+        margin-top: 24px;
+        border: 2px solid rgba(255, 182, 193, 0.56);
+        border-radius: 30px;
+        overflow: hidden;
+        background: #111012;
+        box-shadow: 0 0 50px rgba(255, 182, 193, 0.13);
+      }
+
+      #pack-track {
+        position: absolute;
+        top: 37px;
+        left: 0;
+        display: flex;
+        gap: 40px;
+        width: max-content;
+        will-change: transform;
+      }
+
+      .pack-card {
+        position: relative;
+        display: flex;
+        flex: 0 0 620px;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 380px;
+        padding: 36px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 26px;
+        overflow: hidden;
+        background: #29272b;
+      }
+
+      .pack-card::after {
+        position: absolute;
+        right: -86px;
+        bottom: -86px;
+        width: 250px;
+        height: 250px;
+        border: 42px solid rgba(255, 182, 193, 0.08);
+        border-radius: 72px;
+        content: "";
+        transform: rotate(24deg);
+      }
+
+      .pack-number {
+        color: rgba(255, 255, 255, 0.36);
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .pack-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 106px;
+        height: 106px;
+        border-radius: 30px;
+        border: 2px solid var(--pink);
+        color: var(--silver);
+        background-color: #49383d;
+        box-shadow: 0 16px 40px rgba(255, 182, 193, 0.22);
+        font-size: 48px;
+        font-weight: 900;
+      }
+
+      .pack-name {
+        position: relative;
+        z-index: 2;
+        max-width: 520px;
+        color: var(--silver);
+        font-size: 50px;
+        font-weight: 900;
+        line-height: 1.02;
+      }
+
+      .pack-kind {
+        position: relative;
+        z-index: 2;
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .pack-progress {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 34px;
+      }
+
+      .pack-progress span {
+        width: 82px;
+        height: 9px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .pack-progress span:first-child {
+        background: var(--pink);
+        box-shadow: 0 0 18px rgba(255, 182, 193, 0.4);
+      }
+
+      #kinetic-line {
+        margin-top: 54px;
+        color: var(--silver);
+        font-size: 38px;
+        font-weight: 900;
+      }
+
+      #kinetic-line span {
+        color: var(--pink);
+      }
+
+      /* Scene 4: CTA */
+      #scene-cta {
+        background: var(--charcoal);
+      }
+
+      .desk-background {
+        position: absolute;
+        inset: -48px;
+        width: calc(100% + 96px);
+        height: calc(100% + 96px);
+        object-fit: cover;
+        filter: blur(16px) saturate(0.78) brightness(0.4);
+        transform: scale(1.16);
+      }
+
+      .desk-shade {
+        position: absolute;
+        inset: 0;
+        background: rgba(26, 26, 26, 0.42);
+      }
+
+      #scene-cta .scene-content {
+        align-items: center;
+        justify-content: center;
+        gap: 34px;
+        padding: 190px 76px 240px;
+        text-align: center;
+      }
+
+      #cta-icon {
+        width: 180px;
+        height: 180px;
+        border-radius: 44px;
+        filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.55));
+      }
+
+      #cta-title {
+        max-width: 910px;
+        font-size: 86px;
+        line-height: 1;
+        text-shadow: 0 8px 35px rgba(0, 0, 0, 0.58);
+      }
+
+      #cta-subtitle {
+        max-width: 780px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.22;
+      }
+
+      #app-store-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        width: 860px;
+        min-height: 154px;
+        margin-top: 28px;
+        border: 3px solid rgba(255, 255, 255, 0.34);
+        border-radius: 34px;
+        color: var(--charcoal);
+        background: var(--silver);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42), 0 0 58px rgba(255, 182, 193, 0.24);
+      }
+
+      .apple-mark {
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 76px;
+        line-height: 1;
+      }
+
+      .store-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1;
+      }
+
+      .store-small {
+        font-size: 23px;
+        font-weight: 700;
+      }
+
+      .store-large {
+        margin-top: 8px;
+        font-size: 42px;
+        font-weight: 900;
+      }
+
+      #cta-free {
+        color: var(--pink-bright);
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      #final-black {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        opacity: 0;
+        background: #000000;
+      }
+
+      /* Transition bands */
+      .transition {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .transition-band {
+        position: absolute;
+        top: -160px;
+        left: 0;
+        width: 430px;
+        height: 2240px;
+        border-radius: 50%;
+        background: var(--pink);
+        box-shadow: 0 0 170px 78px rgba(255, 182, 193, 0.62);
+        transform: rotate(-11deg);
+      }
+
+      .transition.silver .transition-band {
+        background: var(--silver-soft);
+        box-shadow: 0 0 160px 74px rgba(255, 255, 255, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="tappy-viral-15"
+      data-composition-id="tappy-viral-15"
+      data-start="0"
+      data-duration="15"
+      data-track-index="0"
+      data-width="1080"
+      data-height="1920"
+    >
+      <section id="scene-hook" class="scene clip" data-start="0" data-duration="3" data-track-index="1">
+        <div class="soft-grid"></div>
+        <div class="scene-content">
+          <div id="hook-kicker">MAC TYPING, WITHOUT TAPPY</div>
+          <h1 id="hook-title">Typing on a Mac feels dead...</h1>
+          <p id="hook-subtitle">Flat keys. Flat feedback. Nothing that makes you want to keep typing.</p>
+          <div class="keyboard-stage">
+            <div id="keyboard-shell" class="keyboard-shell"></div>
+            <div id="dead-meter" class="dead-meter">
+              <span>MUFFLED INPUT</span>
+              <span class="dead-line"></span>
+              <span>BARELY THERE</span>
+            </div>
+          </div>
+        </div>
+        <div class="grain"></div>
+      </section>
+
+      <section id="scene-activation" class="scene clip" data-start="3" data-duration="4" data-track-index="1">
+        <div class="charcoal-lines"></div>
+        <div class="scene-content">
+          <div>
+            <p id="activation-eyebrow" class="eyebrow">ONE CLICK CHANGES EVERYTHING</p>
+            <h2 id="activation-title">...Until you turn on <span>Tappy.</span></h2>
+          </div>
+          <div class="activation-stage">
+            <div class="square-ring one"></div>
+            <div class="square-ring two"></div>
+            <div class="square-ring three"></div>
+            <div id="floating-icon"><img src="assets/tappy-icon.png" alt="Tappy app icon" /></div>
+          </div>
+          <div class="toggle-wrap">
+            <span id="toggle-label" class="toggle-label">SYSTEM-WIDE FEEDBACK</span>
+            <div id="activation-toggle">
+              <span id="toggle-on">ON</span>
+              <div id="toggle-knob"></div>
+            </div>
+            <div id="typing-bars" class="typing-bars"></div>
+          </div>
+        </div>
+        <div class="grain"></div>
+      </section>
+
+      <section id="scene-carousel" class="scene clip" data-start="7" data-duration="5" data-track-index="1">
+        <div class="charcoal-lines"></div>
+        <div class="scene-content">
+          <p id="carousel-eyebrow" class="eyebrow">REAL TACTILE SOUND PACKS</p>
+          <h2 id="carousel-title">Choose your <span>vibe.</span></h2>
+          <p id="carousel-subtitle">Switch the feel of every key in seconds.</p>
+          <div id="menu-strip">
+            <span>Finder&nbsp;&nbsp;&nbsp; File&nbsp;&nbsp;&nbsp; Edit&nbsp;&nbsp;&nbsp; View</span>
+            <span class="menu-right">
+              <img class="mini-app-icon" src="assets/tappy-icon-menu.png" alt="" />
+              <span>Tappy</span>
+              <span>9:41</span>
+            </span>
+          </div>
+          <div id="popover">
+            <div class="popover-head">
+              <div>
+                <div class="popover-brand">Tappy</div>
+                <div class="popover-caption">Auditory typing feedback</div>
+              </div>
+              <div class="active-chip"><span class="active-dot"></span>Active</div>
+            </div>
+            <div id="carousel-frame">
+              <div id="pack-track" data-layout-allow-overflow>
+                <article class="pack-card">
+                  <span class="pack-number">01 / CLEAN</span>
+                  <span class="pack-icon">P</span>
+                  <div>
+                    <div class="pack-name">Plastic Tapping</div>
+                    <div class="pack-kind">Light, glossy nail taps</div>
+                  </div>
+                </article>
+                <article class="pack-card">
+                  <span class="pack-number">02 / WARM</span>
+                  <span class="pack-icon">O</span>
+                  <div>
+                    <div class="pack-name">Organic Taps</div>
+                    <div class="pack-kind">Wood and sand textures</div>
+                  </div>
+                </article>
+                <article class="pack-card">
+                  <span class="pack-number">03 / HEAVY</span>
+                  <span class="pack-icon">M</span>
+                  <div>
+                    <div class="pack-name">Heavy Mechanical Clack</div>
+                    <div class="pack-kind">Crisp, focused switch feedback</div>
+                  </div>
+                </article>
+              </div>
+            </div>
+            <div class="pack-progress"><span></span><span></span><span></span></div>
+            <div id="kinetic-line">Choose your vibe. <span>Lock in your focus.</span></div>
+          </div>
+        </div>
+        <div class="grain"></div>
+      </section>
+
+      <section id="scene-cta" class="scene clip" data-start="12" data-duration="3" data-track-index="1">
+        <img class="desk-background" src="assets/cozy-desk.png" alt="Cozy Mac desk setup" data-layout-allow-overflow />
+        <div class="desk-shade"></div>
+        <div class="scene-content">
+          <img id="cta-icon" src="assets/tappy-icon-cta.png" alt="Tappy app icon" />
+          <p id="cta-eyebrow" class="eyebrow">MAKE EVERY KEY SATISFYING</p>
+          <h2 id="cta-title">Tappy: ASMR Keyboard Sounds.</h2>
+          <p id="cta-subtitle">Mechanical keyboard energy for the Mac you already own.</p>
+          <div id="app-store-button">
+            <span class="apple-mark">&#63743;</span>
+            <span class="store-copy">
+              <span class="store-small">Download on the</span>
+              <span class="store-large">Mac App Store</span>
+            </span>
+          </div>
+          <span id="cta-free">FREE TO DOWNLOAD</span>
+        </div>
+        <div class="grain"></div>
+        <div id="final-black"></div>
+      </section>
+
+      <div id="transition-one" class="transition clip" data-start="2.72" data-duration="0.62" data-track-index="10">
+        <div class="transition-band"></div>
+      </div>
+      <div id="transition-two" class="transition silver clip" data-start="6.72" data-duration="0.62" data-track-index="11">
+        <div class="transition-band"></div>
+      </div>
+      <div id="transition-three" class="transition clip" data-start="11.72" data-duration="0.62" data-track-index="12">
+        <div class="transition-band"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      const keyboardRows = [
+        ["esc", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "delete"],
+        ["tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+        ["caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", "return"],
+        ["shift", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "shift"],
+        ["fn", "control", "option", "command", "space", "command", "option"],
+      ];
+
+      const keyboard = document.getElementById("keyboard-shell");
+      keyboardRows.forEach((row, rowIndex) => {
+        const rowElement = document.createElement("div");
+        rowElement.className = "keyboard-row";
+        row.forEach((label) => {
+          const key = document.createElement("div");
+          const isWide = ["delete", "tab", "caps", "return", "shift", "command"].includes(label);
+          key.className = `key${isWide ? " wide" : ""}${label === "space" ? " space" : ""}`;
+          key.textContent = label === "space" ? "" : label;
+          rowElement.appendChild(key);
+        });
+        keyboard.appendChild(rowElement);
+      });
+
+      const bars = document.getElementById("typing-bars");
+      for (let index = 0; index < 20; index += 1) {
+        const bar = document.createElement("span");
+        bar.className = "typing-bar";
+        bar.style.height = `${32 + ((index * 17) % 58)}px`;
+        bars.appendChild(bar);
+      }
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({paused: true});
+
+      tl.from("#hook-kicker", {y: 24, opacity: 0, duration: 0.42, ease: "power3.out"}, 0.14);
+      tl.from("#hook-title", {y: 48, opacity: 0, duration: 0.55, ease: "expo.out"}, 0.26);
+      tl.from("#hook-subtitle", {y: 24, opacity: 0, duration: 0.46, ease: "power2.out"}, 0.46);
+      tl.from("#keyboard-shell", {y: 34, opacity: 0, duration: 0.5, ease: "power4.out"}, 0.7);
+      tl.from("#dead-meter", {opacity: 0, duration: 0.36, ease: "sine.out"}, 1.0);
+
+      tl.fromTo("#transition-one .transition-band", {x: -820}, {x: 1460, duration: 0.62, ease: "power3.inOut"}, 2.72);
+
+      tl.from("#activation-eyebrow", {y: 28, opacity: 0, duration: 0.42, ease: "power3.out"}, 3.08);
+      tl.from("#activation-title", {scale: 0.92, opacity: 0, duration: 0.56, ease: "expo.out"}, 3.12);
+      tl.from(".square-ring.one", {scale: 0.58, opacity: 0, rotation: -8, duration: 0.62, ease: "power4.out"}, 3.06);
+      tl.from(".square-ring.two", {scale: 0.5, opacity: 0, rotation: 8, duration: 0.58, ease: "back.out(1.2)"}, 3.14);
+      tl.from(".square-ring.three", {scale: 0.4, opacity: 0, duration: 0.5, ease: "circ.out"}, 3.2);
+      tl.from("#floating-icon", {scale: 0.48, opacity: 0, rotationX: 22, rotationY: -34, y: 90, duration: 0.7, ease: "back.out(1.35)"}, 3.1);
+      tl.from("#toggle-label", {y: 18, opacity: 0, duration: 0.36, ease: "power2.out"}, 3.18);
+      tl.from("#activation-toggle", {scale: 0.72, opacity: 0, duration: 0.46, ease: "back.out(1.35)"}, 3.22);
+      tl.from("#toggle-knob", {x: -264, duration: 0.34, ease: "back.out(1.5)"}, 3.28);
+      tl.from("#toggle-on", {opacity: 0, x: 18, duration: 0.28, ease: "power2.out"}, 3.34);
+      tl.from("#typing-bars", {y: 18, opacity: 0, duration: 0.38, ease: "sine.out"}, 3.46);
+
+      const fastHits = [3.36, 3.49, 3.62, 3.74, 3.87, 3.99, 4.13, 4.25, 4.38, 4.51, 4.65, 4.79, 4.92, 5.04, 5.18, 5.31, 5.44, 5.58, 5.71, 5.84, 5.98, 6.1, 6.24, 6.37, 6.5, 6.63];
+      fastHits.forEach((time, index) => {
+        const selector = `.typing-bar:nth-child(${(index % 20) + 1})`;
+        tl.from(selector, {scaleY: 0.2, duration: 0.12, ease: "back.out(2.1)"}, time);
+        tl.from("#floating-icon", {scale: 0.97, duration: 0.1, ease: "power2.out", immediateRender: false}, time);
+      });
+      tl.to(".square-ring.one", {rotation: 9, duration: 2.92, ease: "sine.inOut"}, 3.74);
+      tl.to(".square-ring.two", {rotation: -11, duration: 2.86, ease: "sine.inOut"}, 3.76);
+
+      tl.fromTo("#transition-two .transition-band", {x: -820}, {x: 1460, duration: 0.62, ease: "power3.inOut"}, 6.72);
+
+      tl.from("#carousel-eyebrow", {y: 26, opacity: 0, duration: 0.38, ease: "power3.out"}, 7.06);
+      tl.from("#carousel-title", {scale: 0.9, opacity: 0, duration: 0.48, ease: "expo.out"}, 7.1);
+      tl.from("#carousel-subtitle", {y: 20, opacity: 0, duration: 0.42, ease: "power2.out"}, 7.22);
+      tl.from("#menu-strip", {y: -34, opacity: 0, duration: 0.42, ease: "circ.out"}, 7.12);
+      tl.from("#popover", {scale: 0.7, y: 116, opacity: 0, duration: 0.62, ease: "back.out(1.25)"}, 7.1);
+      tl.set("#pack-track", {x: 80}, 7.0);
+      tl.from("#carousel-frame", {scale: 0.9, opacity: 0, duration: 0.46, ease: "power4.out"}, 7.28);
+      tl.from("#kinetic-line", {y: 22, opacity: 0, duration: 0.42, ease: "sine.out"}, 7.44);
+      tl.to("#pack-track", {x: -580, duration: 0.3, ease: "back.out(1.45)"}, 8.68);
+      tl.from("#carousel-frame", {scale: 0.985, duration: 0.18, ease: "power2.out", immediateRender: false}, 8.68);
+      tl.to(".pack-progress span:first-child", {backgroundColor: "rgba(255,255,255,0.14)", boxShadow: "none", duration: 0.18}, 8.68);
+      tl.to(".pack-progress span:nth-child(2)", {backgroundColor: "#ffb6c1", boxShadow: "0 0 18px rgba(255,182,193,0.4)", duration: 0.18}, 8.68);
+      tl.to("#pack-track", {x: -1240, duration: 0.3, ease: "back.out(1.45)"}, 10.24);
+      tl.from("#carousel-frame", {scale: 0.985, duration: 0.18, ease: "power2.out", immediateRender: false}, 10.24);
+      tl.to(".pack-progress span:nth-child(2)", {backgroundColor: "rgba(255,255,255,0.14)", boxShadow: "none", duration: 0.18}, 10.24);
+      tl.to(".pack-progress span:nth-child(3)", {backgroundColor: "#ffb6c1", boxShadow: "0 0 18px rgba(255,182,193,0.4)", duration: 0.18}, 10.24);
+
+      tl.fromTo("#transition-three .transition-band", {x: -820}, {x: 1460, duration: 0.62, ease: "power3.inOut"}, 11.72);
+
+      tl.from("#cta-icon", {scale: 0.45, rotation: -9, opacity: 0, duration: 0.5, ease: "back.out(1.35)"}, 12.06);
+      tl.from("#cta-eyebrow", {y: 24, opacity: 0, duration: 0.4, ease: "power3.out"}, 12.16);
+      tl.from("#cta-title", {scale: 0.9, opacity: 0, duration: 0.52, ease: "expo.out"}, 12.22);
+      tl.from("#cta-subtitle", {y: 22, opacity: 0, duration: 0.42, ease: "sine.out"}, 12.42);
+      tl.from("#app-store-button", {y: 68, scale: 0.78, opacity: 0, duration: 0.58, ease: "back.out(1.4)"}, 12.46);
+      tl.from("#cta-free", {y: 16, opacity: 0, duration: 0.36, ease: "power2.out"}, 12.7);
+      tl.from("#app-store-button", {scale: 0.95, duration: 0.22, ease: "back.out(2)", immediateRender: false}, 14.44);
+      tl.to("#final-black", {opacity: 1, duration: 0.18, ease: "power3.in"}, 14.52);
+
+      window.__timelines["tappy-viral-15"] = tl;
+    </script>
+  </body>
+</html>

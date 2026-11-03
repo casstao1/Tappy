@@ -25,6 +25,9 @@ xcuserdata/
 .env.*
 !.env.example
 
+# Reproducible third-party tooling cache
+MarketingVideoPlugins/tools/hyperframes-cache/
+
 # Local-only sound design pipeline and generated review assets
 AppStoreScreenshots_raw/
 battle_candidates/

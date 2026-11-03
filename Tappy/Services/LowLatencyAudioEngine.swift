@@ -46,6 +46,8 @@ final class LowLatencyAudioEngine {
     private var nextPlayerIndex = 0
     private var isEnabled = true
     private var outputVolume: Float = 1.0
+    private var engineConfigurationObserver: NSObjectProtocol?
+    private var isRecoveringEngine = false
 
     init(concurrentVoices: Int = 8) {
         self.concurrentVoices = concurrentVoices
@@ -56,6 +58,13 @@ final class LowLatencyAudioEngine {
         outputFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: channelCount)!
 
         configureEngine()
+        observeEngineConfigurationChanges()
+    }
+
+    deinit {
+        if let engineConfigurationObserver {
+            NotificationCenter.default.removeObserver(engineConfigurationObserver)
+        }
     }
 
     func makeBuffer(from url: URL, maximumDuration: TimeInterval? = nil) throws -> AVAudioPCMBuffer {
@@ -240,13 +249,63 @@ final class LowLatencyAudioEngine {
         engine.mainMixerNode.outputVolume = 1.0
     }
 
+    private func observeEngineConfigurationChanges() {
+        engineConfigurationObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: nil
+        ) { [weak self] _ in
+            guard let self else { return }
+            self.queue.async { [weak self] in
+                self?.recoverEngineAfterConfigurationChange()
+            }
+        }
+    }
+
     private func startEngineIfNeeded() throws {
         if !engine.isRunning {
-            engine.prepare()
-            try engine.start()
+            do {
+                try startEngine()
+            } catch {
+                resetEngineForRecovery()
+                Thread.sleep(forTimeInterval: 0.03)
+                try startEngine()
+            }
         }
 
         startPlayersIfNeeded()
+    }
+
+    private func startEngine() throws {
+        engine.prepare()
+        try engine.start()
+    }
+
+    private func recoverEngineAfterConfigurationChange() {
+        guard isEnabled, !isRecoveringEngine else { return }
+        isRecoveringEngine = true
+        defer { isRecoveringEngine = false }
+
+        resetEngineForRecovery()
+
+        do {
+            try startEngine()
+            startPlayersIfNeeded()
+        } catch {
+            NSLog("Tappy audio engine recovery failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func resetEngineForRecovery() {
+        for player in players {
+            player.stop()
+            player.reset()
+        }
+
+        engine.stop()
+        engine.reset()
+        voiceNextAvailableAt = Array(repeating: 0, count: players.count)
+        nextPlayerIndex = 0
     }
 
     private func startPlayersIfNeeded() {

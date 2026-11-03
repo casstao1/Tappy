@@ -1,23 +1,37 @@
 import AppKit
-import SwiftUI
 
 @main
-struct TappyApp: App {
-    @StateObject private var controller = KeyboardSoundController()
+final class TappyAppDelegate: NSObject, NSApplicationDelegate {
+    private static var sharedDelegate: TappyAppDelegate?
 
-    var body: some Scene {
-        // Tappy is a pure menu-bar app — all UI lives in the NSStatusItem
-        // popover managed by KeyboardSoundController.setupMenuBarItem().
-        // The Settings scene is kept as a no-op so SwiftUI has a valid scene
-        // to satisfy the App protocol; it is never opened.
-        Settings {
-            EmptyView()
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    controller.handleAppDidBecomeActive()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
-                    controller.handleAppDidResignActive()
-                }
+    private var controller: KeyboardSoundController?
+
+    static func main() {
+        let app = NSApplication.shared
+        let delegate = TappyAppDelegate()
+        sharedDelegate = delegate
+        app.delegate = delegate
+        app.setActivationPolicy(.accessory)
+        app.finishLaunching()
+        app.run()
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
+            return
         }
+        controller = KeyboardSoundController()
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        controller?.handleAppDidBecomeActive()
+    }
+
+    func applicationDidResignActive(_ notification: Notification) {
+        controller?.handleAppDidResignActive()
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 }
