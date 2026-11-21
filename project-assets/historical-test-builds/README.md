@@ -1,0 +1,1 @@
+Historical test and release material retained for recovery. Source snapshots are historical variants; the app source at the repository root is the current version. The archive-symbols folders contain the original build-specific dSYMs and archive metadata, not installable apps.

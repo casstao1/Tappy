@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!--
+	    Tappy is distributed as a sandboxed macOS app.
+	    System-wide auditory typing feedback is performed through Input
+	    Monitoring, using a listen-only event tap. The app observes physical
+	    key-code categories for local cues and does not store or transmit
+	    typed text.
+	-->
+</dict>
+</plist>
