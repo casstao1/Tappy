@@ -14,14 +14,41 @@ struct KeyboardTrigger {
     let origin: KeyboardTriggerOrigin
 }
 
+/// Matches the local and global deliveries of the same key-down event by its
+/// original event timestamp, rather than suppressing nearby physical presses.
+struct KeyboardEventDeduplicator {
+    private struct Observation {
+        let keyCode: UInt16
+        let timestamp: UInt64
+        let origin: KeyboardTriggerOrigin
+    }
+
+    private var recent: [Observation] = []
+    private let limit = 64
+
+    mutating func isDuplicate(keyCode: UInt16, timestamp: UInt64, origin: KeyboardTriggerOrigin) -> Bool {
+        // An event without a timestamp cannot be safely identified as a duplicate.
+        guard timestamp != 0 else { return false }
+        if let match = recent.firstIndex(where: {
+            $0.keyCode == keyCode && $0.timestamp == timestamp && $0.origin != origin
+        }) {
+            recent.remove(at: match)
+            return true
+        }
+        recent.append(Observation(keyCode: keyCode, timestamp: timestamp, origin: origin))
+        if recent.count > limit { recent.removeFirst(recent.count - limit) }
+        return false
+    }
+
+    mutating func clear() { recent.removeAll() }
+}
+
 final class KeyboardMonitor {
     enum CaptureState: Equatable {
         case stopped
         case ready
         case unavailable
     }
-
-    private let duplicateTriggerSuppressionWindow: TimeInterval = 0.08
 
     private var localKeyMonitor: Any?
     private var localFlagsMonitor: Any?
@@ -33,8 +60,7 @@ final class KeyboardMonitor {
 
     private var handler: ((KeyboardTrigger) -> Void)?
     private var pressedKeyCodes = Set<UInt16>()
-    private var lastEmittedTrigger: KeyboardTrigger?
-    private var lastEmittedAt: TimeInterval = 0
+    private var eventDeduplicator = KeyboardEventDeduplicator()
     private var wasSecureEventInputEnabled = false
 
     private(set) var isMonitoring = false
@@ -127,7 +153,8 @@ final class KeyboardMonitor {
 
     private func processKeyDown(_ event: NSEvent) -> Bool {
         if !event.isARepeat {
-            handleKeyDown(keyCode: event.keyCode, origin: .localApp)
+            let timestamp = event.cgEvent?.timestamp ?? UInt64(max(0, event.timestamp) * 1_000_000_000)
+            handleKeyDown(keyCode: event.keyCode, origin: .localApp, timestamp: timestamp)
         }
 
         return shouldConsumeLocalKeyDown(event)
@@ -155,9 +182,7 @@ final class KeyboardMonitor {
             let monitor = Unmanaged<KeyboardMonitor>.fromOpaque(userInfo).takeUnretainedValue()
 
             if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-                DispatchQueue.main.async {
-                    monitor.handleEventTapDisabled(type: type)
-                }
+                monitor.handleEventTapDisabled(type: type)
 
                 if let tap = monitor.eventTap {
                     CGEvent.tapEnable(tap: tap, enable: true)
@@ -165,29 +190,24 @@ final class KeyboardMonitor {
                 return Unmanaged.passUnretained(event)
             }
 
-            // Extract only key-code level data on the tap thread. Tappy never
-            // reads characters or text from the event stream.
+            // This tap's run-loop source is attached only to the main run loop.
+            // Deliver immediately there, using key-code data without reading text.
             switch type {
             case .keyDown:
                 let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
                 let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+                let timestamp = event.timestamp
                 guard !isRepeat else { break }
-                DispatchQueue.main.async {
-                    monitor.handleGlobalKeyDown(keyCode: keyCode)
-                }
+                monitor.handleGlobalKeyDown(keyCode: keyCode, timestamp: timestamp)
 
             case .keyUp:
                 let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-                DispatchQueue.main.async {
-                    monitor.handleGlobalKeyUp(keyCode: keyCode)
-                }
+                monitor.handleGlobalKeyUp(keyCode: keyCode)
 
             case .flagsChanged:
                 let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
                 let rawFlags = event.flags.rawValue
-                DispatchQueue.main.async {
-                    monitor.handleGlobalFlagsChanged(keyCode: keyCode, rawFlags: rawFlags)
-                }
+                monitor.handleGlobalFlagsChanged(keyCode: keyCode, rawFlags: rawFlags)
 
             default:
                 break
@@ -238,8 +258,8 @@ final class KeyboardMonitor {
         eventTap = nil
     }
 
-    private func handleGlobalKeyDown(keyCode: UInt16) {
-        handleKeyDown(keyCode: keyCode, origin: .globalBackground)
+    private func handleGlobalKeyDown(keyCode: UInt16, timestamp: UInt64) {
+        handleKeyDown(keyCode: keyCode, origin: .globalBackground, timestamp: timestamp)
     }
 
     private func handleGlobalKeyUp(keyCode: UInt16) {
@@ -251,12 +271,13 @@ final class KeyboardMonitor {
         handleModifierFlagsChanged(keyCode: keyCode, modifierFlags: flags, origin: .globalBackground)
     }
 
-    private func handleKeyDown(keyCode: UInt16, origin: KeyboardTriggerOrigin) {
+    private func handleKeyDown(keyCode: UInt16, origin: KeyboardTriggerOrigin, timestamp: UInt64) {
         guard !synchronizeSecureEventInputState() else { return }
 
         // Normal keyDown events are already de-duped by the autorepeat flag.
         // Do not keep them in pressedKeyCodes: password fields can suppress
         // keyUp events, leaving stale standard keys that silence later typing.
+        guard !eventDeduplicator.isDuplicate(keyCode: keyCode, timestamp: timestamp, origin: origin) else { return }
         emit(triggerForKeyCode(keyCode, origin: origin))
     }
 
@@ -283,22 +304,10 @@ final class KeyboardMonitor {
 
     private func clearPressedKeys() {
         pressedKeyCodes.removeAll()
-        lastEmittedTrigger = nil
-        lastEmittedAt = 0
+        eventDeduplicator.clear()
     }
 
     private func emit(_ trigger: KeyboardTrigger) {
-        let now = ProcessInfo.processInfo.systemUptime
-
-        if let lastEmittedTrigger,
-           trigger.keyCode == lastEmittedTrigger.keyCode,
-           trigger.category == lastEmittedTrigger.category,
-           now - lastEmittedAt < duplicateTriggerSuppressionWindow {
-            return
-        }
-
-        lastEmittedTrigger = trigger
-        lastEmittedAt = now
         handler?(trigger)
     }
 

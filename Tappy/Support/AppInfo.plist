@@ -47,6 +47,10 @@
 	<true/>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>TappyAnalyticsHost</key>
+	<string>$(TAPPY_ANALYTICS_HOST)</string>
+	<key>TappyAnalyticsKey</key>
+	<string>$(TAPPY_ANALYTICS_KEY)</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>NSSupportsSuddenTermination</key>

@@ -7,7 +7,6 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            #if TAPPY_DIRECT
             // Shown while a premium preview is active
             if let preview = controller.previewPack {
                 previewBar(pack: preview)
@@ -19,13 +18,9 @@ struct MenuBarView: View {
                 ctaBar(pack: cta)
                 Divider()
             }
-            #endif
 
             header
             Divider()
-            #if TAPPY_DIRECT
-            // The direct-download build alone shows Stripe/license status here. The paid
-            // App Store edition includes every sound and never enters this code path.
             if let storeStatus = controller.premiumStoreStatusText {
                 storeStatusBar(storeStatus)
                 Divider()
@@ -34,13 +29,16 @@ struct MenuBarView: View {
                 premiumPurchaseBar
                 Divider()
             }
-            #endif
             if controller.setupPhase != .complete {
                 setupBar
                 Divider()
             }
             if let issue = controller.inputMonitoringIssue {
                 statusBar(issue)
+                Divider()
+            }
+            if let sampleError = controller.sampleErrorMessage {
+                statusBar(sampleError)
                 Divider()
             }
             packList
@@ -92,7 +90,6 @@ struct MenuBarView: View {
         }
     }
 
-    #if TAPPY_DIRECT
     private func storeStatusBar(_ message: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             ProgressView()
@@ -111,7 +108,6 @@ struct MenuBarView: View {
         .padding(.vertical, 8)
         .background(Color.accentColor.opacity(0.04))
     }
-    #endif
 
     /// Error bar shown only when system-wide input monitoring isn't working.
     private func statusBar(_ message: String) -> some View {
@@ -132,8 +128,6 @@ struct MenuBarView: View {
         .background(Color.orange.opacity(0.06))
     }
 
-    #if TAPPY_DIRECT
-    // Direct-download (Stripe) build only.
     private var premiumPurchaseBar: some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -147,7 +141,7 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Buy once with Stripe, then return to Tappy from the checkout page to unlock automatically.")
+            Text("Unlock every sound pack with a one-time App Store purchase.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(nil)
@@ -156,38 +150,26 @@ struct MenuBarView: View {
             Button {
                 controller.buyPremium()
             } label: {
-                Label("Buy \(controller.premiumUnlockPrice)", systemImage: "cart.fill")
+                Label(controller.premiumUnlockPrice.isEmpty ? "Buy All Packs" : "Buy \(controller.premiumUnlockPrice)", systemImage: "cart.fill")
                     .frame(maxWidth: .infinity)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
-            .disabled(controller.isPremiumStoreBusy)
+            .disabled(!controller.canRequestPremiumPurchase)
 
-            HStack(spacing: 7) {
-                TextField("Fallback license key", text: $controller.directLicenseKeyEntry)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
-                    .frame(minWidth: 0)
-
-                Button {
-                    Task { await controller.activateDirectLicense() }
-                } label: {
-                    Label("Activate", systemImage: "key.fill")
-                }
-                .labelStyle(.iconOnly)
-                .help("Activate license")
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(!controller.canActivateDirectLicense)
+            Button("Restore Purchases") {
+                controller.restorePurchases()
             }
+            .buttonStyle(.plain)
+            .font(.caption)
+            .disabled(controller.isPremiumStoreBusy)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(Color.accentColor.opacity(0.04))
     }
-    #endif
 
     // MARK: - Setup bar
 
@@ -234,7 +216,6 @@ struct MenuBarView: View {
 
     // MARK: - Live preview bar
 
-    #if TAPPY_DIRECT
     @ViewBuilder
     private func previewBar(pack: TechPack) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -261,14 +242,14 @@ struct MenuBarView: View {
                 Spacer(minLength: 0)
 
                 if controller.shouldShowPremiumPurchaseUI {
-                    Button("Buy \(controller.premiumUnlockPrice)") {
+                    Button(controller.premiumUnlockPrice.isEmpty ? "Buy All Packs" : "Buy \(controller.premiumUnlockPrice)") {
                         controller.buyPremium()
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.mini)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
-                    .disabled(controller.isPremiumStoreBusy)
+                    .disabled(!controller.canRequestPremiumPurchase)
                 }
             }
         }
@@ -276,11 +257,9 @@ struct MenuBarView: View {
         .padding(.vertical, 10)
         .background(Color.accentColor.opacity(0.05))
     }
-    #endif
 
     // MARK: - Post-preview CTA bar
 
-    #if TAPPY_DIRECT
     @ViewBuilder
     private func ctaBar(pack: TechPack) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -296,14 +275,14 @@ struct MenuBarView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 8) {
-                Button("Buy \(controller.premiumUnlockPrice)") {
+                Button(controller.premiumUnlockPrice.isEmpty ? "Buy All Packs" : "Buy \(controller.premiumUnlockPrice)") {
                     controller.buyPremium()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
                 .lineLimit(1)
                 .minimumScaleFactor(0.9)
-                .disabled(controller.isPremiumStoreBusy)
+                .disabled(!controller.canRequestPremiumPurchase)
 
                 Button("Not Now") {
                     controller.dismissUpgradeCTA()
@@ -318,18 +297,20 @@ struct MenuBarView: View {
         .padding(.vertical, 10)
         .background(Color.accentColor.opacity(0.05))
     }
-    #endif
 
     // MARK: - Pack list
 
     private var packList: some View {
-        VStack(spacing: 0) {
-            ForEach(controller.availablePacks) { pack in
-                PackRow(pack: pack)
-                    .environmentObject(controller)
+        ScrollView(.vertical) {
+            VStack(spacing: 0) {
+                ForEach(controller.availablePacks) { pack in
+                    PackRow(pack: pack)
+                        .environmentObject(controller)
+                }
             }
+            .padding(.vertical, 4)
         }
-        .padding(.vertical, 4)
+        .frame(maxHeight: 360)
     }
 
     // MARK: - Volume
@@ -382,6 +363,14 @@ struct MenuBarView: View {
 
             Spacer()
 
+            Button("Privacy") {
+                controller.showAnalyticsPrivacy()
+            }
+            .buttonStyle(.plain)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.trailing, 12)
+
             Button {
                 NSApp.terminate(nil)
             } label: {
@@ -409,32 +398,40 @@ private struct PackRow: View {
     private var isTrying: Bool { controller.previewPack?.id == pack.id }
     private var isHighlighted: Bool { pack.id == controller.highlightedPackID }
 
-    #if TAPPY_DIRECT
     private var lockedPackAlertTitle: String {
-        return controller.hasTrialedPack(pack) ? "\(pack.name) — Preview Used" : "Preview \(pack.name)?"
+        "Preview \(pack.name)?"
     }
-    #endif
 
     private var iconColor: Color {
         switch pack.id {
         case TechPack.plasticTapping.id:  return Color(red: 0.48, green: 0.72, blue: 1.00)
         case TechPack.farming.id:         return Color(red: 0.38, green: 0.82, blue: 0.46)
+        case TechPack.swordBattle.id:     return Color(red: 1.00, green: 0.45, blue: 0.32)
         case TechPack.bubble.id:          return Color(red: 0.38, green: 0.88, blue: 0.88)
         case TechPack.stars.id:           return Color(red: 1.00, green: 0.82, blue: 0.30)
         case TechPack.woodBrush.id:       return Color(red: 0.85, green: 0.62, blue: 0.38)
         case TechPack.analogStopwatch.id: return Color(red: 0.72, green: 0.78, blue: 0.90)
         case TechPack.squishyPop.id:       return Color(red: 0.70, green: 0.52, blue: 1.00)
         case TechPack.waxCracking.id:      return Color(red: 0.96, green: 0.42, blue: 0.58)
+        case TechPack.fart.id:             return Color(red: 0.65, green: 0.76, blue: 0.35)
+        case TechPack.paperCrinkle.id:     return Color(red: 0.82, green: 0.73, blue: 0.58)
+        case TechPack.plasticCrinkle.id:   return Color(red: 0.46, green: 0.76, blue: 0.85)
+        case TechPack.wetMouth.id:         return Color(red: 0.86, green: 0.51, blue: 0.65)
+        case TechPack.suckingWaterThroughATube.id: return Color(red: 0.43, green: 0.72, blue: 0.88)
+        case TechPack.hairBrushing.id: return Color(red: 0.77, green: 0.61, blue: 0.82)
+        case TechPack.splashingWater.id: return Color(red: 0.31, green: 0.70, blue: 0.86)
+        case TechPack.gentleWaterSwishing.id: return Color(red: 0.39, green: 0.76, blue: 0.79)
+        case TechPack.scissorsCutting.id: return Color(red: 0.67, green: 0.72, blue: 0.79)
+        case TechPack.catMeows.id: return Color(red: 0.90, green: 0.64, blue: 0.45)
+        case TechPack.dogBarks.id: return Color(red: 0.76, green: 0.63, blue: 0.45)
+        case TechPack.running.id: return Color(red: 0.50, green: 0.73, blue: 0.52)
+        case TechPack.thud.id: return Color(red: 0.68, green: 0.50, blue: 0.40)
         default:                          return .accentColor
         }
     }
 
     var body: some View {
-        #if TAPPY_DIRECT
-        directPackRow
-        #else
-        packRowContent
-        #endif
+        lockedPackRow
     }
 
     private var packRowContent: some View {
@@ -443,7 +440,7 @@ private struct PackRow: View {
                 RoundedRectangle(cornerRadius: 7)
                     .fill(iconColor.opacity(isActive || isTrying ? 0.20 : 0.10))
                     .frame(width: 30, height: 30)
-                Image(systemName: pack.symbolName)
+                Image(systemName: NSImage(systemSymbolName: pack.symbolName, accessibilityDescription: nil) == nil ? "water.waves" : pack.symbolName)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(iconColor.opacity(isActive || isTrying ? 1.0 : 0.8))
 
@@ -479,6 +476,19 @@ private struct PackRow: View {
 
             Spacer()
 
+            if isLocked && !isTrying {
+                Button {
+                    controller.highlightPack(pack)
+                    controller.playPremiumDemo()
+                } label: {
+                    Label("Play", systemImage: "play.fill")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+                .help("Play a sample of \(pack.name)")
+            }
+
             if isActive && !isTrying {
                 Image(systemName: "checkmark")
                     .font(.system(size: 11, weight: .bold))
@@ -502,39 +512,28 @@ private struct PackRow: View {
         }
     }
 
-    #if TAPPY_DIRECT
-    private var directPackRow: some View {
+    private var lockedPackRow: some View {
         packRowContent
         .alert(
             lockedPackAlertTitle,
             isPresented: $showLockedPackOptions
         ) {
-            if !controller.hasTrialedPack(pack) {
-                Button("Start \(controller.livePreviewLimitText) Preview") {
-                    controller.highlightPack(pack)
-                    controller.startLivePreview(pack)
-                }
+            Button("Play Sample") {
+                controller.highlightPack(pack)
+                controller.playPremiumDemo()
             }
             if controller.shouldShowPremiumPurchaseUI {
-                Button("Buy All Packs — \(controller.premiumUnlockPrice)") {
+                Button(controller.premiumUnlockPrice.isEmpty ? "Buy All Packs" : "Buy All Packs — \(controller.premiumUnlockPrice)") {
                     controller.highlightPack(pack)
                     controller.buyPremium()
                 }
+                .disabled(!controller.canRequestPremiumPurchase)
             }
             Button("Go Back", role: .cancel) {}
         } message: {
-            if controller.hasTrialedPack(pack) {
-                if controller.shouldShowPremiumPurchaseUI {
-                    Text("You've already previewed \(pack.name). Unlock all premium feedback packs to keep it.")
-                } else {
-                    Text("You've already previewed \(pack.name).")
-                }
-            } else {
-                Text("Hear \(pack.name) for your next \(controller.livePreviewLimitText) burst of typing. Your previous pack restores automatically once the preview ends.")
-            }
+            Text("Play a sample, or unlock all packs to use them while you type.")
         }
     }
-    #endif
 
     private var rowBackgroundColor: Color {
         if isTrying {

@@ -1,0 +1,14 @@
+Source: /tmp/tappy-running-14658.wav
+Exported clips: 8
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=2.415s score=15560.72 peak=28803 duration=120.0ms
+- t=0.225s score=13588.31 peak=25892 duration=120.0ms
+- t=1.875s score=10539.01 peak=19601 duration=158.0ms
+- t=1.155s score=9510.10 peak=24390 duration=183.0ms
+- t=0.680s score=7199.03 peak=21918 duration=240.0ms
+- t=1.615s score=6455.28 peak=17616 duration=240.0ms
+- t=1.370s score=5149.95 peak=10560 duration=228.0ms
+- t=0.930s score=4719.17 peak=9679 duration=240.0ms

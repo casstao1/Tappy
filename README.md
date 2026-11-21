@@ -2,15 +2,9 @@
 
 `Tappy` is a sandboxed macOS Swift app that provides low-latency auditory typing feedback from bundled and user-provided audio cues.
 
-## Download Site
+## Mac App Store
 
-This repo includes a Vercel-ready website in [docs](/Users/castao/Desktop/Tappy/docs). The site downloads the latest notarized macOS DMG from GitHub Releases:
-
-`https://github.com/casstao1/Tappy/releases/latest/download/Tappy.dmg`
-
-See [docs/VERCEL_RELEASES_SETUP.md](/Users/castao/Desktop/Tappy/docs/VERCEL_RELEASES_SETUP.md) for the Vercel + local Developer ID notarization setup. Apple signing secrets stay on your Mac and are not stored in GitHub.
-
-The direct-release build sells the premium ASMR pack unlock through Stripe Checkout. See [docs/STRIPE_CHECKOUT_SETUP.md](/Users/castao/Desktop/Tappy/docs/STRIPE_CHECKOUT_SETUP.md) for the Stripe product, Vercel environment variables, and license-key flow.
+The current app is the [Mac App Store edition](https://apps.apple.com/us/app/tappy-asmr-keyboard-sounds/id6763399930?mt=12). The website source is in `docs/`. Older direct-download customers may still need the historical Stripe license backend and support documentation; those files are retained for their existing purchases, not for new releases.
 
 ## Repo Scope
 
@@ -29,15 +23,7 @@ Open [Tappy.xcodeproj](/Users/castao/Desktop/KeyboardSoundApp/Tappy.xcodeproj) i
 
 ## App Store Metadata
 
-Planned App Store name:
-
-- `Tappy`
-
-Planned App Store subtitle:
-
-- `Auditory typing feedback`
-
-The subtitle is set in App Store Connect, not in the Xcode project.
+The English (US) listing copy is in [Tappy-App-Store-Metadata.md](Tappy-App-Store-Metadata.md). App Store listing fields are managed in App Store Connect, not in the Xcode project.
 
 ## Where To Put Your Feedback Cues
 

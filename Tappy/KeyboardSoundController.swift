@@ -5,6 +5,68 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
+
+/// Optional usage events contain only predefined app actions and bundled pack IDs.
+@MainActor
+final class TappyTelemetry {
+    private let defaults: UserDefaults
+    private let enabledKey = "Tappy.analyticsEnabled"
+    private let idKey = "Tappy.analyticsInstallID"
+    private let sessionConfiguration: URLSessionConfiguration
+    private let configurationOverride: (URL, String)?
+    private var session: URLSession
+
+    init(defaults: UserDefaults, configurationOverride: (URL, String)? = nil,
+         sessionConfiguration: URLSessionConfiguration = .ephemeral) {
+        self.defaults = defaults
+        self.configurationOverride = configurationOverride
+        self.sessionConfiguration = sessionConfiguration
+        self.session = URLSession(configuration: sessionConfiguration)
+    }
+
+    private var configuration: (URL, String)? {
+        if let configurationOverride { return configurationOverride }
+        guard let host = Bundle.main.object(forInfoDictionaryKey: "TappyAnalyticsHost") as? String,
+              let key = Bundle.main.object(forInfoDictionaryKey: "TappyAnalyticsKey") as? String,
+              !key.isEmpty, !key.contains("$("),
+              let url = URL(string: host), url.scheme == "https", url.host != nil,
+              !host.contains("$(") else { return nil }
+        return (url.appendingPathComponent("capture/"), key)
+    }
+
+    var available: Bool { configuration != nil }
+    var enabled: Bool { defaults.bool(forKey: enabledKey) && available }
+
+    func setEnabled(_ enabled: Bool) {
+        guard !enabled || available else { return }
+        defaults.set(enabled, forKey: enabledKey)
+        if enabled {
+            defaults.set(UUID().uuidString, forKey: idKey)
+        } else {
+            session.invalidateAndCancel()
+            session = URLSession(configuration: sessionConfiguration)
+            defaults.removeObject(forKey: idKey)
+        }
+    }
+
+    func record(_ event: String, pack: String? = nil, properties: [String: String] = [:]) {
+        guard enabled, let (url, key) = configuration,
+              let id = defaults.string(forKey: idKey) else { return }
+        var values: [String: Any] = [
+            "distinct_id": id, "$process_person_profile": false, "$geoip_disable": true,
+            "distribution": "app_store", "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        ]
+        if let pack, TechPack.all.contains(where: { $0.id == pack }) { values["pack_id"] = pack }
+        for (key, value) in properties { values[key] = value }
+        let body: [String: Any] = ["api_key": key, "event": event, "properties": values]
+        guard let data = try? JSONSerialization.data(withJSONObject: body) else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = data
+        session.dataTask(with: request).resume()
+    }
+}
 // MARK: - Setup Phase
 
 /// Describes where the user is in the Input Monitoring setup flow for
@@ -38,7 +100,7 @@ final class KeyboardSoundController: ObservableObject {
     private static let currentWelcomeVersion = 1
 
     private static var debugSelectedPackID: String? {
-        #if DEBUG && !TAPPY_DIRECT
+        #if DEBUG
         ProcessInfo.processInfo.environment["TAPPY_DEBUG_PACK_ID"]
         #else
         nil
@@ -56,9 +118,6 @@ final class KeyboardSoundController: ObservableObject {
     @Published var highlightedPackID = TechPack.plasticTapping.id
     @Published private(set) var backgroundCaptureState: KeyboardMonitor.CaptureState = .stopped
     @Published private(set) var premiumUnlocked = false
-    #if TAPPY_DIRECT
-    @Published var directLicenseKeyEntry = ""
-    #endif
     @Published private(set) var trialedPackIDs: Set<String> = []
     @Published private(set) var setupPhase: SetupPhase
     @Published var clickVolume: Double {
@@ -76,13 +135,80 @@ final class KeyboardSoundController: ObservableObject {
 
     @Published private(set) var statusMessage = "Preparing audio engine..."
     @Published private(set) var errorMessage: String?
+    @Published private(set) var sampleErrorMessage: String?
     @Published private(set) var lastReloadedAt: Date?
 
     let permissionManager = InputMonitoringPermissionManager()
     let soundLibrary = SoundLibrary()
-    #if TAPPY_DIRECT
-    let directLicenseStore: DirectLicenseStore
+    let purchaseStore: AppStorePurchaseStore
+    @Published private(set) var isStoreRefreshInFlight = false
+    @Published private(set) var isStoreActionPending = false
+    private let telemetry: TappyTelemetry
+    #if DEBUG
+    static var debugTelemetryFactory: ((UserDefaults) -> TappyTelemetry)?
+    static var debugPurchaseStoreFactory: (() -> AppStorePurchaseStore)?
+    static var debugSkipStoreRefresh = false
     #endif
+    @Published private(set) var analyticsEnabled = false
+    var analyticsAvailable: Bool { telemetry.available }
+    private let analyticsConsentPromptSeenKey = "Tappy.analyticsConsentPromptSeen"
+    private var isShowingAnalyticsPrivacy = false
+
+    func setAnalyticsEnabled(_ enabled: Bool) {
+        telemetry.setEnabled(enabled)
+        analyticsEnabled = telemetry.enabled
+        if analyticsEnabled {
+            telemetry.record("analytics_enabled", pack: currentPack.id, properties: ["setup": setupPhase.analyticsValue])
+        }
+    }
+
+    /// Asks only when the user has not already made an analytics choice.
+    @discardableResult
+    func presentAnalyticsConsentIfNeeded() -> Bool {
+        guard analyticsAvailable, !isShowingAnalyticsPrivacy,
+              !userDefaults.bool(forKey: analyticsConsentPromptSeenKey) else { return false }
+        // Preserve choices made by users of earlier builds with the checkbox.
+        if userDefaults.object(forKey: "Tappy.analyticsEnabled") != nil {
+            userDefaults.set(true, forKey: analyticsConsentPromptSeenKey)
+            return false
+        }
+        showAnalyticsPrivacy()
+        return true
+    }
+
+    /// The menu entry lets the user change or withdraw consent at any time.
+    func showAnalyticsPrivacy() {
+        let policyURL = URL(string: "https://casstao1.github.io/Tappy/privacy.html")!
+        guard analyticsAvailable else {
+            NSWorkspace.shared.open(policyURL)
+            return
+        }
+        guard !isShowingAnalyticsPrivacy else { return }
+        isShowingAnalyticsPrivacy = true
+        defer { isShowingAnalyticsPrivacy = false }
+
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = analyticsEnabled ? "Usage data sharing is on" : "Share optional usage data?"
+        alert.informativeText = "Tappy can send sound choices, previews, and purchase steps to PostHog with a random installation ID to help improve the app. It never sends typed text or individual keystrokes. You can change your choice anytime under Privacy in Tappy."
+        alert.addButton(withTitle: analyticsEnabled ? "Stop Sharing" : "Share Usage Data")
+        alert.addButton(withTitle: analyticsEnabled ? "Keep Sharing" : "Don't Share")
+        alert.addButton(withTitle: "Privacy Policy")
+        // Returning or closing the window must not opt the user in.
+        alert.buttons[0].keyEquivalent = ""
+        alert.buttons[1].keyEquivalent = "\r"
+        let result = alert.runModal()
+        if result == .alertThirdButtonReturn {
+            NSWorkspace.shared.open(policyURL)
+            return
+        }
+        if result == .alertFirstButtonReturn {
+            setAnalyticsEnabled(!analyticsEnabled)
+        } else if result == .alertSecondButtonReturn && !analyticsEnabled {
+            setAnalyticsEnabled(false)
+        }
+        userDefaults.set(true, forKey: analyticsConsentPromptSeenKey)
+    }
 
     private let keyboardMonitor = KeyboardMonitor()
     private let audioEngine = LowLatencyAudioEngine()
@@ -90,16 +216,20 @@ final class KeyboardSoundController: ObservableObject {
     private let fileManager = FileManager.default
     private var cancellables = Set<AnyCancellable>()
     private var appURLHandler: TappyAppURLHandler?
+    private var sampleRequestID = UUID()
+    private var sampleLoadTask: Task<Void, Never>?
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        #if TAPPY_DIRECT
-        directLicenseStore = DirectLicenseStore(userDefaults: userDefaults)
-        premiumUnlocked = directLicenseStore.hasUnlockedPremium
+        #if DEBUG
+        purchaseStore = Self.debugPurchaseStoreFactory?() ?? AppStorePurchaseStore()
+        telemetry = Self.debugTelemetryFactory?(userDefaults) ?? TappyTelemetry(defaults: userDefaults)
         #else
-        // The Mac App Store edition is paid up front, so every bundled sound is included.
-        premiumUnlocked = true
+        purchaseStore = AppStorePurchaseStore()
+        telemetry = TappyTelemetry(defaults: userDefaults)
         #endif
+        analyticsEnabled = telemetry.enabled
+        premiumUnlocked = purchaseStore.hasUnlockedPremium
         trialedPackIDs = Set(userDefaults.stringArray(forKey: DefaultsKey.trialedPackIDs) ?? [])
         if userDefaults.object(forKey: DefaultsKey.clickVolume) == nil {
             clickVolume = 1.0
@@ -122,23 +252,19 @@ final class KeyboardSoundController: ObservableObject {
             persistSelectedPack(TechPack.plasticTapping)
         }
 
-        #if TAPPY_DIRECT
-        directLicenseStore.objectWillChange
+        purchaseStore.objectWillChange
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
-
-        directLicenseStore.onUnlockStateChange = { [weak self] _ in
-            self?.reconcilePremiumUnlockState()
-        }
-
-        if directLicenseStore.hasSavedLicense {
-            Task {
-                await directLicenseStore.validateSavedLicense()
-                reconcilePremiumUnlockState()
-            }
-        }
+        purchaseStore.$hasUnlockedPremium.dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.reconcilePremiumUnlockState() }
+            .store(in: &cancellables)
+        #if DEBUG
+        if !Self.debugSkipStoreRefresh { refreshStore() }
+        #else
+        refreshStore()
         #endif
 
         permissionManager.onStatusChange = { [weak self] _ in
@@ -168,6 +294,7 @@ final class KeyboardSoundController: ObservableObject {
         setupMenuBarItem()
         appURLHandler = TappyAppURLHandler(controller: self)
         presentWelcomeIfNeeded()
+        telemetry.record("app_launched", pack: currentPack.id, properties: ["setup": setupPhase.analyticsValue, "unlocked": premiumUnlocked ? "yes" : "no"])
     }
 
     deinit {
@@ -234,6 +361,7 @@ final class KeyboardSoundController: ObservableObject {
         guard let button = menuStatusItem?.button else { return }
         guard let popover = menuPopover else { return }
 
+        refreshStorePrice()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
@@ -356,54 +484,49 @@ final class KeyboardSoundController: ObservableObject {
         premiumUnlocked
     }
 
-    #if TAPPY_DIRECT
     var premiumUnlockPrice: String {
-        DirectPurchaseConfig.displayPrice
+        isPremiumStoreLoading ? "" : (purchaseStore.displayPrice ?? "")
     }
 
     var premiumStoreMessage: String? {
-        directLicenseStore.lastMessage
+        purchaseStore.statusMessage
     }
 
     var premiumStoreStatusText: String? {
-        if directLicenseStore.isActivating {
-            return "Activating Tappy license..."
-        }
-
-        if directLicenseStore.isValidating {
-            return "Checking Tappy license..."
-        }
-
-        return directLicenseStore.lastMessage
+        if purchaseStore.isPurchasing { return "Completing App Store purchase..." }
+        if purchaseStore.isRestoring { return "Restoring purchases..." }
+        if isStoreRefreshInFlight || purchaseStore.isLoading { return "Loading App Store purchase..." }
+        return purchaseStore.statusMessage
     }
 
     var isPremiumStoreLoading: Bool {
-        directLicenseStore.isValidating
+        isStoreRefreshInFlight || purchaseStore.isLoading
     }
 
     var isPremiumPurchaseInFlight: Bool {
-        false
+        purchaseStore.isPurchasing
     }
 
     var isPremiumStoreBusy: Bool {
-        directLicenseStore.isBusy
+        isStoreRefreshInFlight || isStoreActionPending || purchaseStore.isLoading || purchaseStore.isPurchasing || purchaseStore.isRestoring
     }
+
+    var isPremiumPurchaseAvailable: Bool {
+        purchaseStore.displayPrice != nil && !isPremiumStoreBusy
+    }
+
+    /// A Buy click can also retry loading the App Store product if no price is available.
+    var canRequestPremiumPurchase: Bool { !isPremiumStoreBusy }
 
     var shouldShowPremiumPurchaseUI: Bool {
         !premiumUnlocked
     }
 
-    var canActivateDirectLicense: Bool {
-        !directLicenseKeyEntry.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !isPremiumStoreBusy
-    }
-    #endif
-
     // MARK: - Public actions
 
     func reloadSounds() {
         do {
-            try soundLibrary.reload(using: audioEngine)
+            try soundLibrary.reload(using: audioEngine, packID: currentPack.id)
             lastReloadedAt = Date()
             errorMessage = nil
             statusMessage = soundLibrary.totalSoundCount > 0 ? monitoringSummary() : soundLibrary.lastLoadMessage
@@ -488,6 +611,7 @@ final class KeyboardSoundController: ObservableObject {
 
     func highlightPack(_ pack: TechPack) {
         highlightedPackID = pack.id
+        telemetry.record("pack_selected", pack: pack.id, properties: ["locked": isPackLocked(pack) ? "yes" : "no"])
 
         guard pack.isAvailable else {
             statusMessage = "\(pack.name) is not installed yet."
@@ -522,6 +646,11 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func playPremiumDemo() {
+        sampleLoadTask?.cancel()
+        let requestID = UUID()
+        sampleRequestID = requestID
+        audioEngine.stopSample()
+        sampleErrorMessage = nil
         let pack = highlightedPack
         guard isPackLocked(pack) else {
             preview(category: .standard)
@@ -529,32 +658,93 @@ final class KeyboardSoundController: ObservableObject {
         }
 
         do {
-            try soundLibrary.previewBundledDemo(packID: pack.id, using: audioEngine)
-            statusMessage = "Playing \(pack.name) demo."
+            let demoURL = try soundLibrary.bundledDemoURL(packID: pack.id)
+            let engine = audioEngine
+            sampleLoadTask = Task { [weak self] in
+                let result = await Task.detached(priority: .userInitiated) {
+                    Result { try engine.makeBuffer(from: demoURL) }
+                }.value
+                guard let self, !Task.isCancelled, self.sampleRequestID == requestID else { return }
+                switch result {
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                    self.sampleErrorMessage = "The sample for \(pack.name) could not be played."
+                case .success(let buffer):
+                    engine.playSample(buffer: buffer) { [weak self] result in
+                        guard let self, self.sampleRequestID == requestID else { return }
+                        switch result {
+                        case .success:
+                            self.telemetry.record("demo_played", pack: pack.id)
+                            self.statusMessage = "Playing \(pack.name) demo."
+                        case .failure(let error):
+                            self.errorMessage = error.localizedDescription
+                            self.sampleErrorMessage = "The sample for \(pack.name) could not be played."
+                        }
+                    }
+                }
+            }
         } catch {
             errorMessage = error.localizedDescription
+            sampleErrorMessage = "The sample for \(pack.name) could not be played."
         }
     }
 
-    #if TAPPY_DIRECT
     func buyPremium() {
+        guard canRequestPremiumPurchase else { return }
+        // Do not start a transaction until the real, localized price is visible.
+        // If StoreKit failed to load, let Buy retry instead of leaving a dead button.
+        guard purchaseStore.displayPrice != nil else {
+            refreshStore()
+            return
+        }
         cancelPendingCTA()
-        NSWorkspace.shared.open(DirectPurchaseConfig.purchaseURL)
-        statusMessage = "Opening secure Stripe checkout. Return here after payment to finish unlocking."
+        telemetry.record("purchase_requested", pack: ctaPack?.id ?? highlightedPackID)
+        isStoreActionPending = true
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.isStoreActionPending = false }
+            let unlocked = await self.purchaseStore.purchase()
+            self.telemetry.record("purchase_finished", properties: [
+                "access": unlocked ? "unlocked" : "not_unlocked",
+                "result": self.purchaseStore.lastPurchaseOutcome.rawValue
+            ])
+            self.reconcilePremiumUnlockState()
+        }
     }
 
-    func activateDirectLicense() async {
-        cancelPendingCTA()
-        await directLicenseStore.activate(licenseKey: directLicenseKeyEntry)
-        finishDirectLicenseActivation()
+    func restorePurchases() {
+        guard !isPremiumStoreBusy else { return }
+        telemetry.record("restore_requested")
+        isStoreActionPending = true
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.isStoreActionPending = false }
+            let unlocked = await self.purchaseStore.restore()
+            self.telemetry.record("restore_finished", properties: ["access": unlocked ? "unlocked" : "not_unlocked"])
+            self.reconcilePremiumUnlockState()
+        }
     }
 
-    func validateDirectLicense() async {
-        await directLicenseStore.validateSavedLicense()
-        reconcilePremiumUnlockState()
-        statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
+    func refreshStore() {
+        guard !isPremiumStoreBusy else { return }
+        isStoreRefreshInFlight = true
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.isStoreRefreshInFlight = false }
+            await self.purchaseStore.refresh()
+            self.reconcilePremiumUnlockState()
+        }
     }
-    #endif
+
+    func refreshStorePrice() {
+        guard !hasPremiumAccess, !isPremiumStoreBusy else { return }
+        isStoreRefreshInFlight = true
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.isStoreRefreshInFlight = false }
+            await self.purchaseStore.refreshPrice()
+        }
+    }
 
     func handleIncomingURL(_ url: URL) {
         guard url.scheme?.lowercased() == "tappy" else { return }
@@ -562,10 +752,6 @@ final class KeyboardSoundController: ObservableObject {
         let action = (url.host ?? url.pathComponents.dropFirst().first ?? "").lowercased()
 
         switch action {
-        #if TAPPY_DIRECT
-        case "checkout-complete", "activate-license", "unlock":
-            handleDirectCheckoutURL(url)
-        #endif
         case "open", "menu":
             showMenuPopover()
         default:
@@ -573,46 +759,6 @@ final class KeyboardSoundController: ObservableObject {
             showMenuPopover()
         }
     }
-
-    #if TAPPY_DIRECT
-    /// Handles the `tappy://` callback opened after a Stripe checkout completes
-    /// (direct-download build only).
-    private func handleDirectCheckoutURL(_ url: URL) {
-        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        let queryItems = components?.queryItems ?? []
-
-        func queryValue(_ names: String...) -> String? {
-            for name in names {
-                if let value = queryItems.first(where: { $0.name == name })?.value,
-                   !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    return value
-                }
-            }
-            return nil
-        }
-
-        cancelPendingCTA()
-        showMenuPopover()
-
-        if let sessionID = queryValue("session_id", "checkout_session_id", "session") {
-            statusMessage = "Finishing Stripe checkout and unlocking Tappy..."
-            Task {
-                await directLicenseStore.activate(checkoutSessionID: sessionID)
-                finishDirectLicenseActivation()
-                showMenuPopover()
-            }
-        } else if let licenseKey = queryValue("license_key", "license") {
-            directLicenseKeyEntry = licenseKey
-            statusMessage = "Activating Tappy license..."
-            Task {
-                await activateDirectLicense()
-                showMenuPopover()
-            }
-        } else {
-            statusMessage = "Tappy could not read the checkout activation link."
-        }
-    }
-    #endif
 
     func showWelcomeWindow() {
         NSApp.activate(ignoringOtherApps: true)
@@ -725,7 +871,7 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     func preview(category: SoundCategory) {
-        audioEngine.play(category: category, keyCode: nil)
+        audioEngine.playLoadedSample(category: category)
     }
 
     func isPackLocked(_ pack: TechPack) -> Bool {
@@ -733,11 +879,7 @@ final class KeyboardSoundController: ObservableObject {
     }
 
     nonisolated static func isPackLocked(_ pack: TechPack, hasPremiumAccess: Bool) -> Bool {
-        #if TAPPY_DIRECT
         pack.isPremium && !hasPremiumAccess
-        #else
-        false
-        #endif
     }
 
     func hasTrialedPack(_ pack: TechPack) -> Bool {
@@ -760,11 +902,59 @@ final class KeyboardSoundController: ObservableObject {
         "\(Self.livePreviewKeystrokeLimit)-keystroke"
     }
 
+    var livePreviewUnavailableReason: String? {
+        #if DEBUG
+        if let override = debugPreviewAvailabilityOverride {
+            return override ? nil : "Enable typing feedback before starting a preview."
+        }
+        #endif
+        return Self.livePreviewUnavailableReason(isEnabled: isEnabled, setupPhase: setupPhase)
+    }
+
+    nonisolated static func livePreviewUnavailableReason(isEnabled: Bool, setupPhase: SetupPhase) -> String? {
+        guard isEnabled else { return "Turn on Feedback before starting a typing preview." }
+        switch setupPhase {
+        case .needsPermission:
+            return "Enable Input Monitoring before starting a typing preview."
+        case .needsRestart:
+            return "Restart Tappy after enabling Input Monitoring before starting a typing preview."
+        case .complete:
+            return nil
+        }
+    }
+
+    var canStartLivePreview: Bool { livePreviewUnavailableReason == nil }
+
+    #if DEBUG
+    // Tests can simulate an active keyboard monitor without accessing real input.
+    var debugPreviewAvailabilityOverride: Bool?
+    #endif
+
     func startLivePreview(_ pack: TechPack) {
         guard !hasTrialedPack(pack) else { return }
+        guard canStartLivePreview else {
+            sampleErrorMessage = livePreviewUnavailableReason
+            return
+        }
 
+        // Prepare the new sounds before consuming a trial or changing the
+        // current preview. The regular sound library stays available as-is.
+        do {
+            let contents = try soundLibrary.loadBundledPreviewPack(packID: pack.id, using: audioEngine)
+            let longSoundPack = pack.id == TechPack.thud.id || pack.id == TechPack.catMeows.id
+            try audioEngine.setPreviewSounds(contents.sounds, keySounds: contents.keySounds, allowVoiceExpansion: longSoundPack)
+        } catch {
+            errorMessage = error.localizedDescription
+            sampleErrorMessage = "The preview for \(pack.name) could not be loaded. Try again."
+            return
+        }
+        sampleErrorMessage = nil
         cancelPendingCTA()
-        stopRunningPreview()
+        if let previous = previewPack { telemetry.record("preview_cancelled", pack: previous.id) }
+        previewPack = nil
+        previewKeystrokesRemaining = 0
+
+        telemetry.record("preview_started", pack: pack.id)
 
         // Record this preview permanently so it can't be repeated
         trialedPackIDs.insert(pack.id)
@@ -780,7 +970,6 @@ final class KeyboardSoundController: ObservableObject {
 
         // Switch sounds immediately — full quality, no degradation
         currentPack = pack
-        restoreBuiltInPack(packID: pack.id)
         statusMessage = "Previewing \(pack.name) for your next \(Self.livePreviewKeystrokeLimit) keystrokes."
     }
 
@@ -795,19 +984,26 @@ final class KeyboardSoundController: ObservableObject {
         }
     }
 
+    #if DEBUG
+    func debugConsumePreviewKeystroke() {
+        consumePreviewKeystroke()
+    }
+    #endif
+
     private func stopRunningPreview() {
         previewPack = nil
         previewKeystrokesRemaining = 0
+        audioEngine.clearPreviewSounds()
     }
 
     private func endLivePreview() {
         let previewed = previewPack
+        if let previewed { telemetry.record("preview_completed", pack: previewed.id) }
         stopRunningPreview()
         ctaPack = previewed
 
         // Revert to the free pack they were on
         currentPack = lastFreePack
-        restoreBuiltInPack(packID: lastFreePack.id)
         if let previewed {
             statusMessage = "\(previewed.name) preview ended."
         }
@@ -818,12 +1014,14 @@ final class KeyboardSoundController: ObservableObject {
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.ctaPack != nil, self.previewPack == nil, !self.hasPremiumAccess else { return }
             self.showUpgradeCTA = true
+            self.telemetry.record("upgrade_prompt_shown", pack: self.ctaPack?.id)
         }
         pendingCTAWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
     }
 
     func dismissUpgradeCTA() {
+        if showUpgradeCTA { telemetry.record("upgrade_prompt_dismissed", pack: ctaPack?.id) }
         cancelPendingCTA()
         showUpgradeCTA = false
         ctaPack = nil
@@ -831,11 +1029,11 @@ final class KeyboardSoundController: ObservableObject {
 
     /// Cancels any active live preview and reverts to the last free pack.
     func cancelLivePreview() {
-        guard previewPack != nil else { return }
+        guard let previewPack else { return }
+        telemetry.record("preview_cancelled", pack: previewPack.id)
         cancelPendingCTA()
         stopRunningPreview()
         currentPack = lastFreePack
-        restoreBuiltInPack(packID: lastFreePack.id)
         statusMessage = monitoringSummary()
     }
 
@@ -855,14 +1053,17 @@ final class KeyboardSoundController: ObservableObject {
 
     private func handle(trigger: KeyboardTrigger) {
         guard isEnabled else { return }
-        audioEngine.play(category: trigger.category, keyCode: trigger.keyCode)
+        if previewPack != nil {
+            audioEngine.playPreview(category: trigger.category, keyCode: trigger.keyCode)
+        } else {
+            audioEngine.play(category: trigger.category, keyCode: trigger.keyCode)
+        }
         // Each premium keystroke counts against the preview budget.
         consumePreviewKeystroke()
     }
 
-    #if TAPPY_DIRECT
     private func reconcilePremiumUnlockState() {
-        premiumUnlocked = directLicenseStore.hasUnlockedPremium
+        premiumUnlocked = purchaseStore.hasUnlockedPremium
 
         if hasPremiumAccess {
             cancelPendingCTA()
@@ -882,18 +1083,18 @@ final class KeyboardSoundController: ObservableObject {
                 }
             }
 
-            statusMessage = directLicenseStore.lastMessage ?? "Premium ASMR packs unlocked."
+            statusMessage = purchaseStore.statusMessage ?? "Premium ASMR packs unlocked."
             return
         }
 
-        if currentPack.isPremium {
+        if currentPack.isPremium && previewPack == nil {
             currentPack = .plasticTapping
             highlightedPackID = TechPack.plasticTapping.id
             persistSelectedPack(.plasticTapping)
             restoreBuiltInPack(packID: TechPack.plasticTapping.id)
         }
 
-        statusMessage = monitoringSummary()
+        statusMessage = purchaseStore.statusMessage ?? monitoringSummary()
     }
 
     private func selectUnlockedPremiumPack(_ pack: TechPack) {
@@ -903,20 +1104,6 @@ final class KeyboardSoundController: ObservableObject {
         persistSelectedPack(pack)
         restoreBuiltInPack(packID: pack.id)
     }
-
-    private func finishDirectLicenseActivation() {
-        reconcilePremiumUnlockState()
-
-        if directLicenseStore.hasUnlockedPremium {
-            directLicenseKeyEntry = ""
-            if highlightedPack.isPremium {
-                highlightPack(highlightedPack)
-            }
-        }
-
-        statusMessage = directLicenseStore.lastMessage ?? monitoringSummary()
-    }
-    #endif
 
     private var hasSeenCurrentWelcome: Bool {
         let welcomeVersionSeen = userDefaults.integer(forKey: DefaultsKey.welcomeVersionSeen)
@@ -974,17 +1161,19 @@ final class KeyboardSoundController: ObservableObject {
         }
 
         keyboardMonitor.start { [weak self] trigger in
-            DispatchQueue.main.async {
+            MainActor.assumeIsolated {
                 self?.handle(trigger: trigger)
             }
         }
     }
 
     private func reconcileSetupPhase() {
+        let previous = setupPhase
         setupPhase = Self.setupPhase(
             trusted: permissionManager.isTrusted,
             captureState: backgroundCaptureState
         )
+        if setupPhase != previous { telemetry.record("setup_changed", properties: ["setup": setupPhase.analyticsValue]) }
     }
 
     private func persistSelectedPack(_ pack: TechPack) {
@@ -1138,6 +1327,16 @@ private final class TappyAppURLHandler: NSObject {
 
         Task { @MainActor [weak controller] in
             controller?.handleIncomingURL(url)
+        }
+    }
+}
+
+private extension SetupPhase {
+    var analyticsValue: String {
+        switch self {
+        case .needsPermission: return "needs_permission"
+        case .needsRestart: return "needs_restart"
+        case .complete: return "complete"
         }
     }
 }

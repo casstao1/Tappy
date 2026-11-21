@@ -1,0 +1,88 @@
+{
+  "clips": {
+    "paper-crinkle-291786/01_t0000.505_score8723.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.584Z"
+    },
+    "paper-crinkle-291786/02_t0001.090_score7133.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.579Z"
+    },
+    "paper-crinkle-291786/03_t0001.455_score10601.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.589Z"
+    },
+    "paper-crinkle-291786/04_t0001.800_score8814.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.582Z"
+    },
+    "paper-crinkle-291786/05_t0002.170_score3329.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.586Z"
+    },
+    "paper-crinkle-291786/06_t0002.565_score5967.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.581Z"
+    },
+    "paper-crinkle-291786/07_t0003.095_score5634.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.577Z"
+    },
+    "paper-crinkle-291786/08_t0004.060_score3571.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.576Z"
+    },
+    "paper-crinkle-291786/09_t0004.415_score6779.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.593Z"
+    },
+    "paper-crinkle-291786/10_t0004.710_score3588.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.578Z"
+    },
+    "paper-crinkle-291786/11_t0005.005_score3647.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.590Z"
+    },
+    "paper-crinkle-291786/12_t0005.365_score8097.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.588Z"
+    },
+    "paper-crinkle-291786/13_t0006.080_score5282.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.592Z"
+    },
+    "paper-crinkle-291786/14_t0006.500_score6136.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:09:11.591Z"
+    }
+  }
+}

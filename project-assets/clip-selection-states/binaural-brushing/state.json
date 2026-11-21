@@ -1,0 +1,142 @@
+{
+  "clips": {
+    "binaural-brushing-335553/01_t0001.935_score145.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.356Z"
+    },
+    "binaural-brushing-335553/02_t0023.552_score217.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.364Z"
+    },
+    "binaural-brushing-335553/03_t0032.270_score148.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.363Z"
+    },
+    "binaural-brushing-335553/04_t0056.987_score270.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.361Z"
+    },
+    "binaural-brushing-335553/05_t0068.404_score236.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.365Z"
+    },
+    "binaural-brushing-335553/06_t0082.922_score173.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.355Z"
+    },
+    "binaural-brushing-335553/07_t0092.239_score274.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.368Z"
+    },
+    "binaural-brushing-335553/08_t0128.474_score173.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.367Z"
+    },
+    "binaural-brushing-335553/09_t0146.791_score183.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.370Z"
+    },
+    "binaural-brushing-335553/10_t0151.108_score212.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.361Z"
+    },
+    "binaural-brushing-335553/11_t0166.926_score154.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.369Z"
+    },
+    "binaural-brushing-335553/12_t0192.643_score139.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.368Z"
+    },
+    "binaural-brushing-335553/13_t0209.260_score158.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.358Z"
+    },
+    "binaural-brushing-335553/14_t0219.378_score176.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.354Z"
+    },
+    "binaural-brushing-335553/15_t0235.395_score243.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.357Z"
+    },
+    "binaural-brushing-335553/16_t0246.212_score257.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.360Z"
+    },
+    "binaural-brushing-335553/17_t0262.230_score196.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.354Z"
+    },
+    "binaural-brushing-335553/18_t0283.047_score547.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.371Z"
+    },
+    "binaural-brushing-335553/19_t0285.464_score188.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.366Z"
+    },
+    "binaural-brushing-335553/20_t0307.782_score175.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.359Z"
+    },
+    "binaural-brushing-335553/21_t0315.999_score222.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.367Z"
+    },
+    "binaural-brushing-335553/22_t0336.716_score167.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.362Z"
+    },
+    "binaural-brushing-335553/23_t0354.534_score280.wav": {
+      "rating": 0,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-18T23:29:18.371Z"
+    }
+  }
+}

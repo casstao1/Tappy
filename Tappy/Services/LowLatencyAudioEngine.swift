@@ -34,6 +34,7 @@ final class LowLatencyAudioEngine {
     private let voiceReleasePadding: TimeInterval = 0.01
 
     private var players: [AVAudioPlayerNode] = []
+    private let samplePlayer = AVAudioPlayerNode()
     private var voiceNextAvailableAt: [TimeInterval] = []
     private var loadedSounds: [SoundCategory: [LoadedSound]] = [:]
     private var loadedKeySounds: [UInt16: [LoadedSound]] = [:]
@@ -44,10 +45,19 @@ final class LowLatencyAudioEngine {
     private var lastPlayedPreviewIndex: [SoundCategory: Int] = [:]
     private var lastPlayedPreviewKeyIndex: [UInt16: Int] = [:]
     private var nextPlayerIndex = 0
+    private var allowVoiceExpansion = false
+    private var previewAllowsVoiceExpansion = false
     private var isEnabled = true
     private var outputVolume: Float = 1.0
     private var engineConfigurationObserver: NSObjectProtocol?
     private var isRecoveringEngine = false
+
+    #if DEBUG
+    var debugVoiceCount: Int { queue.sync { players.count } }
+    var debugSampleIsPlaying: Bool { queue.sync { samplePlayer.isPlaying } }
+    var debugLoadedSoundCount: Int { queue.sync { loadedSounds.values.reduce(0) { $0 + $1.count } } }
+    var debugPreviewSoundCount: Int { queue.sync { previewSounds.values.reduce(0) { $0 + $1.count } } }
+    #endif
 
     init(concurrentVoices: Int = 8) {
         self.concurrentVoices = concurrentVoices
@@ -117,10 +127,11 @@ final class LowLatencyAudioEngine {
         return durationLimitedBuffer(convertedBuffer, maximumDuration: maximumDuration)
     }
 
-    func setLoadedSounds(_ sounds: [SoundCategory: [LoadedSound]], keySounds: [UInt16: [LoadedSound]]) throws {
+    func setLoadedSounds(_ sounds: [SoundCategory: [LoadedSound]], keySounds: [UInt16: [LoadedSound]], allowVoiceExpansion: Bool = false) throws {
         try queue.sync {
             loadedSounds = sounds
             loadedKeySounds = keySounds
+            self.allowVoiceExpansion = allowVoiceExpansion
             lastPlayedIndex.removeAll()
             lastPlayedKeyIndex.removeAll()
             if isEnabled {
@@ -129,13 +140,14 @@ final class LowLatencyAudioEngine {
         }
     }
 
-    func setPreviewSounds(_ sounds: [SoundCategory: [LoadedSound]], keySounds: [UInt16: [LoadedSound]]) {
-        queue.async { [weak self] in
-            guard let self else { return }
-            self.previewSounds = sounds
-            self.previewKeySounds = keySounds
-            self.lastPlayedPreviewIndex.removeAll()
-            self.lastPlayedPreviewKeyIndex.removeAll()
+    func setPreviewSounds(_ sounds: [SoundCategory: [LoadedSound]], keySounds: [UInt16: [LoadedSound]], allowVoiceExpansion: Bool = false) throws {
+        try queue.sync {
+            if isEnabled { try startEngineIfNeeded() }
+            previewSounds = sounds
+            previewKeySounds = keySounds
+            previewAllowsVoiceExpansion = allowVoiceExpansion
+            lastPlayedPreviewIndex.removeAll()
+            lastPlayedPreviewKeyIndex.removeAll()
         }
     }
 
@@ -144,6 +156,7 @@ final class LowLatencyAudioEngine {
             guard let self else { return }
             self.previewSounds.removeAll()
             self.previewKeySounds.removeAll()
+            self.previewAllowsVoiceExpansion = false
             self.lastPlayedPreviewIndex.removeAll()
             self.lastPlayedPreviewKeyIndex.removeAll()
         }
@@ -175,6 +188,7 @@ final class LowLatencyAudioEngine {
             for player in self.players {
                 player.volume = clampedVolume
             }
+            self.samplePlayer.volume = clampedVolume
         }
     }
 
@@ -215,9 +229,26 @@ final class LowLatencyAudioEngine {
 
             do {
                 try self.startEngineIfNeeded()
-                self.playBuffer(sound.buffer)
+                self.playBuffer(sound.buffer, allowExpansion: self.previewAllowsVoiceExpansion)
             } catch {
                 NSLog("Tappy audio engine preview failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func playLoadedSample(category: SoundCategory) {
+        queue.async { [weak self] in
+            guard let self, self.isEnabled,
+                  let sound = self.pickSound(
+                    for: category, keyCode: nil,
+                    sounds: self.loadedSounds, keySounds: self.loadedKeySounds,
+                    categoryHistory: &self.lastPlayedIndex, keyHistory: &self.lastPlayedKeyIndex
+                  ) else { return }
+            do {
+                try self.startEngineIfNeeded()
+                self.playSampleBuffer(sound.buffer)
+            } catch {
+                NSLog("Tappy audio engine sample failed: \(error.localizedDescription)")
             }
         }
     }
@@ -225,18 +256,41 @@ final class LowLatencyAudioEngine {
     func play(buffer: AVAudioPCMBuffer) {
         queue.async { [weak self] in
             guard let self else { return }
-            guard self.isEnabled else { return }
 
             do {
                 try self.startEngineIfNeeded()
-                self.playBuffer(buffer)
+                self.playSampleBuffer(buffer)
             } catch {
                 NSLog("Tappy audio engine preview failed: \(error.localizedDescription)")
             }
         }
     }
 
+    func stopSample() {
+        queue.async { [weak self] in
+            self?.samplePlayer.stop()
+        }
+    }
+
+    func playSample(buffer: AVAudioPCMBuffer, completion: @escaping (Result<Void, Error>) -> Void) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            let result: Result<Void, Error>
+            do {
+                try self.startEngineIfNeeded()
+                self.playSampleBuffer(buffer)
+                result = .success(())
+            } catch {
+                result = .failure(error)
+            }
+            DispatchQueue.main.async { completion(result) }
+        }
+    }
+
     private func configureEngine() {
+        engine.attach(samplePlayer)
+        engine.connect(samplePlayer, to: engine.mainMixerNode, format: outputFormat)
+        samplePlayer.volume = outputVolume
         players = (0..<concurrentVoices).map { _ in
             let player = AVAudioPlayerNode()
             engine.attach(player)
@@ -297,6 +351,8 @@ final class LowLatencyAudioEngine {
     }
 
     private func resetEngineForRecovery() {
+        samplePlayer.stop()
+        samplePlayer.reset()
         for player in players {
             player.stop()
             player.reset()
@@ -315,6 +371,7 @@ final class LowLatencyAudioEngine {
     }
 
     private func stopPlayback() {
+        samplePlayer.stop()
         for player in players {
             player.stop()
         }
@@ -383,25 +440,48 @@ final class LowLatencyAudioEngine {
         return sounds[.standard] ?? []
     }
 
-    private func playBuffer(_ buffer: AVAudioPCMBuffer) {
+    private func playSampleBuffer(_ buffer: AVAudioPCMBuffer) {
+        samplePlayer.stop()
+        samplePlayer.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
+        samplePlayer.play()
+    }
+
+    private func playBuffer(_ buffer: AVAudioPCMBuffer, allowExpansion: Bool? = nil) {
         guard !players.isEmpty else { return }
 
+        let expands = allowExpansion ?? allowVoiceExpansion
         let now = ProcessInfo.processInfo.systemUptime
-        guard let playerIndex = firstIdlePlayerIndex(at: now) else {
+        let playerIndex: Int
+        if let idlePlayerIndex = firstIdlePlayerIndex(at: now, allowExpansion: expands) {
+            playerIndex = idlePlayerIndex
+        } else if expands {
+            // Long Thud sounds overlap while typing, so add a voice instead of
+            // dropping a key when the original pool is busy. New voices are reused.
+            let player = AVAudioPlayerNode()
+            engine.attach(player)
+            engine.connect(player, to: engine.mainMixerNode, format: outputFormat)
+            player.volume = outputVolume
+            player.play()
+            players.append(player)
+            voiceNextAvailableAt.append(0)
+            playerIndex = players.count - 1
+        } else {
             return
         }
 
         let player = players[playerIndex]
         player.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
         voiceNextAvailableAt[playerIndex] = now + bufferDuration(buffer) + voiceReleasePadding
-        nextPlayerIndex = (playerIndex + 1) % players.count
+        let selectableVoices = expands ? players.count : min(concurrentVoices, players.count)
+        nextPlayerIndex = (playerIndex + 1) % selectableVoices
     }
 
-    private func firstIdlePlayerIndex(at now: TimeInterval) -> Int? {
-        guard !players.isEmpty else { return nil }
+    private func firstIdlePlayerIndex(at now: TimeInterval, allowExpansion: Bool) -> Int? {
+        let selectableVoices = allowExpansion ? players.count : min(concurrentVoices, players.count)
+        guard selectableVoices > 0 else { return nil }
 
-        for offset in 0..<players.count {
-            let index = (nextPlayerIndex + offset) % players.count
+        for offset in 0..<selectableVoices {
+            let index = (nextPlayerIndex + offset) % selectableVoices
             if voiceNextAvailableAt[index] <= now {
                 return index
             }

@@ -1,5 +1,7 @@
 # Paid App Release
 
+> Historical release plan. Verify the current App Store Connect price, availability, and live binary before changing the storefront; the instructions below describe a previous rollout and are not proof of current state. Tappy is now being prepared as an App Store-only app.
+
 Tappy 1.1.0 changes the Mac App Store edition to a $0.99 paid app with every bundled sound pack included.
 
 ## Binary requirements
@@ -7,7 +9,6 @@ Tappy 1.1.0 changes the Mac App Store edition to a $0.99 paid app with every bun
 - No StoreKit product is loaded by the App Store target.
 - No trial, purchase, locked-pack, or restore UI is visible.
 - Every pack is selectable without an entitlement.
-- The `TAPPY_DIRECT` build keeps its independent Stripe/license behavior.
 
 ## App Store Connect rollout
 The currently published free binary still contains premium locks. Do not make the app paid while that binary is live.
@@ -31,11 +32,10 @@ Run the full test suite:
 xcodebuild test -project Tappy.xcodeproj -scheme Tappy -destination 'platform=macOS'
 ```
 
-Also build both compilation paths:
+Build the App Store target:
 
 ```sh
 xcodebuild build -project Tappy.xcodeproj -scheme Tappy -configuration Release -destination 'platform=macOS'
-xcodebuild build -project Tappy.xcodeproj -scheme Tappy -configuration Debug -destination 'platform=macOS' SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG TAPPY_DIRECT'
 ```
 
 Archive and upload without changing the live storefront:

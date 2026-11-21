@@ -1,0 +1,14 @@
+Source: scissors_cutting_candidates/source.wav
+Exported clips: 13
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=7.400s score=8034.41 peak=25327 duration=110.0ms
+- t=12.645s score=7677.38 peak=26362 duration=110.0ms
+- t=2.720s score=7657.51 peak=26064 duration=110.0ms
+- t=14.345s score=6776.58 peak=17405 duration=110.0ms
+- t=4.740s score=6518.98 peak=20909 duration=110.0ms
+- t=9.800s score=6294.92 peak=20431 duration=110.0ms
+- t=0.695s score=5402.41 peak=17803 duration=110.0ms
+- t=15.320s score=1899.49 peak=2755 duration=131.0ms

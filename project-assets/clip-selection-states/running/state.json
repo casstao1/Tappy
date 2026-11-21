@@ -1,0 +1,52 @@
+{
+  "clips": {
+    "running-14658/01_t0000.225_score13588.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.584Z"
+    },
+    "running-14658/02_t0000.680_score7199.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.580Z"
+    },
+    "running-14658/03_t0000.930_score4719.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.579Z"
+    },
+    "running-14658/04_t0001.155_score9510.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.581Z"
+    },
+    "running-14658/05_t0001.370_score5150.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.583Z"
+    },
+    "running-14658/06_t0001.615_score6455.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.578Z"
+    },
+    "running-14658/07_t0001.875_score10539.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.582Z"
+    },
+    "running-14658/08_t0002.415_score15561.wav": {
+      "rating": 1,
+      "category": "default",
+      "note": "",
+      "createdAt": "2026-11-19T00:56:03.578Z"
+    }
+  }
+}

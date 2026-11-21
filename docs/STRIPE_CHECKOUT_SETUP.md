@@ -1,3 +1,7 @@
+# Historical direct-download checkout
+
+This document describes the retired direct-download sales workflow. Keep the license support backend available for previous purchasers; do not use it to start new sales without a separate decision.
+
 # Tappy Stripe Checkout Setup
 
 Tappy uses Stripe Checkout for the one-time premium ASMR pack unlock. Stripe secrets stay in Vercel environment variables and are never bundled into the macOS app.

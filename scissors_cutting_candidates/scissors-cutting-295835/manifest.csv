@@ -1,0 +1,14 @@
+clip_name,source_time_seconds,duration_ms,score,average_abs,peak_abs,file_path
+01_t0000.695_score5402.wav,0.695,170.0,5402.41,1478.28,17803,scissors_cutting_candidates/scissors-cutting-295835/01_t0000.695_score5402.wav
+02_t0001.000_score1834.wav,1.000,220.0,1834.47,981.23,4508,scissors_cutting_candidates/scissors-cutting-295835/02_t0001.000_score1834.wav
+03_t0002.720_score7658.wav,2.720,170.0,7657.51,1733.53,26064,scissors_cutting_candidates/scissors-cutting-295835/03_t0002.720_score7658.wav
+04_t0003.140_score1672.wav,3.140,220.0,1672.28,982.48,3910,scissors_cutting_candidates/scissors-cutting-295835/04_t0003.140_score1672.wav
+05_t0004.740_score6519.wav,4.740,170.0,6518.98,1908.49,20909,scissors_cutting_candidates/scissors-cutting-295835/05_t0004.740_score6519.wav
+06_t0006.205_score1196.wav,6.205,220.0,1196.41,641.01,3012,scissors_cutting_candidates/scissors-cutting-295835/06_t0006.205_score1196.wav
+07_t0007.400_score8034.wav,7.400,170.0,8034.41,2496.80,25327,scissors_cutting_candidates/scissors-cutting-295835/07_t0007.400_score8034.wav
+08_t0008.740_score1086.wav,8.740,220.0,1086.32,451.42,3252,scissors_cutting_candidates/scissors-cutting-295835/08_t0008.740_score1086.wav
+09_t0009.800_score6295.wav,9.800,170.0,6294.92,1809.64,20431,scissors_cutting_candidates/scissors-cutting-295835/09_t0009.800_score6295.wav
+10_t0010.800_score1059.wav,10.800,220.0,1058.78,529.07,2844,scissors_cutting_candidates/scissors-cutting-295835/10_t0010.800_score1059.wav
+11_t0012.645_score7677.wav,12.645,170.0,7677.38,1822.84,26362,scissors_cutting_candidates/scissors-cutting-295835/11_t0012.645_score7677.wav
+12_t0014.345_score6777.wav,14.345,170.0,6776.58,3475.73,17405,scissors_cutting_candidates/scissors-cutting-295835/12_t0014.345_score6777.wav
+13_t0015.320_score1899.wav,15.320,170.0,1899.49,1895.75,2755,scissors_cutting_candidates/scissors-cutting-295835/13_t0015.320_score1899.wav

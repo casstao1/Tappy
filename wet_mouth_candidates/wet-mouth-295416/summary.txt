@@ -1,0 +1,14 @@
+Source: wet_mouth_candidates/source.wav
+Exported clips: 28
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=1.710s score=3480.68 peak=10894 duration=194.0ms
+- t=50.390s score=3337.50 peak=10873 duration=220.0ms
+- t=48.165s score=3182.43 peak=11023 duration=220.0ms
+- t=38.460s score=3045.30 peak=10019 duration=220.0ms
+- t=32.560s score=2758.53 peak=8879 duration=220.0ms
+- t=0.680s score=2589.08 peak=5854 duration=110.0ms
+- t=15.795s score=2123.13 peak=6505 duration=220.0ms
+- t=36.160s score=2077.48 peak=7157 duration=220.0ms

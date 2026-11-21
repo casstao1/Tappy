@@ -1,0 +1,14 @@
+Source: /tmp/tappy-splash-source.wav
+Exported clips: 17
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=3.700s score=5557.76 peak=8439 duration=110.0ms
+- t=2.370s score=4057.12 peak=6569 duration=110.0ms
+- t=4.030s score=3845.96 peak=6626 duration=110.0ms
+- t=4.690s score=3720.49 peak=6126 duration=110.0ms
+- t=1.395s score=3318.80 peak=7269 duration=110.0ms
+- t=0.450s score=3176.85 peak=4943 duration=240.0ms
+- t=2.820s score=3023.62 peak=10111 duration=110.0ms
+- t=6.590s score=2679.14 peak=7710 duration=110.0ms

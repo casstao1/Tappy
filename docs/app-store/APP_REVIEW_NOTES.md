@@ -1,5 +1,7 @@
 # Tappy App Review Notes
 
+> Historical notes for an earlier paid-up-front proposal. These do not describe the current free-with-in-app-unlock plan, optional usage analytics, or current sound catalog. Do not submit them without rewriting and verifying against the final binary.
+
 ## What the app does
 Tappy is a paid macOS auditory typing feedback utility. Every bundled sound pack is included in the purchase price; this version contains no in-app purchases, subscriptions, trials, locked content, or Restore Purchases control.
 

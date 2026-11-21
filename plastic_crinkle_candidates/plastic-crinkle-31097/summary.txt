@@ -1,0 +1,14 @@
+Source: plastic_crinkle_candidates/source.wav
+Exported clips: 25
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=12.300s score=7931.71 peak=23949 duration=120.0ms
+- t=1.280s score=7724.03 peak=22399 duration=120.0ms
+- t=0.190s score=7168.75 peak=18336 duration=143.0ms
+- t=3.455s score=6746.83 peak=22745 duration=158.0ms
+- t=5.390s score=6613.25 peak=21180 duration=188.0ms
+- t=13.295s score=5920.12 peak=17650 duration=123.0ms
+- t=0.805s score=5756.66 peak=16032 duration=120.0ms
+- t=3.920s score=4946.99 peak=16620 duration=120.0ms

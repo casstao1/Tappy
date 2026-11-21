@@ -29,6 +29,16 @@ struct TechPack: Identifiable, Equatable {
         isPremium: false
     )
 
+    static let swordBattle = TechPack(
+        id: "sword-battle",
+        name: "Sword Battle",
+        tagline: "Battle sound effects",
+        blurb: "Sword slashes, impact swipes, and battle effects shaped into keyboard sounds.",
+        symbolName: "flame.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
     static let bubble = TechPack(
         id: "bubble",
         name: "Bubbles",
@@ -76,7 +86,7 @@ struct TechPack: Identifiable, Equatable {
         blurb: "Seventeen wet, crackly pops with a tactile squish across every key.",
         symbolName: "drop.fill",
         isAvailable: true,
-        isPremium: true
+        isPremium: false
     )
 
     static let waxCracking = TechPack(
@@ -89,14 +99,158 @@ struct TechPack: Identifiable, Equatable {
         isPremium: true
     )
 
+    static let fart = TechPack(
+        id: "fart",
+        name: "Fart",
+        tagline: "Playful comic sounds",
+        blurb: "A collection of silly toots and pops for your keyboard.",
+        symbolName: "wind",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let paperCrinkle = TechPack(
+        id: "paper-crinkle",
+        name: "Paper Crinkle",
+        tagline: "Crisp paper sounds",
+        blurb: "A selection of crisp paper crinkles for every key.",
+        symbolName: "doc.text.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let plasticCrinkle = TechPack(
+        id: "plastic-crinkle",
+        name: "Plastic Crinkle",
+        tagline: "Crisp plastic sounds",
+        blurb: "A selection of crinkly plastic sounds for every key.",
+        symbolName: "waveform",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let wetMouth = TechPack(
+        id: "wet-mouth",
+        name: "Wet Mouth Sounds",
+        tagline: "Soft ASMR sounds",
+        blurb: "A selection of wet mouth sounds for every key.",
+        symbolName: "mouth.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let suckingWaterThroughATube = TechPack(
+        id: "sucking-water-through-a-tube",
+        name: "Water Tube Sucking",
+        tagline: "Tingly water sounds",
+        blurb: "A selection of soft, watery sounds for every key.",
+        symbolName: "drop.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let hairBrushing = TechPack(
+        id: "hair-brushing",
+        name: "Hair Brushing",
+        tagline: "Soft brushing sounds",
+        blurb: "Gentle brushing sounds for every key.",
+        symbolName: "paintbrush.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let splashingWater = TechPack(
+        id: "splashing-water",
+        name: "Taking care of business",
+        tagline: "Playful water sounds",
+        blurb: "A selection of gentle water splashes for every key.",
+        symbolName: "toilet.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let gentleWaterSwishing = TechPack(
+        id: "gentle-water-swishing",
+        name: "Gentle Water Swishing",
+        tagline: "Soft flowing water",
+        blurb: "Gentle water sounds for every key.",
+        symbolName: "water.waves",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let scissorsCutting = TechPack(
+        id: "scissors-cutting",
+        name: "Scissors Cutting",
+        tagline: "Crisp cutting sounds",
+        blurb: "A selection of scissors sounds for every key.",
+        symbolName: "scissors",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let catMeows = TechPack(
+        id: "cat-meows",
+        name: "Cat Meows",
+        tagline: "Playful cat sounds",
+        blurb: "A selection of cat meows for every key.",
+        symbolName: "cat.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let dogBarks = TechPack(
+        id: "dog-barks",
+        name: "Dog Barks",
+        tagline: "Playful dog sounds",
+        blurb: "A selection of dog barks for every key.",
+        symbolName: "dog.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let running = TechPack(
+        id: "running",
+        name: "Running",
+        tagline: "Quick footsteps",
+        blurb: "A selection of running footsteps for every key.",
+        symbolName: "figure.run",
+        isAvailable: true,
+        isPremium: true
+    )
+
+    static let thud = TechPack(
+        id: "thud",
+        name: "Thud",
+        tagline: "A full impact sound",
+        blurb: "The full thud sound plays on each key.",
+        symbolName: "burst.fill",
+        isAvailable: true,
+        isPremium: true
+    )
+
     static let all: [TechPack] = [
         .plasticTapping,
         .farming,
         .squishyPop,
+        .swordBattle,
         .waxCracking,
         .bubble,
         .analogStopwatch,
         .stars,
-        .woodBrush
+        .woodBrush,
+        .fart,
+        .splashingWater,
+        .paperCrinkle,
+        .plasticCrinkle,
+        .wetMouth,
+        .suckingWaterThroughATube,
+        .hairBrushing,
+        .gentleWaterSwishing,
+        .scissorsCutting,
+        .catMeows,
+        .dogBarks,
+        .running,
+        .thud
     ]
 }

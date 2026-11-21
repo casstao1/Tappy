@@ -1,0 +1,7 @@
+filename,variant,source_start_seconds,duration_ms,source_peak
+01_t0000.310_score9709.wav,short,0.31,120,31816
+02_t0000.310_score9709.wav,compact,0.31,180,31816
+03_t0000.310_score9709.wav,medium,0.31,250,31816
+04_t0000.310_score9709.wav,full attack,0.31,350,31816
+05_t0000.310_score9709.wav,long,0.31,600,31816
+06_t0000.310_score9709.wav,long tail,0.31,1000,31816

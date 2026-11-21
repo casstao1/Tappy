@@ -1,0 +1,14 @@
+Source: /tmp/tappy-tingly-source.wav
+Exported clips: 24
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=7.605s score=7817.24 peak=17396 duration=213.0ms
+- t=0.465s score=7570.80 peak=14404 duration=100.0ms
+- t=6.980s score=7001.43 peak=17864 duration=230.0ms
+- t=3.045s score=6836.35 peak=17024 duration=173.0ms
+- t=2.420s score=6660.30 peak=16248 duration=128.0ms
+- t=7.980s score=6604.78 peak=10076 duration=138.0ms
+- t=11.760s score=6549.54 peak=18616 duration=100.0ms
+- t=11.135s score=6441.71 peak=16248 duration=100.0ms

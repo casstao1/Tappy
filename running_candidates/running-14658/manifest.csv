@@ -1,0 +1,9 @@
+clip_name,source_time_seconds,duration_ms,score,average_abs,peak_abs,file_path
+01_t0000.225_score13588.wav,0.225,120.0,13588.31,9669.33,25892,running_candidates/running-14658/01_t0000.225_score13588.wav
+02_t0000.680_score7199.wav,0.680,240.0,7199.03,2357.05,21918,running_candidates/running-14658/02_t0000.680_score7199.wav
+03_t0000.930_score4719.wav,0.930,240.0,4719.17,3115.00,9679,running_candidates/running-14658/03_t0000.930_score4719.wav
+04_t0001.155_score9510.wav,1.155,183.0,9510.10,4641.57,24390,running_candidates/running-14658/04_t0001.155_score9510.wav
+05_t0001.370_score5150.wav,1.370,228.0,5149.95,3451.17,10560,running_candidates/running-14658/05_t0001.370_score5150.wav
+06_t0001.615_score6455.wav,1.615,240.0,6455.28,2820.24,17616,running_candidates/running-14658/06_t0001.615_score6455.wav
+07_t0001.875_score10539.wav,1.875,158.0,10539.01,7571.92,19601,running_candidates/running-14658/07_t0001.875_score10539.wav
+08_t0002.415_score15561.wav,2.415,101.0,15560.72,11199.65,28803,running_candidates/running-14658/08_t0002.415_score15561.wav

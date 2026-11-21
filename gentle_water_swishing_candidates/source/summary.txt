@@ -1,0 +1,14 @@
+Source: /tmp/tappy-swishing-source.wav
+Exported clips: 30
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=42.235s score=7273.07 peak=16640 duration=230.0ms
+- t=44.730s score=5550.37 peak=14450 duration=120.0ms
+- t=24.455s score=5044.76 peak=11549 duration=120.0ms
+- t=52.995s score=4878.73 peak=11005 duration=120.0ms
+- t=60.510s score=4368.86 peak=12148 duration=120.0ms
+- t=0.495s score=4061.98 peak=12887 duration=120.0ms
+- t=25.800s score=3782.22 peak=7404 duration=120.0ms
+- t=39.515s score=3600.55 peak=6450 duration=230.0ms

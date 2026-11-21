@@ -1,3 +1,7 @@
+# Historical direct-download release setup
+
+This document describes the retired direct-download workflow. It is retained for historical support; Tappy is now being prepared for the Mac App Store only. Do not use it to publish a new direct release.
+
 # Tappy Vercel + Manual Notarized Release Setup
 
 This repo is set up so GitHub never needs Apple signing secrets:

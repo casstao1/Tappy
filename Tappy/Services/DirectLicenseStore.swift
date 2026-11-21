@@ -41,17 +41,17 @@ final class DirectLicenseStore: ObservableObject {
         storedLicenseKey != nil
     }
 
-    func activate(licenseKey rawLicenseKey: String) async {
+    func activate(licenseKey rawLicenseKey: String) async -> Bool {
         let licenseKey = rawLicenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !licenseKey.isEmpty else {
             lastMessage = "Paste your Tappy license key first."
-            return
+            return false
         }
 
         guard !isBusy else {
             lastMessage = "A license check is already running."
-            return
+            return false
         }
 
         isActivating = true
@@ -59,22 +59,24 @@ final class DirectLicenseStore: ObservableObject {
 
         do {
             try await activateUnlockedLicense(licenseKey)
+            return true
         } catch {
             lastMessage = "License activation failed: \(error.localizedDescription)"
+            return false
         }
     }
 
-    func activate(checkoutSessionID rawSessionID: String) async {
+    func activate(checkoutSessionID rawSessionID: String) async -> Bool {
         let sessionID = rawSessionID.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard sessionID.starts(with: "cs_") else {
             lastMessage = "Tappy could not read the completed Stripe checkout."
-            return
+            return false
         }
 
         guard !isBusy else {
             lastMessage = "A license check is already running."
-            return
+            return false
         }
 
         isActivating = true
@@ -83,8 +85,10 @@ final class DirectLicenseStore: ObservableObject {
         do {
             let licenseKey = try await licenseKey(forCheckoutSessionID: sessionID)
             try await activateUnlockedLicense(licenseKey)
+            return true
         } catch {
             lastMessage = "Checkout activation failed: \(error.localizedDescription)"
+            return false
         }
     }
 

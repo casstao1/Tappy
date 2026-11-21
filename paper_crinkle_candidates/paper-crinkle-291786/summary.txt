@@ -1,0 +1,14 @@
+Source: paper_crinkle_candidates/source.wav
+Exported clips: 14
+Sample rate: 48000 Hz
+Analysis window: 5.00 ms
+
+Top-scoring clips:
+- t=1.455s score=10601.35 peak=32456 duration=220.0ms
+- t=1.800s score=8813.60 peak=29534 duration=220.0ms
+- t=0.505s score=8722.60 peak=23737 duration=220.0ms
+- t=5.365s score=8097.04 peak=25104 duration=200.0ms
+- t=1.090s score=7133.43 peak=23876 duration=220.0ms
+- t=4.415s score=6779.12 peak=20396 duration=100.0ms
+- t=6.500s score=6136.29 peak=21699 duration=115.0ms
+- t=2.565s score=5966.89 peak=19022 duration=220.0ms

@@ -1,0 +1,15 @@
+clip_name,source_time_seconds,start_seconds,duration_ms,score,average_abs,peak_abs,file_path
+01_t0000.505_score8723.wav,0.505,0.465,220.0,8722.60,5203.86,23737,paper_crinkle_candidates/paper-crinkle-291786/01_t0000.505_score8723.wav
+02_t0001.090_score7133.wav,1.090,1.050,220.0,7133.43,2823.10,23876,paper_crinkle_candidates/paper-crinkle-291786/02_t0001.090_score7133.wav
+03_t0001.455_score10601.wav,1.455,1.415,220.0,10601.35,4210.41,32456,paper_crinkle_candidates/paper-crinkle-291786/03_t0001.455_score10601.wav
+04_t0001.800_score8814.wav,1.800,1.760,220.0,8813.60,2676.12,29534,paper_crinkle_candidates/paper-crinkle-291786/04_t0001.800_score8814.wav
+05_t0002.170_score3329.wav,2.170,2.130,220.0,3328.91,1869.38,10723,paper_crinkle_candidates/paper-crinkle-291786/05_t0002.170_score3329.wav
+06_t0002.565_score5967.wav,2.565,2.525,220.0,5966.89,2064.57,19022,paper_crinkle_candidates/paper-crinkle-291786/06_t0002.565_score5967.wav
+07_t0003.095_score5634.wav,3.095,3.055,220.0,5633.65,2514.49,16819,paper_crinkle_candidates/paper-crinkle-291786/07_t0003.095_score5634.wav
+08_t0004.060_score3571.wav,4.060,4.020,130.0,3570.75,1482.71,11391,paper_crinkle_candidates/paper-crinkle-291786/08_t0004.060_score3571.wav
+09_t0004.415_score6779.wav,4.415,4.375,130.0,6779.12,2719.70,20396,paper_crinkle_candidates/paper-crinkle-291786/09_t0004.415_score6779.wav
+10_t0004.710_score3588.wav,4.710,4.670,220.0,3588.08,1965.33,9972,paper_crinkle_candidates/paper-crinkle-291786/10_t0004.710_score3588.wav
+11_t0005.005_score3647.wav,5.005,4.965,220.0,3647.09,2196.03,11344,paper_crinkle_candidates/paper-crinkle-291786/11_t0005.005_score3647.wav
+12_t0005.365_score8097.wav,5.365,5.325,200.0,8097.04,3268.43,25104,paper_crinkle_candidates/paper-crinkle-291786/12_t0005.365_score8097.wav
+13_t0006.080_score5282.wav,6.080,6.040,130.0,5282.40,1094.33,18527,paper_crinkle_candidates/paper-crinkle-291786/13_t0006.080_score5282.wav
+14_t0006.500_score6136.wav,6.500,6.460,130.0,6136.29,1344.67,21699,paper_crinkle_candidates/paper-crinkle-291786/14_t0006.500_score6136.wav

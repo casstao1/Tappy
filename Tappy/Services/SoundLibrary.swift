@@ -22,7 +22,7 @@ final class SoundLibrary: ObservableObject {
         }
     }
 
-    func reload(using audioEngine: LowLatencyAudioEngine) throws {
+    func reload(using audioEngine: LowLatencyAudioEngine, packID: String? = nil) throws {
         try prepareFolderStructure()
         try installBundledSoundsIfNeeded()
 
@@ -36,7 +36,7 @@ final class SoundLibrary: ObservableObject {
                 LoadedSound(
                     category: category,
                     url: url,
-                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: Self.maximumDuration(for: url, packID: packID))
                 )
             }
 
@@ -54,7 +54,8 @@ final class SoundLibrary: ObservableObject {
             loadedKeySounds[keyCode, default: []].append(sound)
         }
 
-        try audioEngine.setLoadedSounds(loadedSounds, keySounds: loadedKeySounds)
+        let longSoundPack = packID == TechPack.thud.id || packID == TechPack.catMeows.id
+        try audioEngine.setLoadedSounds(loadedSounds, keySounds: loadedKeySounds, allowVoiceExpansion: longSoundPack)
 
         soundCounts = newCounts
         totalSoundCount = newCounts.values.reduce(0, +) + loadedKeySounds.values.reduce(0) { $0 + $1.count }
@@ -164,8 +165,11 @@ final class SoundLibrary: ObservableObject {
         sounds: [SoundCategory: [LoadedSound]],
         keySounds: [UInt16: [LoadedSound]]
     ) {
-        try prepareFolderStructure()
-        return try bundledPackContents(packID: packID, using: audioEngine)
+        let contents = try bundledPackContents(packID: packID, using: audioEngine)
+        guard !(contents.sounds[.standard] ?? []).isEmpty else {
+            throw AudioEngineError.unreadableFile(URL(fileURLWithPath: "preview.wav"))
+        }
+        return contents
     }
 
     func previewBundledSound(packID: String, category: SoundCategory, using audioEngine: LowLatencyAudioEngine) throws {
@@ -175,12 +179,14 @@ final class SoundLibrary: ObservableObject {
         let urls = try soundURLs(in: categoryFolder)
         guard let url = urls.randomElement() else { return }
 
-        let buffer = try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+        let buffer = try audioEngine.makeBuffer(from: url, maximumDuration: Self.maximumDuration(for: url, packID: packID))
         audioEngine.play(buffer: buffer)
     }
 
-    func previewBundledDemo(packID: String, using audioEngine: LowLatencyAudioEngine) throws {
-        guard let bundledPackURL = bundledPackURL(for: packID) else { return }
+    func bundledDemoURL(packID: String) throws -> URL {
+        guard let bundledPackURL = bundledPackURL(for: packID) else {
+            throw AudioEngineError.unreadableFile(URL(fileURLWithPath: "demo.wav"))
+        }
 
         let demoFolderURL = bundledPackURL.appendingPathComponent("demo", isDirectory: true)
         let fallbackDemoURL = demoFolderURL.appendingPathComponent("demo.wav", isDirectory: false)
@@ -195,8 +201,7 @@ final class SoundLibrary: ObservableObject {
         let demoURL = candidates.randomElement() ?? demoURLs[0]
         lastDemoURLByPackID[packID] = demoURL
 
-        let buffer = try audioEngine.makeBuffer(from: demoURL)
-        audioEngine.play(buffer: buffer)
+        return demoURL
     }
 
     func soundFolderURL(for category: SoundCategory) -> URL {
@@ -239,7 +244,7 @@ final class SoundLibrary: ObservableObject {
                 LoadedSound(
                     category: category,
                     url: url,
-                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: LowLatencyAudioEngine.maximumClickDuration)
+                    buffer: try audioEngine.makeBuffer(from: url, maximumDuration: Self.maximumDuration(for: url, packID: packID))
                 )
             }
         }
@@ -265,6 +270,13 @@ final class SoundLibrary: ObservableObject {
         guard currentSoundCount() == 0 else { return }
         guard let bundledPackURL = bundledPackURL(for: TechPack.plasticTapping.id) else { return }
         _ = try importPack(from: bundledPackURL)
+    }
+
+    nonisolated static func maximumDuration(for url: URL, packID: String?) -> TimeInterval? {
+        if packID == TechPack.thud.id && url.lastPathComponent == "thud.wav" {
+            return nil
+        }
+        return LowLatencyAudioEngine.maximumClickDuration
     }
 
     private func currentSoundCount() -> Int {

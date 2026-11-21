@@ -1,5 +1,7 @@
 # Tappy Launch Checklist
 
+> Historical checklist for an earlier paid-up-front proposal. The current plan is a free App Store app with an in-app premium unlock and optional analytics. Revalidate the binary, storefront, pricing, product, privacy disclosures, and review notes before release; the checkmarks below do not establish current status.
+
 ## Product
 - [x] Include all eight sound packs in the paid Mac App Store edition
 - [x] Remove App Store trials, premium locks, purchases, and restore controls
